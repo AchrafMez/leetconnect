@@ -43,10 +43,10 @@ export default function Navbar() {
           </button>
 
           <Button variant="ghost" className="hidden sm:inline-flex" asChild>
-            <a href="#sign-in">Sign In</a>
+            <a href="/#sign-in">Sign In</a>
           </Button>
           <Button asChild>
-            <a href="#get-started">Get Started</a>
+            <a href="/#get-started">Get Started</a>
           </Button>
         </div>
       </nav>

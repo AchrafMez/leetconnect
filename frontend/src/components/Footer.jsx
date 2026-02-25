@@ -41,12 +41,12 @@ export function Footer() {
                         <h4 className="font-semibold mb-4">Product</h4>
                         <ul className="space-y-3 text-sm">
                             <li>
-                                <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
+                                <a href="/#features" className="text-muted-foreground hover:text-primary transition-colors">
                                     Features
                                 </a>
                             </li>
                             <li>
-                                <a href="#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">
+                                <a href="/#how-it-works" className="text-muted-foreground hover:text-primary transition-colors">
                                     How it works
                                 </a>
                             </li>
