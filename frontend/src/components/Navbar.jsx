@@ -1,111 +1,55 @@
-import { Menu } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-
+import { Sun, Moon } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import {
-  Navbar as NavbarComponent,
-  NavbarLeft,
-  NavbarRight,
-} from "@/components/ui/navbar";
-import Navigation from "@/components/ui/navigation";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useTheme } from "@/components/Theme";
 
-export default function Navbar({
-  logo = "Leetconnect",
-  // name = "Leetconnect",
-  homeUrl = "/",
-  mobileLinks = [
-    { text: "Features", href: "/" },
-    { text: "How it works", href: "/" },
-    // { text: "Pricing", href: "/" },
-  ],
-  actions = [
-    { text: "Sign in", href: "/login", isButton: false },
-    {
-      text: "Get Started",
-      href: "/register",
-      isButton: true,
-      variant: "default",
-    },
-  ],
-  showNavigation = true,
-  customNavigation,
-  className,
-}) {
+export default function Navbar() {
+  const { theme, setTheme } = useTheme();
   return (
-    <header className={cn("sticky top-0 z-50 -mb-4 px-4 pb-4", className)}>
-      <div className="fade-bottom bg-background/15 absolute left-0 h-24 w-full backdrop-blur-lg"></div>
-      <div className="max-w-container relative mx-auto">
-        <NavbarComponent>
-          <NavbarLeft>
+    <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
+      <nav className="container mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-10">
+          <div className="flex items-center">
+            <Logo />
+          </div>
+          <div className="hidden md:flex items-center gap-6">
             <a
-              href={homeUrl}
-              className="flex items-center gap-2 text-xl font-bold"
+              href="/#features"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              {logo}
-              {/* {name} */}
+              Features
             </a>
-            {showNavigation && (customNavigation || <Navigation />)}
-          </NavbarLeft>
-          <NavbarRight>
-            {actions.map((action, index) =>
-              action.isButton ? (
-                <Button
-                  key={index}
-                  variant={action.variant || "default"}
-                  asChild
-                >
-                  <a href={action.href}>
-                    {action.icon}
-                    {action.text}
-                    {action.iconRight}
-                  </a>
-                </Button>
-              ) : (
-                <a
-                  key={index}
-                  href={action.href}
-                  className="hidden text-sm md:block"
-                >
-                  {action.text}
-                </a>
-              ),
+            <a
+              href="/#how-it-works"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              How it works
+            </a>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2 rounded-lg hover:bg-accent transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5" />
+            ) : (
+              <Moon className="w-5 h-5" />
             )}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 md:hidden"
-                >
-                  <Menu className="size-5" />
-                  <span className="sr-only">Toggle navigation menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right">
-                <nav className="grid gap-6 text-lg font-medium">
-                  <a
-                    href={homeUrl}
-                    className="flex items-center gap-2 text-xl font-bold"
-                  >
-                    <span>{name}</span>
-                  </a>
-                  {mobileLinks.map((link, index) => (
-                    <a
-                      key={index}
-                      href={link.href}
-                      className="text-sidebar-accent-foreground hover:text-foreground"
-                    >
-                      {link.text}
-                    </a>
-                  ))}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </NavbarRight>
-        </NavbarComponent>
-      </div>
+          </button>
+
+          <Button variant="ghost" className="hidden sm:inline-flex" asChild>
+            <a href="/#sign-in">Sign In</a>
+          </Button>
+          <Button asChild>
+            <a href="/#get-started">Get Started</a>
+          </Button>
+        </div>
+      </nav>
     </header>
   );
 }
