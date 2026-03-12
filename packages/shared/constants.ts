@@ -1,0 +1,64 @@
+// shared constants, use these instead of raw strings to avoid typos
+// roles: user roles : client freelancer admin
+// job_status / proposal_status / contract_status: marketplace lifecycle (ner-roui)
+// friendship_status: friend system (noben-ai)
+// events: redis event names for inter-service communication (noben-ai, ner-roui, adbouras publish — abmahfou subscribes)
+// services: internal urls to call other services via rest
+
+export const ROLES = {
+    CLIENT: 'client',
+    FREELANCER: 'freelancer',
+    ADMIN: 'admin',
+  } as const;
+  
+  export const JOB_STATUS = {
+    OPEN: 'open',
+    IN_PROGRESS: 'in_progress',
+    COMPLETED: 'completed',
+    CLOSED: 'closed',
+  } as const;
+  
+  export const PROPOSAL_STATUS = {
+    PENDING: 'pending',
+    ACCEPTED: 'accepted',
+    REJECTED: 'rejected',
+  } as const;
+  
+  export const CONTRACT_STATUS = {
+    DRAFT: 'draft',
+    ACTIVE: 'active',
+    COMPLETED: 'completed',
+    PAID: 'paid',
+    DISPUTED: 'disputed',
+  } as const;
+  
+  export const FRIENDSHIP_STATUS = {
+    PENDING: 'pending',
+    ACCEPTED: 'accepted',
+    BLOCKED: 'blocked',
+  } as const;
+  
+  export const EVENTS = {
+    USER_REGISTERED: 'user.registered',
+    USER_ONLINE: 'user.online',
+    USER_OFFLINE: 'user.offline',
+    JOB_CREATED: 'job.created',
+    PROPOSAL_RECEIVED: 'proposal.received',
+    CONTRACT_COMPLETED: 'contract.completed',
+    MESSAGE_SENT: 'message.sent',
+  } as const;
+
+  export const SERVICES = {
+    AUTH: process.env.AUTH_SERVICE_URL || 'http://auth:3001',
+    MARKETPLACE: process.env.MARKETPLACE_SERVICE_URL || 'http://marketplace:3002',
+    CHAT: process.env.CHAT_SERVICE_URL || 'http://chat:3003',
+    ANALYTICS: process.env.ANALYTICS_SERVICE_URL || 'http://analytics:3004',
+    ADMIN: process.env.ADMIN_SERVICE_URL || 'http://admin:3005',
+  }
+
+export type Role = typeof ROLES[keyof typeof ROLES];
+export type JobStatus = typeof JOB_STATUS[keyof typeof JOB_STATUS];
+export type ProposalStatus = typeof PROPOSAL_STATUS[keyof typeof PROPOSAL_STATUS];
+export type ContractStatus = typeof CONTRACT_STATUS[keyof typeof CONTRACT_STATUS];
+export type FriendshipStatus = typeof FRIENDSHIP_STATUS[keyof typeof FRIENDSHIP_STATUS];
+export type Event = typeof EVENTS[keyof typeof EVENTS];

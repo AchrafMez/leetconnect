@@ -1,5 +1,6 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+import { DataTypes, Model, Optional } from 'sequelize';
+import sequelize from '../config/database';
+
 const Conversation = sequelize.define('Conversation', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   type: { type: DataTypes.STRING(20), defaultValue: 'direct', validate: { isIn: [['direct', 'group']] } },
@@ -35,4 +36,5 @@ Conversation.hasMany(ConversationMember, { foreignKey: 'conversation_id' });
 ConversationMember.belongsTo(Conversation, { foreignKey: 'conversation_id' });
 Conversation.hasMany(Message, { foreignKey: 'conversation_id' });
 Message.belongsTo(Conversation, { foreignKey: 'conversation_id' });
-module.exports = { Conversation, ConversationMember, Message, Notification };
+
+export { Conversation, ConversationMember, Message, Notification };

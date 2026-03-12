@@ -1,12 +1,13 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const healthRoutes = require('./routes/health');
-const { errorHandler } = require('../shared/error-handler');
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import healthRoutes from './routes/health';
+import { errorHandler } from '@leetconnect/shared';
+
 const app = express();
-const PORT = process.env.PORT || 3005;
+const PORT =  3005;
 
 // middleware
 app.use(helmet());

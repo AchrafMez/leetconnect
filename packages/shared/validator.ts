@@ -1,8 +1,19 @@
 // validating a req body or query params
+import { Request, Response, NextFunction } from 'express';
 
-function validateBody(rules) {
-    return (req, res, next) => {
-        const errors = [];
+interface FieldRule {
+    required?: boolean;
+    type?: 'string' | 'number' | 'boolean';
+    minLength?: number;
+    maxLength?: number;
+    isEmail?: boolean;
+}
+
+type ValidationRules = Record<string, FieldRule>;
+
+function validateBody(rules: ValidationRules) {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const errors : string[] = [];
         for(const [field, rule] of Object.entries(rules)){
             const value = req.body[field];
             if(rule.required && (value === undefined || value === null || value === '')) {
@@ -32,8 +43,8 @@ function validateBody(rules) {
     };
 }
 
-function validateQuery(rules){
-    return (req, res, next) => {
+function validateQuery(rules: ValidationRules) {
+    return (req: Request, res: Response, next: NextFunction) => {
         const errors = [];
         for(const [field, rule] of Object.entries(rules)){
             const value = req.query[field];
@@ -48,4 +59,4 @@ function validateQuery(rules){
     };
 }
 
-module.exports = { validateBody, validateQuery };
+export { validateBody, validateQuery };

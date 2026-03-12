@@ -1,9 +1,9 @@
 // sequelize database connection used by all services
 // each service calls createDatabase() once at startup to connect to its own postgresql
 
-const { Sequelize } = require('sequelize');
+import { Sequelize } from 'sequelize';
 
-function createDatabase(databaseUrl) {
+function createDatabase(databaseUrl?: string): Sequelize {
     const url = databaseUrl || process.env.DATABASE_URL;
     if (!url) throw new Error('DATABASE_URL is required');
     return new Sequelize(url, {
@@ -14,4 +14,4 @@ function createDatabase(databaseUrl) {
     });
 }
 
-module.exports = { createDatabase };
+export { createDatabase };

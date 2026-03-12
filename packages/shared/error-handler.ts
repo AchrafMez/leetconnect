@@ -1,7 +1,13 @@
 // global error handling middleware for express
 // app.use(errorHandler); must be placed after all routes
+import { Request, Response, NextFunction } from 'express';
+interface AppError extends Error {
+    status?: number;
+    statusCode?: number;
+  }
+  
+function errorHandler(err: AppError, req: Request, res: Response, next: NextFunction): void {
 
-function errorHandler(err, req, res, next) {
     console.error(`[${req.method}] ${req.path} — ${err.message}`);
     const status = err.status || err.statusCode || 500;
     res.status(status).json({
@@ -10,4 +16,4 @@ function errorHandler(err, req, res, next) {
     });
 }
 
-module.exports = { errorHandler };
+export { errorHandler };

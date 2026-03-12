@@ -2,12 +2,23 @@
   "name": "@leetconnect/shared",
   "version": "1.0.0",
   "description": "Shared utilities for all leetconnect services",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
   "dependencies": {
     "jsonwebtoken": "^9.0.2",
     "ioredis": "^5.4.1",
     "sequelize": "^6.37.5",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^25.4.0",
+    "@types/express": "^5.0.6",
+    "typescript": "^5.9.3"
   }
 }

@@ -1,17 +1,19 @@
-require('dotenv').config();
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const sequelize = require('./config/database');
-const healthRoutes = require('./routes/health');
-const { initEventBus, closeEventBus } = require('../shared/event-emitter');
-const { errorHandler } = require('../shared/error-handler');
+import 'dotenv/config';
+import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import sequelize from './config/database';
+import healthRoutes from './routes/health';
+import { initEventBus, closeEventBus } from '@leetconnect/shared';
+import { errorHandler } from '@leetconnect/shared';
+import { error } from 'console';
+
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 3003;
+const PORT = 3003;
 
 // Socket.io
 const io = new Server(server, {
@@ -60,7 +62,8 @@ async function start() {
       console.log(`Chat service running on port ${PORT}`);
     });
   } catch (err) {
-    console.error('Chat service failed to start:', err.message);
+    const error = err as Error;
+    console.error('Chat service failed to start:', error.message);
     process.exit(1);
   }
 }
