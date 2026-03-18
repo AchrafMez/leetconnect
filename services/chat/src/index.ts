@@ -1,78 +1,55 @@
-import 'dotenv/config';
-import express from 'express';
-import http from 'http';
-import { Server } from 'socket.io';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import sequelize from './config/database';
-import healthRoutes from './routes/health';
-import { initEventBus, closeEventBus } from '@leetconnect/shared';
-import { errorHandler } from '@leetconnect/shared';
-import { error } from 'console';
+import dotenv	from 'dotenv';
+import express	from 'express';
+
+import health_routes	from './routes/route.health';
+import convers_routes	from './routes/route.convers';
+import message_routes	from './routes/route.messages';
+import notif_routes		from './routes/route.notifs';
+import friends_routes	from './routes/route.friends';
+
+import prisma			from './config/config.database';
+
+import error_handler	from './middleware/error.handler';
+
+dotenv.config({ path: '../../.env', quiet: true});
+
+// console.log(process.env);
 
 const app = express();
-const server = http.createServer(app);
-const PORT = 3003;
+const PORT = process.env.CHAT_PORT || 3003;
 
-// Socket.io
-const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
-});
-
-// Middleware
-app.use(helmet());
-app.use(cors());
-app.use(morgan('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-// Routes
-app.use('/api/chat', healthRoutes);
 
-// error handler (must be after all routes)
-app.use(errorHandler);
+app.use('/api/chat', health_routes);
+app.use('/api/chat/convers', convers_routes);
+app.use('/api/chat/convers/:id/messages', message_routes);
+app.use('/api/notifs', notif_routes);
+app.use('/api/friend/requests', friends_routes);
 
-// Socket.io event handlers
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
-  socket.on('join_conversation', (conversationId) => {
-    socket.join(conversationId);
-    console.log(`User ${socket.id} joined conversation ${conversationId}`);
-  });
-  socket.on('send_message', (data) => {
-    io.to(data.conversationId).emit('new_message', data);
-  });
-  socket.on('typing', (data) => {
-    socket.to(data.conversationId).emit('user_typing', data);
-  });
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-  });
-});
+app.use(error_handler);
 
-// Start
-async function start() {
-  try {
-    await sequelize.authenticate();
-    console.log('Chat DB connected');
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('Chat models synced');
-    initEventBus(process.env.REDIS_URL);
-    server.listen(PORT, '0.0.0.0', () => {
-      console.log(`Chat service running on port ${PORT}`);
-    });
-  } catch (err) {
-    const error = err as Error;
-    console.error('Chat service failed to start:', error.message);
-    process.exit(1);
-  }
+start_chat_server();
+
+async function start_chat_server() {
+	try {
+		// TODO: connection to db
+		await prisma.$connect().then( () => {
+			console.log('connected to database.');
+		});
+		app.listen(PORT, () => {
+			console.log(`chat server running on port: ${PORT}`);
+		});
+	} catch (err) {
+		console.log('error accured');
+		process.exit(1);
+	}
 }
-start();
 
-process.on('SIGTERM', async () => {
-  console.log('Shutting down chat service...');
-  io.close();
-  await closeEventBus();
-  await sequelize.close();
-  process.exit(0);
-});
+async function server_exit() {
+	console.log('\nshutting down chat server');
+	await prisma.$disconnect();
+	console.log('disconnected from database.');
+	process.exit(0);
+}
+
+process.on('SIGINT', server_exit);
