@@ -66,7 +66,7 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 	// res.send(`PATCH: api/friend/requests/${id}/accept endpoint`);
 	try {
 		const sender_id = parse_id(req.params.id, 'sender_id');
-		const user_id	= parse_id(req.body.receiver_id, 'user_id');
+		const user_id	= parse_id(req.body.receiver_id, 'receiver_id');
 
 		const request = await prisma.friendRequest.findUnique({
 			where: {id: sender_id}
@@ -94,7 +94,7 @@ export async function reject(req: Request, res: Response, next: NextFunction) {
 	// console.log('Reject an incoming friend request');
 	// res.send(`PATCH: api/friend/requests/${id}/reject endpoint`);
 	try {
-		const sender_id = parse_id(req.params.id, 'sender_id');
+		const sender_id = parse_id(req.params.id, 'friend_request_id');
 		const user_id	= parse_id(req.body.receiver_id, 'user_id');
 
 		const request = await prisma.friendRequest.findUnique({
@@ -105,7 +105,7 @@ export async function reject(req: Request, res: Response, next: NextFunction) {
 
 		check_pending(request.status);
 		if (request.receiver_id !== user_id)
-			throw new err.ForbiddenError('only the receiver can accept');
+			throw new err.ForbiddenError('only the receiver can reject');
 
 		const updated = await prisma.friendRequest.update({
 			where: {id: sender_id},

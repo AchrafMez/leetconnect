@@ -95,8 +95,10 @@ services:
       context: .
       dockerfile: services/chat/Dockerfile
     restart: unless-stopped
+########################
     ports:
       - "3003:3003"
+########################
     networks:
       - leetconnect
     depends_on:
