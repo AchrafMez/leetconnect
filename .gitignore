@@ -28,7 +28,7 @@ pnpm-debug.log*
 .env
 .env.*
 *.local
-
+services/auth/.env
 # caches
 .eslintcache
 .stylelintcache
@@ -47,3 +47,4 @@ pnpm-debug.log*
 
 #certs
 certs/
+tree.txt

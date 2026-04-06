@@ -3,15 +3,26 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import sequelize from './config/database';
-import healthRoutes from './routes/health';
-import { initEventBus, closeEventBus } from '@leetconnect/shared';
-import { errorHandler } from '@leetconnect/shared';
+// import sequelize from './config/database';
+
+// shared resources
+import { initEventBus, closeEventBus, errorHandler} from '@leetconnect/shared';
+
+// ensure zero trust 
 import fs from 'fs';
 import https from 'https';
 
+import cookieParser from 'cookie-parser'; // to store tokens in cookies
+import prisma from './lib/prisma';
+
+import authRoutes from './routes/auth.routes';
+import healthRoutes from './routes/health';
+import { register } from 'module';
+
 const app = express();
 const PORT =  3001;
+
+// SSL configuration
 const sslOptions = {
     key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
     cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
@@ -19,24 +30,27 @@ const sslOptions = {
 
 // middleware
 app.use(helmet());
-app.use(cors());
-app.use(morgan('dev'));
-app.use(express.json());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'https://localhost:5173', // Only allows requests from  React frontend
+    credentials: true // Required to accept cookies from the frontend
+}));
+app.use(morgan('dev')); // display logs
+app.use(express.json()); // takes body of request and turn it into req.body object
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
 // routes
 app.use('/api/auth', healthRoutes);
-
+app.use('/api/auth/', authRoutes);
 // error handler (must be after all routes)
 app.use(errorHandler);
 
 // start
 async function start() {
   try {
-    await sequelize.authenticate();
+    await prisma.$connect(); // connect with postgres database
     console.log('auth db connected');
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('auth models synced');
-    initEventBus(process.env.REDIS_URL);
+    initEventBus(process.env.REDIS_URL); // conntect Auth service to Redis ??
     https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
       console.log(`auth service running on port ${PORT}`);
     });
@@ -52,6 +66,6 @@ start();
 process.on('SIGTERM', async () => {
   console.log('Shutting down auth service...');
   await closeEventBus();
-  await sequelize.close();
+  await prisma.$disconnect();
   process.exit(0);
 });
