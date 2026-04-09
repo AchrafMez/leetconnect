@@ -36,7 +36,7 @@ export default function MessageLayer({message}: MessageProp) {
 	}
 	return (
 		<div className="flex gap-3 mb-4">
-			<Avatar name={message.sender_name} image={message.sender_avatar} />
+			<Avatar name={message.sender_name} image={message.sender_avatar} size="sm" />
 			<div className="max-w-mb">
 				<div className="bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5">
 					<p className="text-sm text-foreground leading-relaxed">
