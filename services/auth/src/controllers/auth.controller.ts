@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
 import jwt from "jsonwebtoken";
 import prisma from '../lib/prisma';
+import fs from "fs";
+import { generateAccessToken, generateRefreshToken } from '../lib/token';
 
+const privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
 
 type AuthBody = {
     username?: unknown,
@@ -70,37 +73,62 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         }
 
         // Slow hash + salt
-        // 12 rounds is the industry standard for slow hashing security
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Save to Database
-        const newUser = await prisma.user.create({
-            data: {
-                // ive decided to store data as it is submitted 
-                // but in login i will lowercase the data to compare that way User123@gmail.com is the same as user123@gmail.com
-                username,
-                email,     
-                password: hashedPassword,
-            },
-            // Ensure we don't return the password string in the response
-            select: {
-                id: true,
-                username: true,
-                email: true,
-                createdAt: true
-            }
+        // // create user and its refresh token and save them both to DB , if prb happens dont save and do nothing 
+        const { user, refreshToken } = await prisma.$transaction(async (tx) => {
+            const newUser = await tx.user.create({
+                data: {
+                    // ive decided to store data as it is submitted 
+                    // but in login i will lowercase the data to compare that way User123@gmail.com is the same as user123@gmail.com
+                    username,
+                    email,     
+                    password: hashedPassword,
+                },
+                // Ensure we don't return the password string in the response
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    createdAt: true,
+                    role: true
+                }
+            });
+            // generate refresh token
+            const rt = await tx.refreshToken.create({
+                data: {
+                token: generateRefreshToken(),
+                userId: newUser.id,
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+                },
+            });
+
+            return { user: newUser, refreshToken: rt };
         });
 
-        return res.status(201).json({
-            message: `Welcome ${newUser.username} 🐱‍👓`,
-            user: newUser
+       
+        // generate access token
+        const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+        
+        // set HttpOnly cookie for Refresh Token
+        res.cookie('refreshToken', refreshToken.token, {
+            httpOnly: true, // Prevents XSS
+            secure: true,   // Requires HTTPS
+            sameSite: 'strict', // Prevents CSRF
+            path: '/api/auth/refresh', // Only send to refresh route
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
+        res.status(201).json({
+            message: "Welcome to LeetConnect",
+            accessToken,
+            user: { id: user.id, username: user.username, role: user.role }
         });
 
     } catch (error) {
         next(error); // Sends error to the shared errorHandler
     }
 };
-
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -135,15 +163,15 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({ error: "Invalid Password" });
         }
 
-        // generate jwt refresh or access ?
-        const token = jwt.sign(
-            { sub: user.id, email: user.email, username: user.username },
-            process.env.JWT_SECRET as string,
-            { expiresIn: "7d" }
-        );
+        // generate jwt refresh and access tokens using private key :D
+        const accessToken = jwt.sign( { sub: user.id, email: user.email, username: user.username }
+            , privateKey, { 
+            algorithm: 'RS256', 
+            expiresIn: '15m' 
+        });
 
         return res.status(200).json({
-            token,
+            accessToken,
             user: {
             id: user.id,
             email: user.email,
@@ -156,3 +184,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         next(error); // Sends error to the shared errorHandler
     }
 };
+
+// refresh route for generating new access token :3
+export const refresh = async(req: Request, res: Response, next: NextFunction) =>{
+    
+}

@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // url      = env("DATABASE_URL") 
 }
 
 model User {
@@ -30,6 +29,10 @@ model User {
   oauthProvider  String?
   oauthId        String?
 
+  // I used an array of refresh tokens because a user can log in from multiple devices 
+  //thus have multiple refresh tokens
+  refreshTokens RefreshToken[] // Relation
+  
   // Timestamps
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -42,4 +45,14 @@ enum Role {
   FREELANCER
   CLIENT
   ADMIN
+}
+
+model RefreshToken{
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   // tells the database which user this token belongs to
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) // relation
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

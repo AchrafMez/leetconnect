@@ -48,3 +48,6 @@ services/auth/.env
 #certs
 certs/
 tree.txt
+
+jwt_private.key
+jwt_public.key.pub

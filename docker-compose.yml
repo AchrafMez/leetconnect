@@ -79,6 +79,8 @@ services:
       - SSL_KEY_PATH=/etc/ssl/internal/auth.key
       - SSL_CERT_PATH=/etc/ssl/internal/auth.crt
       - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PRIVATE_KEY_PATH=/etc/ssl/internal/jwt_private.key
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
     volumes:
       - ./certs:/etc/ssl/internal:ro
   marketplace:
