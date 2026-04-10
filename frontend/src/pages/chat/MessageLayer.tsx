@@ -4,23 +4,27 @@ export interface Message {
 	id: 			number;
 	content: 		string;
 	sender_id: 		number;
-	sender_name: 	string;
-	sender_avatar?:	string;
 	created_at: 	string;
-	is_mine: 		boolean;
+	convers_id: 	number;
+	sender: {
+		username: 	string;
+		avatar: 	string;
+	}
 }
 
 interface MessageProp {
-	message: Message;
+	message: 		Message;
+	curr_user:		number;
 }
 
-export default function MessageLayer({message}: MessageProp) {
-	const time = new Date(message.created_at).toLocaleDateString([], {
+export default function MessageLayer({message, curr_user}: MessageProp) {
+	const is_mine = message.sender_id === curr_user;
+	const time = new Date(message.created_at).toLocaleTimeString([], {
 		hour: "2-digit",
 		minute: "2-digit"
 	});
 
-	if (message.is_mine) {
+	if (is_mine) {
 		return (
 			<div className="flex justify-end mb-4">
 				<div className="max-w-md">
@@ -36,8 +40,8 @@ export default function MessageLayer({message}: MessageProp) {
 	}
 	return (
 		<div className="flex gap-3 mb-4">
-			<Avatar name={message.sender_name} image={message.sender_avatar} size="sm" />
-			<div className="max-w-mb">
+			<Avatar name={message.sender.username} image={message.sender.avatar} size="sm" />
+			<div className="max-w-md">
 				<div className="bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5">
 					<p className="text-sm text-foreground leading-relaxed">
 						{message.content}
