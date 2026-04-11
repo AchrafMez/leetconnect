@@ -30,3 +30,16 @@ chmod 600 *.key
 chmod 644 ca.crt *.crt
 
 echo "certs generated successfully!"
+
+#generating keys 
+echo "gen JWT RS256 Keys..."
+# Generate the private key
+openssl genrsa -out jwt_private.key 2048
+# Extract the public key in PEM format
+openssl rsa -in jwt_private.key -pubout -out jwt_public.key
+
+# Secure the private key
+chmod 600 jwt_private.key
+chmod 644 jwt_public.key
+
+echo "JWT keys generated successfully!"
