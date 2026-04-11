@@ -10,6 +10,8 @@ import healthRoutes from './routes/health';
 import { initEventBus, closeEventBus } from '@leetconnect/shared';
 import { errorHandler } from '@leetconnect/shared';
 import { error } from 'console';
+import fs from 'fs';
+import https from 'https';
 
 const app = express();
 const server = http.createServer(app);
@@ -19,6 +21,12 @@ const PORT = 3003;
 const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
 });
+
+const sslOptions = {
+    key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
+    cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
+};
+
 
 // Middleware
 app.use(helmet());
@@ -58,7 +66,7 @@ async function start() {
     await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
     console.log('Chat models synced');
     initEventBus(process.env.REDIS_URL);
-    server.listen(PORT, '0.0.0.0', () => {
+      https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
       console.log(`Chat service running on port ${PORT}`);
     });
   } catch (err) {
