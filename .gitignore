@@ -47,4 +47,5 @@ services/auth/.env
 
 #certs
 certs/
-tree.txt
+/tree.txt
+/tests.md

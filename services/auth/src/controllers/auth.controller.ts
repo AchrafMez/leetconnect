@@ -236,9 +236,9 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 
 
 // logout => delete refreshToken from db and from httpOnly cookie
-// export const logout = async (req: Request, res: Response) => {
-//     const { refreshToken } = req.cookies;
-//     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
-//     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
-//     res.sendStatus(204);
-// };
+export const logout = async (req: Request, res: Response) => {
+    const { refreshToken } = req.cookies;
+    await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+    res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
+    res.sendStatus(204);
+};
