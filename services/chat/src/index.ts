@@ -12,7 +12,7 @@ import { errorHandler } from '@leetconnect/shared';
 import { error } from 'console';
 import fs from 'fs';
 import https from 'https';
-
+import testRoutes from './routes/test.routes';
 const app = express();
 const server = http.createServer(app);
 const PORT = 3003;
@@ -36,6 +36,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/chat', healthRoutes);
+app.use('/api/chat', testRoutes);
 
 // error handler (must be after all routes)
 app.use(errorHandler);

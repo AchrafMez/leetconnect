@@ -4,12 +4,11 @@ import fs from 'fs';
 import { Role } from './constants';
 
 const publicKeyPath = process.env.JWT_PUBLIC_KEY_PATH as string;
-console.log("path ->",publicKeyPath);
-// We load it once on startup. If it fails, the service won't start (Good for security)
+
+// We load the public key once on startup If it fails, the service won't start
 let publicKey: Buffer;
 try {
     publicKey = fs.readFileSync(publicKeyPath);
-    console.log("content ->",publicKey);
     console.log("JWT Public Key loaded successfully");
 } catch (err) {
     console.warn("JWT Public Key not found at startup. Middleware will fail until it's provided.");
@@ -41,7 +40,6 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ error: 'Malformed authorization header' });
   }
 
-  console.log("token -> ", token);
   try { // verify using asymmetric public key
     const decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] }) as unknown as JwtPayload;
     req.user = decoded; // contains token info like : id email username role
