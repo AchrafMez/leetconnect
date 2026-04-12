@@ -49,9 +49,9 @@ export default function About() {
               <p className="text-muted-foreground mb-4">
                 LeetConnect is our final capstone project <span className="text-foreground font-medium">ft_transcendence</span>, developed to validate our curriculum at the 42 Network. It is designed as a fully-featured proof of concept to demonstrate our mastery of advanced web architecture.
               </p>
-              <p className="text-muted-foreground">
+              {/* <p className="text-muted-foreground">
                 While it looks and feels like a premium startup, please note that this is strictly an educational project. There are no real payments, transactions, or live services. It's just a reflection of everything we’ve learned.
-              </p>
+              </p> */}
             </div>
 
             <div className="bg-accent/30 rounded-3xl p-8 md:p-12 border border-border/50 backdrop-blur-sm">

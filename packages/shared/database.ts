@@ -1,17 +1,14 @@
-// sequelize database connection used by all services
-// each service calls createDatabase() once at startup to connect to its own postgresql
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
-import { Sequelize } from 'sequelize';
 
-function createDatabase(databaseUrl?: string): Sequelize {
+//Creates a Postgres connection pool compatible with Prisma 7 Driver Adapters.
+// Used by services to bypass the Rust binary engine issues in Docker.
+
+export function createPrismaAdapter(databaseUrl?: string) {
     const url = databaseUrl || process.env.DATABASE_URL;
     if (!url) throw new Error('DATABASE_URL is required');
-    return new Sequelize(url, {
-        dialect: 'postgres',
-        logging: process.env.NODE_ENV === 'development' ? console.log : false,
-        pool: { max: 10, min: 2, acquire: 30000, idle: 10000 },
-        define: { timestamps: true, underscored: true },
-    });
-}
 
-export { createDatabase };
+    const pool = new pg.Pool({ connectionString: url });
+    return new PrismaPg(pool);
+}

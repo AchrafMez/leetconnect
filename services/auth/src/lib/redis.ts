@@ -1,0 +1,1 @@
+// Redis client for sessions/online status
