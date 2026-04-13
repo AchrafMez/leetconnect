@@ -1,33 +1,47 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import healthRoutes from './routes/health';
-import { errorHandler } from '@leetconnect/shared';
+import express from "express"
+import cors from "cors"
+import dotenv from "dotenv"
+import usersRoutes from "./routes/users"
+import jobsRoutes from "./routes/jobs"
+import { connectDb, disconnectDb } from './config/prisma'
+import { Server } from "http"
+
+dotenv.config();
+connectDb();
 
 const app = express();
-const PORT =  3005;
+const PORT = 3005;
 
-// middleware
-app.use(helmet());
 app.use(cors());
-app.use(morgan('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// routes
-app.use('/api/admin', healthRoutes);
+app.use('/api/admin/users', usersRoutes);
+app.use('/api/admin/jobs', jobsRoutes);
 
-// error handler (must be after all routes)
-app.use(errorHandler);
+const server: Server = app.listen(PORT, () => {
+	console.log(`Admin listening on PORT ${PORT}...`);
+})
 
-// start
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`admin service running on port ${PORT}`);
+process.on('unhandledRejection', (err) => {
+	console.error('Unhadled Rejection', err);
+	server.close(async () => {
+		await disconnectDb();
+		process.exit(1);
+	});
 });
 
-process.on('SIGTERM', () => {
-  console.log('shutting down admin service...');
-  process.exit(0);
+process.on('uncaughtException', async (err) => {
+	console.error('Uncaught Exception', err);
+	server.close(async () => {
+		await disconnectDb();
+		process.exit(1);
+	});
+});
+
+process.on('SIGTERM', async () => {
+	console.log('SIGTERM received, shutting down gracefully');
+	server.close(async () => {
+		await disconnectDb();
+		process.exit(0);
+	});
 });
