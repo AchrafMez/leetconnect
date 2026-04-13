@@ -12,7 +12,7 @@ export const UsersPage = () => {
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all');
-  const [deleteConfirm, setDeleteConfirm] = useState<Number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const filtered = users.filter(u => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
@@ -20,15 +20,15 @@ export const UsersPage = () => {
     return matchSearch && matchRole;
   });
 
-  function handleRoleChange(userId: Number, newRole: Role) {
+  function handleRoleChange(userId: string, newRole: Role) {
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
   }
-  function handleStatusToggle(userId: Number) {
+  function handleStatusToggle(userId: string) {
     setUsers(prev => prev.map(u =>
       u.id === userId ? { ...u, status: u.status === 'active' ? 'suspended' : 'active' } : u
     ));
   }
-  function handleDelete(userId: Number) {
+  function handleDelete(userId: string) {
     setUsers(prev => prev.filter(u => u.id !== userId));
     setDeleteConfirm(null);
   }
@@ -152,6 +152,7 @@ export const UsersPage = () => {
                         </div>
                       ) : (
                         <button
+													title='delete user'
                           onClick={() => setDeleteConfirm(user.id)}
                           className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
                           <HiOutlineUserMinus className='w-4 h-4' />

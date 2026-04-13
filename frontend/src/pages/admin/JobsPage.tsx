@@ -53,8 +53,8 @@ function StatCard({ label, value, sub, subColor, iconBg, icon }: {
 function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
 	job: Job;
 	onClose: () => void;
-	onDelete: (id: Number) => void;
-	onStatusChange: (id: Number, status: JobStatus) => void;
+	onDelete: (id: string) => void;
+	onStatusChange: (id: string, status: JobStatus) => void;
 }) {
 	const [ confirmDelete, setConfirmDelete ] = useState(false);
 	const s = STATUS_STYLES[job.status];
@@ -192,14 +192,14 @@ export const JobsPage = () => {
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<JobCategory | 'all'>('all');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<Number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  function handleDelete(id: Number) {
+  function handleDelete(id: string) {
     setJobs(prev => prev.filter(j => j.id !== id));
     setDeleteConfirm(null);
   }
 
-  function handleStatusChange(id: Number, status: JobStatus) {
+  function handleStatusChange(id: string, status: JobStatus) {
     setJobs(prev => prev.map(j => j.id === id ? { ...j, status } : j));
     setSelectedJob(prev => prev?.id === id ? { ...prev, status } : prev);
   }
