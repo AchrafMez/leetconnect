@@ -23,7 +23,7 @@ function check_pending(status: string): void {
 
 export async function send(req: Request, res: Response, next: NextFunction) {
 	try {
-		const sender_id   = parse_user_id(req.body.sender_id, 'sender_id');
+		const sender_id   = parse_user_id(req.user?.userId, 'sender_id');
 		const receiver_id = parse_user_id(req.body.receiver_id, 'receiver_id');
 
 		if (sender_id === receiver_id)
@@ -40,15 +40,21 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 
 		const exist = await prisma.friendRequest.findFirst({
 			where: {
-				status: 'PENDING',
 				OR: [
 					{sender_id: sender_id, receiver_id: receiver_id},
 					{sender_id: receiver_id, receiver_id: sender_id}
 				]
 			}
 		});
-		if (exist)
-			throw new err.BadRequestError('a pending request already exists');
+
+		if (exist) {
+			if (exist.status === 'PENDING')
+				throw new err.BadRequestError('a pending request already exists');
+			if (exist.status === 'ACCEPTED')
+				throw new err.BadRequestError('already friends');
+
+			await prisma.friendRequest.delete({where: {id: exist.id}});
+		}
 
 		const request = await prisma.friendRequest.create({
 			data: {
@@ -67,7 +73,7 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 export async function accept(req: Request, res: Response, next: NextFunction) {
 	try {
 		const request_id = parse_int_id(req.params.id, 'request_id');
-		const user_id	 = parse_user_id(req.body.receiver_id, 'receiver_id');
+		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
 
 		const request = await prisma.friendRequest.findUnique({
 			where: {id: request_id}
@@ -93,7 +99,7 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 export async function reject(req: Request, res: Response, next: NextFunction) {
 	try {
 		const request_id = parse_int_id(req.params.id, 'request_id');
-		const user_id	 = parse_user_id(req.body.receiver_id, 'user_id');
+		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
 
 		const request = await prisma.friendRequest.findUnique({
 			where: {id: request_id}
@@ -124,6 +130,15 @@ export async function list_incoming(req: Request, res: Response, next: NextFunct
 				receiver_id: user_id,
 				status: 'PENDING'
 			},
+			include: {
+				sender: {
+					select: {
+						id: true,
+						username: true,
+						avatar: true
+					}
+				}
+			},
 			orderBy: {created_at: 'desc'}
 		});
 		res.status(200).json(reguest);
@@ -140,9 +155,28 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 				sender_id: user_id,
 				status: 'PENDING'
 			},
+			include: {
+				receicer: {
+					select: {
+						id: true,
+						username: true,
+						avatar: true
+					}
+				}
+			},
 			orderBy: {created_at: 'desc'}
 		});
-		res.status(200).json(reguest);
+
+		const mapped = reguest.map(({receicer, ...rest}: 
+			{ receicer: {
+				id: string;
+				username: string;
+				avatar: string
+			}; [key: string]: unknown
+		}) => ({...rest, receiver: receicer}));
+
+		res.status(200).json(mapped);
+
 	} catch (err) {
 		next(err);
 	}
@@ -151,7 +185,7 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 export async function list(req: Request, res: Response, next: NextFunction) {
 	try {
 		const user_id = parse_user_id(req.user?.userId, 'user_id');
-		const request = await prisma.friendRequest.findMany({
+		const requests = await prisma.friendRequest.findMany({
 			where: {
 				status: 'ACCEPTED',
 				OR: [
@@ -161,7 +195,30 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 			},
 			orderBy: {created_at: 'desc'}
 		});
-		res.status(200).json(request);
+
+		const friend_ids = requests.map((r: { sender_id: string; receiver_id: string }) =>
+			r.sender_id === user_id ? r.receiver_id : r.sender_id
+		);
+
+		const users = await prisma.user.findMany({
+			where: {id: {in: friend_ids}},
+			select: {
+				id: true,
+				username: true,
+				avatar: true,
+				isOnline: true
+			}
+		});
+
+		const friends = users.map((u:
+			{ id: string; username: string; avatar: string; isOnline: boolean }) => ({
+				id:        u.id,
+				username:  u.username,
+				avatar:    u.avatar,
+				is_online: u.isOnline,
+		}));
+
+		res.status(200).json(friends);
 	} catch (err) {
 		next(err);
 	}
@@ -207,7 +264,7 @@ export async function remove(req: Request, res: Response, next: NextFunction) {
 				]
 			},
 		});
-		console.log('>>>>>', friendship);
+		// console.log('>>>>>', friendship);
 		if (!friendship)
 			throw new err.NotFoundError('friendship not found');
 

@@ -147,9 +147,11 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 				where: { id: conversation.id },
 				include: {
 					members: {
-						select: { user_id: true, joined_at: true },
-					},
-				},
+						select: {
+							user_id: true, joined_at: true
+						}
+					}
+				}
 			});
 		});
 

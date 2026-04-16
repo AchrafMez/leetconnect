@@ -29,25 +29,32 @@ function getUserIdFromToken(): string {
 const CURRENT_USER_ID = getUserIdFromToken();
 
 export default function Messages() {
+
 	const [conversations, setConversations] = useState<Conversation[]>([]);
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [active_id, setActiveId] = useState<number | null>(null);
+	const [next_cursor, setNext_cursor] = useState<number | null>(null);
+	const [loading_more, setLoading_more] = useState(false);
 
 	// load conversations
 	useEffect(() => {
+		if (!CURRENT_USER_ID) return;
 		chatApi.listConversations(CURRENT_USER_ID)
 			.then(setConversations)
 			.catch(console.error);
-	}, []);
+	}, [CURRENT_USER_ID]);
 
 	// load messages when active conversation changes
 	useEffect(() => {
-		if (!active_id) { setMessages([]); return; }
+		if (!active_id || !CURRENT_USER_ID) { setMessages([]); setNext_cursor(null); return; }
 
 		chatApi.listMessages(active_id, CURRENT_USER_ID)
-			.then((data) => setMessages(data.messages.reverse()))
+			.then((data) => {
+				setMessages(data.messages);
+				setNext_cursor(data.next_cursor);
+			})
 			.catch(console.error);
-	}, [active_id]);
+	}, [active_id, CURRENT_USER_ID]);
 
 	// join room and listen for new messages
 	useEffect(() => {
@@ -67,7 +74,21 @@ export default function Messages() {
 			socket.emit('leave_covers', active_id);
 			socket.off('new_message', handler);
 		};
-	}, [active_id]);
+	}, [active_id, CURRENT_USER_ID]);
+
+	const loadMore = useCallback(async () => {
+		if (!active_id || !next_cursor || loading_more) return;
+		setLoading_more(true);
+		try {
+			const data = await chatApi.listMessages(active_id, CURRENT_USER_ID, 20, next_cursor);
+			setMessages((prev) => [...data.messages, ...prev]);
+			setNext_cursor(data.next_cursor);
+		} catch (err) {
+			console.error('Failed to load older messages:', err);
+		} finally {
+			setLoading_more(false);
+		}
+	}, [active_id, CURRENT_USER_ID, next_cursor, loading_more]);
 
 	const handleSend = useCallback(async (content: string) => {
 		if (!active_id) return;
@@ -77,11 +98,10 @@ export default function Messages() {
 		} catch (err) {
 			console.error('Send failed:', err instanceof Error ? err.message : err);
 		}
-	}, [active_id]);
+	}, [active_id, CURRENT_USER_ID]);
 
 	const active_convers = conversations.find((c) => c.id === active_id);
 
-	// name/avatar for the ChatBox header
 	const convers_name = active_convers
 		? active_convers.type === 'Direct'
 			? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)?.user.username ?? 'Unknown'
@@ -91,6 +111,10 @@ export default function Messages() {
 	const convers_avatar = active_convers?.type === 'Direct'
 		? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)?.user.avatar ?? ''
 		: '';
+
+	const convers_username = active_convers?.type === 'Direct'
+		? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)?.user.username
+		: undefined;
 
 	return (
 		<div className="flex fixed inset-0 top-16">
@@ -105,9 +129,13 @@ export default function Messages() {
 				<ChatBox
 					convers_name={convers_name}
 					convers_avatar={convers_avatar}
+					convers_username={convers_username}
 					messages={messages}
 					curr_user={CURRENT_USER_ID}
 					onSendMessage={handleSend}
+					onLoadMore={loadMore}
+					has_more={next_cursor !== null}
+					loading_more={loading_more}
 				/>
 			) : (
 				<div className="flex-1 flex items-center justify-center text-muted-foreground">

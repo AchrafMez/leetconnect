@@ -39,7 +39,7 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 		const messages = await prisma.message.findMany({
 			where: { convers_id: convers_id},
-			orderBy: { created_at: 'desc'},
+			orderBy: { id: 'desc'},
 			take: limit + 1,
 			...(cursor && {
 				cursor: {id: cursor},
@@ -59,10 +59,11 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 			}
 		});
 
-		const has_more =messages.length > limit;
+		const has_more = messages.length > limit;
 		if (has_more) messages.pop();
 
 		const next_cursor = has_more ? (messages[messages.length - 1]!.id) : null;
+		messages.reverse();
 
 		res.status(200).json({ messages, next_cursor});
 	} catch (err) {

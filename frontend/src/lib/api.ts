@@ -153,6 +153,57 @@ export const chatApi = {
 	health: () => api<HealthResponse>('/chat/health'),
 };
 
+export interface FriendRequest {
+    id:             number;
+    sender_id:      string;
+    receiver_id:    string;
+    status:         'PENDING' | 'ACCEPTED' | 'REJECTED';
+    created_at:     string;
+    updated_at:     string;
+
+    sender?:   {id: string, username: string, avatar: string};
+    receiver?: {id: string, username: string, avatar: string};
+}
+
+export interface Friend {
+    id:         string;
+    username:   string;
+    avatar:     string;
+    is_online:  boolean;
+}
+
+export const friendApi = {
+    sendRequest: (receiver_id: string) =>
+        api<FriendRequest>('/friend/requests', {
+            method: 'POST',
+            body: {receiver_id}
+        }),
+    
+    acceptRequest: (request_id: number) =>
+        api<FriendRequest>(`/friend/requests/${request_id}/accept`, {
+            method: 'PATCH'
+        }),
+
+    rejectRequest: (request_id: number) =>
+        api<FriendRequest>(`/friend/requests/${request_id}/reject`, {
+            method: 'PATCH'
+        }),
+
+    cancelRequest: (request_id: number) =>
+        api<void>(`/friend/requests/${request_id}`, {
+            method: 'DELETE'
+        }),
+
+    listIncoming: () => api<FriendRequest[]>('/friend/requests/incoming'),
+    listOutgoing: () => api<FriendRequest[]>('/friend/requests/outgoing'),
+    listFriends: () => api<Friend[]>('/friend/requests/friends'),
+
+    removeFriend: (friend_id: string) => api<void>('/friend/requests/friends', {
+            method: 'DELETE',
+            body: {friend_id},
+        })
+}
+
 export const analyticsApi = {
     getDashboard: () => api('/analytics/dashboard'),
     health: () => api<HealthResponse>('/analytics/health'),

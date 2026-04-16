@@ -6,6 +6,7 @@ export function getSocket(): Socket {
 	if (!socket) {
 		socket = io({
 			transports: ['websocket'],
+			auth: {token: localStorage.getItem('token') ?? ''},
 			autoConnect: true,
 		});
 	}
