@@ -8,6 +8,8 @@ import healthRoutes from './routes/health';
 import { initEventBus, closeEventBus, errorHandler } from '@leetconnect/shared';
 import fs from 'fs';
 import https from 'https';
+import jobsRoutes from "./routes/jobs";
+import proposalsRoutes from "./routes/proposals";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -27,7 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes
 app.use('/api/market', healthRoutes);
-
+app.use("/api/jobs", jobsRoutes);
+app.use("/api/proposals", proposalsRoutes);
 
 // global error handler
 app.use(errorHandler);
