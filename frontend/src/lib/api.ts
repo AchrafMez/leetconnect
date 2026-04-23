@@ -2,6 +2,9 @@
 // All requests go through Nginx proxy (relative paths)
 // Automatically attaches JWT token from localStorage
 
+import type { Conversation } from '../pages/chat/ConverLayer';
+import type { Message } from '../pages/chat/MessageLayer';
+
 const API_BASE = '/api';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -26,18 +29,18 @@ export interface Job {
     createdAt: string;
 }
 
-export interface Conversation {
-    id: string;
-    title: string;
-    updatedAt: string;
-}
+// export interface Conversation {
+//     id: string;
+//     title: string;
+//     updatedAt: string;
+// }
 
-export interface Message {
-    id: string;
-    conversationId: string;
-    content: string;
-    createdAt: string;
-}
+// export interface Message {
+//     id: string;
+//     conversationId: string;
+//     content: string;
+//     createdAt: string;
+// }
 
 export interface HealthResponse {
     status: 'ok' | 'degraded' | 'down';
@@ -102,11 +105,119 @@ export const marketApi = {
     health: () => api<HealthResponse>('/market/health'),
 };
 
+interface PaginatedMessages {
+	messages: 		Message[];
+	next_cursor:	number | null;
+}
+
+interface CreateConversPayload {
+    type: 'Direct' | 'Group';
+    name?: string;
+    member_ids: string[];
+}
+
 export const chatApi = {
-    getConversations: () => api<Conversation[]>('/chat/conversations'),
-    getMessages: (convId: string) => api<Message[]>(`/chat/conversations/${convId}/messages`),
-    health: () => api<HealthResponse>('/chat/health'),
+	// ---------------------- Conversations ----------------------
+	listConversations: () =>
+		api<Conversation[]>(`/chat/convers`),
+
+	getConversation: (convers_id: number) =>
+		api<Conversation>(`/chat/convers/${convers_id}`),
+
+	leaveConversation: (convers_id: number, user_id: string) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}`, {
+			method: 'DELETE',
+			body: { user_id: user_id },
+		}),
+
+	// ---------------------- Messages ----------------------
+	listMessages: (convers_id: number, limit = 20, cursor?: number) => {
+		let url = `/chat/convers/${convers_id}/messages?limit=${limit}`;
+		if (cursor)
+            url += `&cursor=${cursor}`;
+		return api<PaginatedMessages>(url);
+	},
+
+	sendMessage: (convers_id: number, content: string) =>
+		api<Message>(`/chat/convers/${convers_id}/messages`, {
+			method: 'POST',
+			body: { content: content },
+		}),
+
+	getMessage: (convers_id: number, msg_id: number) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
+			body: { msg_id: msg_id },
+		}),
+
+	deleteMessage: (convers_id: number, msg_id: number) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
+			method: 'DELETE'
+		}),
+
+	// ---------------------- Convers ----------------------
+        createConversation: (data: CreateConversPayload) =>
+        api<Conversation>('/chat/convers', {
+            method: 'POST',
+            body: {
+                type: data.type,
+                name: data.name,
+                member_ids: data.member_ids,
+            },
+        }),
+	// ---------------------- Health ----------------------
+	health: () => api<HealthResponse>('/chat/health'),
 };
+
+export interface FriendRequest {
+    id:             number;
+    sender_id:      string;
+    receiver_id:    string;
+    status:         'PENDING' | 'ACCEPTED' | 'REJECTED';
+    created_at:     string;
+    updated_at:     string;
+
+    sender?:   {id: string, username: string, avatar: string};
+    receiver?: {id: string, username: string, avatar: string};
+}
+
+export interface Friend {
+    id:         string;
+    username:   string;
+    avatar:     string;
+    is_online:  boolean;
+}
+
+export const friendApi = {
+    sendRequest: (receiver_id: string) =>
+        api<FriendRequest>('/friend/requests', {
+            method: 'POST',
+            body: {receiver_id}
+        }),
+    
+    acceptRequest: (request_id: number) =>
+        api<FriendRequest>(`/friend/requests/${request_id}/accept`, {
+            method: 'PATCH'
+        }),
+
+    rejectRequest: (request_id: number) =>
+        api<FriendRequest>(`/friend/requests/${request_id}/reject`, {
+            method: 'PATCH'
+        }),
+
+    cancelRequest: (request_id: number) =>
+        api<void>(`/friend/requests/${request_id}`, {
+            method: 'DELETE'
+        }),
+
+    listIncoming: () => api<FriendRequest[]>('/friend/requests/incoming'),
+    listOutgoing: () => api<FriendRequest[]>('/friend/requests/outgoing'),
+    listFriends: () => api<Friend[]>('/friend/requests/friends'),
+
+    removeFriend: (friend_id: string) => api<void>('/friend/requests/friends', {
+            method: 'DELETE',
+            body: {friend_id},
+        })
+}
 
 export const analyticsApi = {
     getDashboard: () => api('/analytics/dashboard'),

@@ -1,0 +1,30 @@
+.
+├── Dockerfile
+├── package.json
+├── prisma
+│   └── schema.prisma
+├── prisma.config.ts
+├── src
+│   ├── config
+│   │   └── database.ts
+│   ├── controllers
+│   │   └── auth.controller.ts
+│   ├── index.ts
+│   ├── lib
+│   │   ├── prisma.ts
+│   │   └── redis.ts
+│   ├── middlewares
+│   │   ├── error.ts
+│   │   └── validate.ts
+│   ├── models
+│   │   ├── User.ts
+│   │   └── index.ts
+│   ├── routes
+│   │   ├── auth.routes.ts
+│   │   └── health.ts
+│   └── validators
+│       └── auth.validator.ts
+├── tree.txt
+└── tsconfig.json
+
+10 directories, 18 files

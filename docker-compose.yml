@@ -37,6 +37,8 @@ services:
       - ./scripts/init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
     networks:
       - leetconnect
+    ports:
+      - "5432:5432"
   redis:
     container_name: redis
     build:
@@ -67,6 +69,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    ports:
+    - "5555:5555"  # exposed this port so I can connect to prisma ui
     environment:
       - DATABASE_URL=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASS}@postgres:5432/${AUTH_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
@@ -75,11 +79,13 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - JWT_PRIVATE_KEY_PATH=/etc/ssl/internal/jwt_private.key
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
       # - SSL_KEY_PATH=/etc/ssl/internal/auth.key
       # - SSL_CERT_PATH=/etc/ssl/internal/auth.crt
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
-    # volumes:
-    #   - ./certs:/etc/ssl/internal:ro
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
   marketplace:
     container_name: marketplace
     # image_name: marketplace
@@ -99,11 +105,12 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
       - AUTH_SERVICE_URL=http://auth:3001
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
       # - SSL_KEY_PATH=/etc/ssl/internal/marketplace.key
       # - SSL_CERT_PATH=/etc/ssl/internal/marketplace.crt
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
-    # volumes:
-    #   - ./certs:/etc/ssl/internal:ro
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
   chat:
     container_name: chat
     # image_name: chat
@@ -123,11 +130,12 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
       - AUTH_SERVICE_URL=http://auth:3001
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
       # - SSL_KEY_PATH=/etc/ssl/internal/chat.key
       # - SSL_CERT_PATH=/etc/ssl/internal/chat.crt
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
-    # volumes:
-    #   - ./certs:/etc/ssl/internal:ro
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
   analytics:
     container_name: analytics
     # image_name: analytics
@@ -170,11 +178,12 @@ services:
       - AUTH_SERVICE_URL=http://auth:3001
       - MARKETPLACE_SERVICE_URL=http://marketplace:3002
       - ANALYTICS_SERVICE_URL=http://analytics:3004
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
       # - SSL_KEY_PATH=/etc/ssl/internal/admin.key
       # - SSL_CERT_PATH=/etc/ssl/internal/admin.crt
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
-    # volumes:
-    #   - ./certs:/etc/ssl/internal:ro
   frontend:
     container_name: frontend
     build: ./frontend

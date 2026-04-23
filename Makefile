@@ -1,31 +1,31 @@
-up:
+up: certs
 	docker compose up --build
 
-up-d:
+up-d: certs
 	docker compose up --build -d
 
 down:
 	docker compose down
 
-re: clean
+re: clean certs
 	docker compose up --build -d
 
-# certs:
-# 	@if [ ! -d "./certs" ]; then \
-# 		echo "gen local SSL certs..."; \
-# 		chmod +x scripts/gen-certs.sh; \
-# 		./scripts/gen-certs.sh; \
-# 	else \
-# 		echo "certs already exist."; \
-# 	fi
+certs:
+	@if [ ! -d "./certs" ]; then \
+		echo "gen local SSL certs..."; \
+		chmod +x scripts/gen-certs.sh; \
+		./scripts/gen-certs.sh; \
+	else \
+		echo "certs already exist."; \
+	fi
 
 clean:
 	docker compose down -v
-	rm -rf
+	sudo rm -rf certs
 
 fclean:
 	docker compose down -v --rmi all
-	rm -rf
+	sudo rm -rf certs
 
 logs:
 	docker compose logs -f
@@ -64,3 +64,7 @@ health:
 	@echo -n "\nanalytics: "; curl -sk https://localhost/api/analytics/health || echo "not reachable"
 	@echo -n "\nadmin: "; curl -sk https://localhost/api/admin/health || echo "not reachable"
 	@echo ""
+
+seed:
+	docker cp scripts/seed.js auth:/app/service/seed.js
+	docker exec -w /app/service auth node seed.js

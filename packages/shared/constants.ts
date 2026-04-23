@@ -6,11 +6,23 @@
 // services: internal urls to call other services via rest
 
 export const ROLES = {
-    CLIENT: 'client',
-    FREELANCER: 'freelancer',
-    ADMIN: 'admin',
+    CLIENT: 'CLIENT',
+    FREELANCER: 'FREELANCER',
+    ADMIN: 'ADMIN',
   } as const;
   
+export const AUTH_EVENTS = {
+  USER_REGISTERED: 'user.registered',
+};
+
+// The data sent to other services
+export interface UserRegisteredPayload {
+  id: string;
+  email: string;
+  username: string;
+  role: string;
+}
+
   export const JOB_STATUS = {
     OPEN: 'open',
     IN_PROGRESS: 'in_progress',
@@ -39,7 +51,7 @@ export const ROLES = {
   } as const;
   
   export const EVENTS = {
-    USER_REGISTERED: 'user.registered',
+    // USER_REGISTERED: 'user.registered',
     USER_ONLINE: 'user.online',
     USER_OFFLINE: 'user.offline',
     JOB_CREATED: 'job.created',
@@ -62,3 +74,4 @@ export type ProposalStatus = typeof PROPOSAL_STATUS[keyof typeof PROPOSAL_STATUS
 export type ContractStatus = typeof CONTRACT_STATUS[keyof typeof CONTRACT_STATUS];
 export type FriendshipStatus = typeof FRIENDSHIP_STATUS[keyof typeof FRIENDSHIP_STATUS];
 export type Event = typeof EVENTS[keyof typeof EVENTS];
+export type AuthEvent = typeof AUTH_EVENTS[keyof typeof AUTH_EVENTS];
