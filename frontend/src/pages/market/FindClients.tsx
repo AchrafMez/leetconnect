@@ -4,7 +4,10 @@ import { Briefcase, MapPin, DollarSign } from "lucide-react";
 type ClientJob = {
   id: string | number;
   title: string;
-  client: string;
+  client: {
+    name: string;
+    rating: number;
+  };
   budget: number;
   location: string;
   skills: string[];

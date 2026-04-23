@@ -45,32 +45,98 @@ import SideBar from "./components/market/SideBar";
 import PostJob from "./pages/market/PostJob";
 import Freelencers from "./pages/market/Freelencers";
 import Dashboard from "./pages/market/Dashbord";
-import FreelancerDashboardPage from "./pages/market/Dashb";
+import FreelancerDashboardPage from "./pages/market/FreelancerDashboardPage";
 import FindClients from "./pages/market/FindClients";
+import JobDetails from "./pages/market/JobDetails";
+
+// import { Routes, Route } from "react-router-dom";
+// import SideBar from "./components/SideBar";
+// import Dashboard from "./pages/Dashboard";
+// import PostJob from "./pages/PostJob";
+// import Freelencers from "./pages/Freelencers";
+// import FindClients from "./pages/FindClients";
+// import FreelancerDashboardPage from "./pages/FreelancerDashboardPage";
 
 function App() {
-  const auth = "client";
+  // 🔥 change ici pour tester
+  const auth = "client"; // "client" ou "freelancer"
 
+  const jobs = [
+    {
+      id: "1",
+      title: "Développeur React pour dashboard freelance",
+      description:
+        "Créer un dashboard moderne avec React et Tailwind pour une plateforme freelance.",
+      budget: 500,
+      category: "Développement Web",
+      skills: ["React", "Tailwind", "API REST"],
+      client: {
+        name: "Ahmed Benali",
+        rating: 4.8,
+      },
+      createdAt: "2026-04-15",
+    },
+    {
+      id: "2",
+      title: "Designer UI/UX pour application mobile",
+      description:
+        "Concevoir une interface moderne et intuitive pour une app de livraison.",
+      budget: 300,
+      category: "Design",
+      skills: ["Figma", "UX Research", "Prototyping"],
+      client: {
+        name: "Sara El Amrani",
+        rating: 4.6,
+      },
+      createdAt: "2026-04-18",
+    },
+    {
+      id: "3",
+      title: "Développeur Node.js backend API",
+      description: "Créer une API sécurisée avec Express et JWT.",
+      budget: 400,
+      category: "Backend",
+      skills: ["Node.js", "Express", "JWT", "MongoDB"],
+      client: {
+        name: "Youssef Karim",
+        rating: 4.9,
+      },
+      createdAt: "2026-04-10",
+    },
+  ];
 
-<FindClients jobs={jobs} />
   return (
     <div className="flex h-screen">
       <SideBar />
 
       <div className="flex-1 overflow-auto">
         <Routes>
-          {auth === "client" ? (
+          {/* Dashboard dynamique */}
+          <Route
+            path="/"
+            element={auth === "client" ? (<Dashboard />) : (
+                <FreelancerDashboardPage />
+              )
+            }
+          />
+
+          {/* Routes CLIENT */}
+          {auth === "client" && (
             <>
               <Route path="/myJobs" element={<PostJob />} />
               <Route path="/freelencers" element={<Freelencers />} />
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/jobs/:id" element={<JobDetails />} />
             </>
-          ) : (
+          )}
+
+          {/* Routes FREELANCER */}
+          {auth === "freelancer" && (
             <>
-            <Route path="/" element={<FreelancerDashboardPage />} />
-            <Route path="/freelencers" element={<FindClients />} />
+              <Route
+                path="/freelancers"
+                element={<FindClients jobs={jobs} />}
+              />
             </>
-            
           )}
         </Routes>
       </div>
