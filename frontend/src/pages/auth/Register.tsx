@@ -1,5 +1,3 @@
-// @nobenai
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,7 +7,6 @@ import Navbar from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Eye, EyeOff } from 'lucide-react';
 
-type UserRole = 'freelancer' | 'client';
 
 export default function Register() {
     const navigate = useNavigate();
@@ -17,17 +14,15 @@ export default function Register() {
     const [error, setError] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    // add setter !!!
-    const [userRole, setUserRole] = useState<UserRole>('freelancer');
 
     const [formData, setFormData] = useState({
         username: '',
-        firstName: '',
-        lastName: '',
+        firstname: '',
+        lastname: '',
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'FREELANCER' as 'FREELANCER' | 'CLIENT', // Default value
+        type: 'FREELANCER' as 'FREELANCER' | 'CLIENT', // Default value
         agreeToTerms: false,
     });
 
@@ -36,12 +31,12 @@ export default function Register() {
     const validateForm = (): boolean => {
         const errors: Record<string, string> = {};
 
-            if (!formData.firstName.trim()) {
-                errors.firstName = 'First name is required';
+            if (!formData.firstname.trim()) {
+                errors.firstname = 'First name is required';
             }
 
-            if (!formData.lastName.trim()) {
-                errors.lastName = 'Last name is required';
+            if (!formData.lastname.trim()) {
+                errors.lastname = 'Last name is required';
             }
 
             if (formData.username.trim().length < 2) {
@@ -144,7 +139,7 @@ export default function Register() {
                     <CardHeader className="space-y-2 text-center">
                         <CardTitle className="text-2xl font-semibold">Create your account</CardTitle>
                         <CardDescription>
-                            Start your {userRole === 'freelancer' ? 'freelancing' : 'hiring'} journey in seconds, no credit card required.
+                            Start your {formData.type === 'FREELANCER' ? 'freelancing' : 'hiring'} journey in seconds, no credit card required.
                         </CardDescription>
                     </CardHeader>
 
@@ -177,7 +172,7 @@ export default function Register() {
                         <div
                             className={`
                             absolute top-1 bottom-1 w-1/2 rounded-md bg-primary transition-transform duration-300
-                            ${formData.role === 'FREELANCER' ? 'translate-x-0' : 'translate-x-full'}
+                            ${formData.type === 'FREELANCER' ? 'translate-x-0' : 'translate-x-full'}
                             `}
                         />
 
@@ -186,11 +181,11 @@ export default function Register() {
                             <button
                             key={r}
                             type="button"
-                            onClick={() => setFormData({ ...formData, role: r })}
+                            onClick={() => setFormData({ ...formData, type: r })}
                             className={`
                                 relative z-10 flex-1 py-2 px-3 rounded-md text-sm font-medium
                                 transition-colors duration-200
-                                ${formData.role === r ? 'text-white' : 'text-foreground-muted hover:text-foreground'}
+                                ${formData.type === r ? 'text-white' : 'text-foreground-muted hover:text-foreground'}
                             `}
                             >
                             {r === 'FREELANCER' ? 'Join as Freelancer' : 'Hire Talent'}
@@ -202,13 +197,13 @@ export default function Register() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-xs uppercase font-bold text-foreground-muted">First Name</label>
-                                    <input name="firstName" value={formData.firstName} onChange={handleChange} className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none" placeholder="First name"/>
-                                    {validationErrors.firstName && <p className="text-[10px] text-red-400">{validationErrors.firstName}</p>}
+                                    <input name="firstname" value={formData.firstname} onChange={handleChange} className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none" placeholder="First name"/>
+                                    {validationErrors.firstname && <p className="text-[10px] text-red-400">{validationErrors.firstname}</p>}
                                 </div>
                                 <div className="space-y-1">
                                     <label className="text-xs uppercase font-bold text-foreground-muted">Last Name</label>
-                                    <input name="lastName" value={formData.lastName} onChange={handleChange} className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none" placeholder="Last name"/>
-                                    {validationErrors.lastName && <p className="text-[10px] text-red-400">{validationErrors.lastName}</p>}
+                                    <input name="lastname" value={formData.lastname} onChange={handleChange} className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none" placeholder="Last name"/>
+                                    {validationErrors.lastname && <p className="text-[10px] text-red-400">{validationErrors.lastname}</p>}
                                 </div>
                             </div>
                             

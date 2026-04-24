@@ -24,9 +24,11 @@ export interface User {
     id: string;
     email: string;
     username: string; // Used 'username' instead of 'name'
-    firstName: string;
-    lastName: string;
-    role: 'CLIENT' | 'FREELANCER' | 'ADMIN';
+    firstname: string;
+    lastname: string;
+    // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
+    role: 'ADMIN' | 'USER' | 'MODERATOR';
+    type: 'CLIENT' | 'FREELANCER';
 }
 
 export interface Job {
@@ -62,10 +64,11 @@ export interface LoginRequest {
 export interface RegisterRequest {
     email: string;
     username: string;
-    firstName: string;
-    lastName: string;
+    firstname: string;
+    lastname: string;
     password: string;
-    role: 'CLIENT' | 'FREELANCER';
+    // role: 'CLIENT' | 'FREELANCER'; old
+    type: 'CLIENT' | 'FREELANCER'; // Changed from role
 }
 
 export interface AuthResponse {
