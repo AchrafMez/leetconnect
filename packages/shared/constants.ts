@@ -25,7 +25,10 @@ export interface UserRegisteredPayload {
   id: string;
   email: string;
   username: string;
+  firstname: string;
+  lastname: string;
   role: string;
+  type: string;
 }
 
   export const JOB_STATUS = {

@@ -1,34 +1,18 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { chatApi, type UserProfile } from '../../lib/api';
 
 export default function ProfilePage() {
 	const { username } = useParams<{ username: string }>();
-	const [data, setData]   = useState<unknown>(null);
+	const [user, setUser]   = useState<UserProfile | null>(null);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (!username) return;
-		setData(null);
+		setUser(null);
 		setError(null);
-
-		fetch(`/api/chat/users/${username}`, {
-			headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-		})
-			.then(async (r) => {
-				const text = await r.text();
-				const ctype = r.headers.get('content-type') ?? '';
-				if (!r.ok) {
-					throw new Error(`${r.status} ${r.statusText}\n\n${text.slice(0, 300)}`);
-				}
-				if (!ctype.includes('application/json')) {
-					throw new Error(
-						`Expected JSON, got ${ctype || 'no content-type'}.\n` +
-						`First 300 chars of response:\n${text.slice(0, 300)}`
-					);
-				}
-				return JSON.parse(text);
-			})
-			.then(setData)
+		chatApi.getUser(username)
+			.then(setUser)
 			.catch((e) => setError(String(e)));
 	}, [username]);
 
@@ -48,12 +32,12 @@ export default function ProfilePage() {
 			<div className="p-4 rounded-lg bg-secondary text-sm">
 				<div className="text-muted-foreground mb-2">GET /api/chat/users/{username}</div>
 				{error && <pre className="text-destructive">{error}</pre>}
-				{data !== null && !error && (
+				{user && !error && (
 					<pre className="whitespace-pre-wrap break-all">
-						{JSON.stringify(data, null, 2)}
+						{JSON.stringify(user, null, 2)}
 					</pre>
 				)}
-				{data === null && !error && <div className="opacity-60">loading…</div>}
+				{!user && !error && <div className="opacity-60">loading…</div>}
 			</div>
 		</div>
 	);

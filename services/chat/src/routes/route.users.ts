@@ -14,6 +14,8 @@ router.get('/users/:username', authMiddleware, async (req: Request, res: Respons
 						select: {
 							id: true,
 							username: true,
+							firstname: true,
+							lastname: true,
 							avatar: true,
 							isOnline: true,
 							createdAt: true

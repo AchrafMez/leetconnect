@@ -64,12 +64,12 @@ async function start_chat_server() {
 	try {
 		initEventBus();
 		subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, async (channel, message: any) => {
-			const {id, email, username, role} = message.data;
+			const {id, email, username, firstname, lastname, role, type} = message.data;
 
 			await prisma.user.upsert({
 				where:  {id: id },
-				update: {email, username, role},
-				create: {id, email, username, role}
+				update: {email, username, firstname, lastname, role, type},
+				create: {id, email, username, firstname, lastname, role, type}
 			});
 			console.log(`user synced to chat_db: [${id}](${username})`);
 		});

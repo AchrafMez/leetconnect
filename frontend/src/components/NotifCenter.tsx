@@ -1,17 +1,37 @@
+import { useEffect, useRef } from 'react';
+import type { RefObject } from 'react';
 import { useNotifications } from '../context/NotifProvider';
 import type { ChatNotif } from '../lib/api';
 
-export default function NotifCenter({onClose}: {onClose: () => void}) {
+interface Props {
+	onClose: () => void;
+	wrapperRef?: RefObject<HTMLDivElement | null>;
+}
+
+export default function NotifCenter({onClose, wrapperRef}: Props) {
 	const context = useNotifications();
+	const panel_ref = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const handle = (e: MouseEvent) => {
+			const target = e.target as Node;
+			const inside_panel   = panel_ref.current?.contains(target);
+			const inside_wrapper = wrapperRef?.current?.contains(target);
+			if (!inside_panel && !inside_wrapper) onClose();
+		};
+		document.addEventListener('mousedown', handle);
+		return () => document.removeEventListener('mousedown', handle);
+	}, [onClose, wrapperRef]);
+
 	if (!context)
 		return null;
 	const {notifs, unread, markRead, markAllRead} = context;
 
 	return (
-		<>
-			<div className="fixed inset-0 z-40" onClick={onClose} />
-			<div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto
-							bg-background border border-border rounded-md shadow-lg z-50">
+		<div ref={panel_ref}
+			className="fixed left-2 right-2 top-16 max-h-[calc(100vh-5rem)]
+						sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 sm:max-h-96
+						overflow-y-auto bg-background border border-border rounded-md shadow-lg z-50">
 				<div className="flex items-center justify-between px-4 py-3 border-b border-border">
 					<span className="font-semibold">Notifications</span>
 					{unread > 0 && (
@@ -25,9 +45,8 @@ export default function NotifCenter({onClose}: {onClose: () => void}) {
 					<div className="p-6 text-center text-sm text-muted-foreground">
 						No notifications yet.
 					</div>
-				) : notifs.map(n => <Row key={n.id} n={n} onRead={markRead} />)}
-			</div>
-		</>
+			) : notifs.map(n => <Row key={n.id} n={n} onRead={markRead} />)}
+		</div>
 	);
 }
 

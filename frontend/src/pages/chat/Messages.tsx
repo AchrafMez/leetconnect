@@ -8,28 +8,12 @@ import { getSocket } from "../../lib/socket";
 import type { Message } from "./MessageLayer";
 import type { Conversation } from "./ConverLayer";
 import type { Friend } from "../../lib/api";
-
-function getUserIdFromToken(): string {
-	const token = localStorage.getItem('token');
-	// console.log('>>>>>>> token:', token);
-	if (!token) return '';
-	try {
-		const parts = token.split('.');
-		// console.log('>>>>>>> parts:', parts);
-		if (!parts[1]) return '';
-		// console.log('>>>>>>> parts[1]:', parts[1]);
-		const payload = JSON.parse(atob(parts[1]));
-		// console.log('>>>>>>> payload:', payload);
-		// console.log('>>>>>>> payload.userId:', payload.userId);
-		return payload.userId ?? '';
-	} catch {
-		return '';
-	}
-}
-
-const CURRENT_USER_ID = getUserIdFromToken();
+import { useAuth } from '../../context/userContext';
 
 export default function Messages() {
+
+	const { user } = useAuth();
+	const CURRENT_USER_ID = user?.id ?? '';
 
 	const [conversations, setConversations] = useState<Conversation[]>([]);
 	const [messages, setMessages] = useState<Message[]>([]);

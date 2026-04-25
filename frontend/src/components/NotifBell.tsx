@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useNotifications } from '../context/NotifProvider';
 import NotifCenter from './NotifCenter';
@@ -6,14 +6,15 @@ import NotifCenter from './NotifCenter';
 export default function NotifBell() {
     const context = useNotifications();
     const [open, setOpen] = useState(false);
+    const wrapper_ref = useRef<HTMLDivElement>(null);
 
     if (!context)
         return null;
-        
+
     const {unread} = context;
 
     return (
-        <div className="relative">
+        <div ref={wrapper_ref} className="relative">
             <button
                 onClick={() => setOpen(o => !o)}
                 className="p-2 rounded-lg hover:bg-accent transition-colors"
@@ -29,7 +30,7 @@ export default function NotifBell() {
                     </span>
                 )}
             </button>
-            {open && <NotifCenter onClose={() => setOpen(false)} />}
+            {open && <NotifCenter onClose={() => setOpen(false)} wrapperRef={wrapper_ref} />}
         </div>
     );
 }

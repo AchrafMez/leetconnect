@@ -16,6 +16,8 @@ export const setAccessToken = (token: string | null) => {
     _accessToken = token;
 };
 
+export const getAccessToken = () => _accessToken;
+
 
 interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
     method?: HttpMethod;
@@ -147,6 +149,16 @@ interface CreateConversPayload {
     member_ids: string[];
 }
 
+export interface UserProfile {
+    id: string;
+    username: string;
+    firstname?: string;
+    lastname?: string;
+    avatar: string;
+    isOnline: boolean;
+    createdAt: string;
+}
+
 export const chatApi = {
 	// ---------------------- Conversations ----------------------
 	listConversations: () =>
@@ -197,6 +209,9 @@ export const chatApi = {
         }),
 	// ---------------------- Health ----------------------
 	health: () => api<HealthResponse>('/chat/health'),
+    
+	// ---------------------- Users ----------------------
+    getUser: (username: string) => api<UserProfile>(`/chat/users/${username}`),
 };
 
 export interface FriendRequest {

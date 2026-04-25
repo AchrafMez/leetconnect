@@ -17,7 +17,10 @@ model User {
   email           String          @unique
   username        String          @unique
 
-  role            String          @default("CLIENT")
+  firstname       String          @default("")
+  lastname        String          @default("")
+  role            String          @default("USER")
+  type            String          @default("CLIENT")
   avatar          String          @default("/avatars/default.png")
   isOnline        Boolean         @default(false)
 
