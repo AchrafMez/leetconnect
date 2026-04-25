@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+	output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  username      String         @unique
+  firstname     String         @default("")
+  lastname      String         @default("")
+  status        Status         @default(active)
+  password      String?
+  role          Role           @default(ADMIN)
+  type          UserType       @default(CLIENT)
+  avatar        String         @default("/avatars/default.png")
+  isOnline      Boolean        @default(false)
+  twoFASecret   String?
+  twoFAEnabled  Boolean        @default(false)
+  oauthProvider String?
+  oauthId       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  jobs          Job[]
+  refreshTokens RefreshToken[]
+
+  @@unique([oauthProvider, oauthId])
+}
+
+model Job {
+  id           String     @id @default(uuid())
+  title        String
+  description  String
+  budget       Int        @default(0)
+  budgetType   BudgetType @default(fixed)
+  category     String
+  clientId     String
+  status       JobStatus  @default(active)
+  createdAt    DateTime   @default(now())
+  proposals    Int        @default(0)
+  skills       String[]
+  deadline     DateTime?
+  postedByName String
+  createdBy    User       @relation(fields: [clientId], references: [id])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  ADMIN
+  USER
+  MODERATOR
+}
+
+enum UserType {
+  FREELANCER
+  CLIENT
+}
+
+enum Status {
+  active
+  suspended
+  pending
+}
+
+enum JobStatus {
+  active
+  flagged
+  closed
+}
+
+enum BudgetType {
+  hourly
+  fixed
+}

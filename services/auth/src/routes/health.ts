@@ -1,15 +1,29 @@
 import { Router, Request, Response } from 'express';
-import sequelize from'../config/database';
+import prisma from '../lib/prisma';
 
 const router = Router();
 
-router.get('/health', async (req : Request, res: Response) => {
+const healthHandler = async (req: Request, res: Response) => {
   try {
-    await sequelize.authenticate();
-    res.json({ status: 'ok', service: 'auth', timestamp: new Date().toISOString() });
-  } catch (err) {
-    const error = err as Error;
-    res.status(503).json({ status: 'error', service: 'auth', error: error.message });
+    // Prisma equivalent of sequelize.authenticate()
+    // This sends a simple 'SELECT 1' to the DB to see if it's alive
+    await prisma.$queryRaw`SELECT 1`;
+
+    res.json({
+      status: 'UP',
+      database: 'connected',
+      service: 'auth-service'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'DOWN',
+      database: 'disconnected',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
-});
+};
+
+router.get('/', healthHandler);
+router.get('/health', healthHandler);
+
 export default router;

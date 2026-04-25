@@ -16,11 +16,10 @@ export const updateRoleSchema = z.object({
 	role: z.enum([
 		"ADMIN",
 		"MODERATOR",
-		"GUEST",
 		"USER"
 	], {
 		error: () => ({
-			message: 'Role must be one of: ADMIN, MODERATOR, USER, GUEST'
+			message: 'Role must be one of: ADMIN, MODERATOR, USER'
 		})
 	})
 })

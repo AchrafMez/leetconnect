@@ -15,10 +15,16 @@ services:
       - frontend
     networks:
       - leetconnect
+    volumes:
+      - ./certs/nginx.crt:/etc/nginx/ssl/cert.pem:ro
+      - ./certs/nginx.key:/etc/nginx/ssl/key.pem:ro
   postgres:
     container_name: postgres
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: services/postgres/Dockerfile
     restart: unless-stopped
+    command: ["postgres", "-c", "ssl=on", "-c", "ssl_cert_file=/etc/ssl/internal/postgres.crt", "-c", "ssl_key_file=/etc/ssl/internal/postgres.key"]
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -34,12 +40,15 @@ services:
       - leetconnect
   redis:
     container_name: redis
-    image: redis:7-alpine
+    build:
+      context: .
+      dockerfile: services/redis/Dockerfile
     restart: unless-stopped
+    command: ["redis-server", "--tls-port", "6379", "--port", "0", "--tls-cert-file", "/etc/ssl/internal/redis.crt", "--tls-key-file", "/etc/ssl/internal/redis.key", "--tls-ca-cert-file", "/etc/ssl/internal/ca.crt", "--tls-auth-clients", "no"]
     networks:
       - leetconnect
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD", "redis-cli", "--tls", "--cacert", "/etc/ssl/internal/ca.crt", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -59,6 +68,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    ports:
+    - "5555:5555"  # exposed this port so I can connect to prisma ui
     environment:
       - DATABASE_URL=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASS}@postgres:5432/${AUTH_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
@@ -67,6 +78,13 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - SSL_KEY_PATH=/etc/ssl/internal/auth.key
+      - SSL_CERT_PATH=/etc/ssl/internal/auth.crt
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PRIVATE_KEY_PATH=/etc/ssl/internal/jwt_private.key
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
   marketplace:
     container_name: marketplace
     # image_name: marketplace
@@ -85,7 +103,13 @@ services:
       - DATABASE_URL=postgresql://${MARKET_DB_USER}:${MARKET_DB_PASS}@postgres:5432/${MARKET_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
-      - AUTH_SERVICE_URL=http://auth:3001
+      - AUTH_SERVICE_URL=https://auth:3001
+      - SSL_KEY_PATH=/etc/ssl/internal/marketplace.key
+      - SSL_CERT_PATH=/etc/ssl/internal/marketplace.crt
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
   chat:
     container_name: chat
     # image_name: chat
@@ -104,7 +128,13 @@ services:
       - DATABASE_URL=postgresql://${CHAT_DB_USER}:${CHAT_DB_PASS}@postgres:5432/${CHAT_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
-      - AUTH_SERVICE_URL=http://auth:3001
+      - AUTH_SERVICE_URL=https://auth:3001
+      - SSL_KEY_PATH=/etc/ssl/internal/chat.key
+      - SSL_CERT_PATH=/etc/ssl/internal/chat.crt
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
   analytics:
     container_name: analytics
     # image_name: analytics
@@ -123,7 +153,13 @@ services:
       - DATABASE_URL=postgresql://${ANALYTICS_DB_USER}:${ANALYTICS_DB_PASS}@postgres:5432/${ANALYTICS_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
-      - AUTH_SERVICE_URL=http://auth:3001
+      - AUTH_SERVICE_URL=https://auth:3001
+      - SSL_KEY_PATH=/etc/ssl/internal/analytics.key
+      - SSL_CERT_PATH=/etc/ssl/internal/analytics.crt
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
   admin:
     container_name: admin
     # image_name: admin
@@ -133,15 +169,25 @@ services:
     restart: unless-stopped
     networks:
       - leetconnect
+    ports:
+      - "5432:5432"
     depends_on:
       - auth
       - marketplace
       - analytics
     environment:
       - JWT_SECRET=${JWT_SECRET}
-      - AUTH_SERVICE_URL=http://auth:3001
-      - MARKETPLACE_SERVICE_URL=http://marketplace:3002
-      - ANALYTICS_SERVICE_URL=http://analytics:3004
+      - AUTH_SERVICE_URL=https://auth:3001
+      - MARKETPLACE_SERVICE_URL=https://marketplace:3002
+      - ANALYTICS_SERVICE_URL=https://analytics:3004
+      - SSL_KEY_PATH=/etc/ssl/internal/admin.key
+      - SSL_CERT_PATH=/etc/ssl/internal/admin.crt
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+    volumes:
+      - ./certs:/etc/ssl/internal:ro
+      - ./services/admin:/app/service
+      - /app/service/node_modules
   frontend:
     container_name: frontend
     build: ./frontend

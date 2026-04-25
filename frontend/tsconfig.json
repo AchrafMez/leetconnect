@@ -8,7 +8,6 @@
     // See also https://aka.ms/tsconfig/module
     "module": "esnext",
     "target": "esnext",
-    "types": [],
     // For nodejs:
     "lib": [
       "DOM",
@@ -40,7 +39,7 @@
     // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
+    // "verbatimModuleSyntax": true,
     "isolatedModules": true,
     // "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
