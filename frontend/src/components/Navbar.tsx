@@ -2,11 +2,26 @@ import { Sun, Moon } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/Theme";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/context/userContext";
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const auth = useAuth();
+  const { user, loading, logout } = auth || { user: null, loading: true, logout: async () => { } };
+
+  const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
       <nav className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -44,12 +59,30 @@ export default function Navbar() {
             )}
           </button>
 
-          <Button onClick={() => navigate('/auth/sign-up')} variant="ghost" className="hidden sm:inline-flex">
-            Sign In
-          </Button>
-          <Button onClick={() => navigate('/auth/sign-up')}>
-            Sign up
-          </Button>
+          {!loading && !user ? (
+            <>
+              <Button
+                onClick={() => navigate('/auth/sign-in')}
+                variant={isActive('/auth/sign-in') ? 'default' : 'ghost'}
+                className="hidden sm:inline-flex"
+              >
+                Sign In
+              </Button>
+              <Button
+                onClick={() => navigate('/auth/sign-up')}
+                variant={isActive('/auth/sign-up') ? 'default' : 'outline'}
+              >
+                Sign up
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={handleLogout}
+              variant="default"
+            >
+              Logout
+            </Button>
+          )}
         </div>
       </nav>
     </header>

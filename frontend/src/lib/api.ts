@@ -85,9 +85,9 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     const { body, headers: extraHeaders, ...restOptions } = options;
 
     // used httpOnly cookie instead of localstorage
-    const config : RequestInit = {
+    const config: RequestInit = {
         ...restOptions,
-        credentials: 'include', 
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
             ...(_accessToken && { Authorization: `Bearer ${_accessToken}` }),
@@ -100,17 +100,21 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     const res = await fetch(`${API_BASE}${path}`, config);
 
     // If token expired (401) refresh to get a new one
-    if (res.status === 401 && !path.includes('/auth/login')) {
-        const refreshRes = await fetch(`${API_BASE}/auth/refresh`, { 
-            method: 'POST', 
-            credentials: 'include' 
-        });
+    if (res.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
+        try {
+            const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
+                method: 'POST',
+                credentials: 'include'
+            });
 
-        if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            setAccessToken(data.accessToken);
-            // Retry the original request with the new token
-            return api<T>(path, options);
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                setAccessToken(data.accessToken);
+                // Retry the original request with the new token
+                return api<T>(path, options);
+            }
+        } catch (error) {
+            console.error('Token refresh failed:', error);
         }
     }
 
@@ -118,6 +122,11 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
         const message = typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`;
         throw new Error(message);
+    }
+
+    // Handle 204 No Content response
+    if (res.status === 204) {
+        return Promise.resolve(undefined as unknown as T);
     }
 
     return res.json() as Promise<T>;
