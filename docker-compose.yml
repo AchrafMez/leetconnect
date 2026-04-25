@@ -40,6 +40,8 @@ services:
       - ./scripts/init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
     networks:
       - leetconnect
+    ports:
+      - "5432:5432"
   redis:
     container_name: redis
     build:
@@ -197,7 +199,9 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-
+    # environment: # added to auto apply changes in front
+    # - CHOKIDAR_USEPOLLING=true
+    # - WATCHPACK_POLLING=true
 networks:
   leetconnect:
     driver: bridge

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
-import { Role } from './constants';
+import { Role, UserType } from './constants';
 
 const publicKeyPath = process.env.JWT_PUBLIC_KEY_PATH as string;
 
@@ -16,7 +16,8 @@ try {
 
 export interface JwtPayload { // put the least user info data => Least Privilege
   userId: string; // used userId for better clarity in the code when other services use it so its not confict with other ids
-  role: Role;
+  role: Role; // admin , user ..
+  type:UserType; // freelancer or client
 }
 
 // declaration merging
@@ -60,6 +61,15 @@ function requireRole(...roles: string[]) {
       return res.status(403).json({
         error: 'Forbidden'
       });
+    next();
+  };
+}
+
+export function requireType(...types: UserType[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user || !types.includes(req.user.type)) {
+        return res.status(403).json({ error: 'Incorrect user type for this action' });
+    }
     next();
   };
 }

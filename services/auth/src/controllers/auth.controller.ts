@@ -2,16 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
 import jwt from "jsonwebtoken";
 import prisma from '../lib/prisma';
-import fs from "fs";
 import { generateAccessToken, generateRefreshToken } from '../lib/token';
 import { ROLES, Role ,publishEvent, AUTH_EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
-
-const privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
+// import { User } from 'lucide-react';
 
 type AuthBody = {
     username?: unknown,
     email?:unknown,
     password?:unknown,
+    firstname?: unknown;
+    lastname?: unknown;
+    type?: unknown; // changed from role
     role?: unknown;
 }
 
@@ -22,28 +23,32 @@ function TrimAuthInput(body: AuthBody) {
 
     const password = typeof body.password === 'string' ? body.password : '';
 
-    const role = typeof body.role === 'string' ? body.role.toUpperCase() : '';
+    const type = typeof body.type === 'string' ? body.type.toUpperCase() : '';
 
-    return { username, email, password, role};
+    const firstname = typeof body.firstname === 'string' ? body.firstname.trim() : '';
+
+    const lastname = typeof body.lastname === 'string' ? body.lastname.trim() : '';
+    
+    return { username, email, password, type, firstname, lastname};
 }
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { username, email, password, role } = TrimAuthInput(req.body);
+        const { username, email, password, type ,firstname, lastname} = TrimAuthInput(req.body);
 
         // input Validation
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !firstname || !lastname) {
             return res.status(400).json({ error: 'Missing fields' });
         }
-
-        if (role !== 'CLIENT' && role !== 'FREELANCER') {
-            return res.status(400).json({ error: 'Invalid role selection' });
+        
+        if (type !== 'CLIENT' && type !== 'FREELANCER') {
+            return res.status(400).json({ error: 'Invalid type selection' });
         }
         // Check duplicates in Postgres
         // turn into lowercase to compare in db
         const normalizedEmail = email.toLowerCase();
         const normalizedUsername = username.toLowerCase();
-
+        
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [
@@ -66,7 +71,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
         if (existingUser) {
             return res.status(409).json({ 
-                error: existingUser.email.toLowerCase() === email.toLowerCase() ? 'Email taken' : 'Username taken' 
+                error: existingUser.email.toLowerCase() === email.toLowerCase() ? 'Email is taken' : 'Username is taken' 
             });
         }
 
@@ -74,23 +79,29 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         const hashedPassword = await bcrypt.hash(password, 12);
 
         // // create user and its refresh token and save them both to DB , if prb happens dont save and do nothing 
-        const { user, refreshToken } = await prisma.$transaction(async (tx) => {
+        const { user, refreshToken } = await prisma.$transaction(async (tx: any) => {
             const newUser = await tx.user.create({
                 data: {
                     // ive decided to store data as it is submitted 
                     // but in login i will lowercase the data to compare that way User123@gmail.com is the same as user123@gmail.com
                     username,
                     email,     
+                    firstname,
+                    lastname,
                     password: hashedPassword,
-                    role: role as any, // client of freelancer
+                    type: type as any, // client of freelancer
+                    role: 'USER', // default role is user
                 },
                 // Ensure we don't return the password string in the response
                 select: {
                     id: true,
                     username: true,
+                    firstname: true,
+                    lastname: true,
                     email: true,
                     createdAt: true,
-                    role: true
+                    role: true,
+                    type: true,
                 }
             });
 
@@ -107,7 +118,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         });
         
         // generate access token
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
         
         // set HttpOnly cookie for Refresh Token
         res.cookie('refreshToken', refreshToken.token, {
@@ -123,13 +134,16 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             id: user.id,
             email: user.email,
             username: user.username,
-            role: user.role
+            firstname: user.firstname,
+            lastname: user.lastname,
+            role: user.role,
+            type: user.type
         });
 
         res.status(201).json({
             message: `Welcome to LeetConnect ${username} !`,
             accessToken,
-            user: { id: user.id, username: user.username, role: user.role }
+            user: { id: user.id, username: user.username, type: user.type, role: user.role }
         });
 
     } catch (error) {
@@ -179,7 +193,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             }
         });
 
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role });
+        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
 
          res.cookie('refreshToken', refreshToken.token, {
             httpOnly: true,
@@ -192,7 +206,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         return res.status(200).json({
             message: `Welcome Back ${user.username} !`,
             accessToken,
-            user: { id: user.id, email: user.email, username: user.username, role: user.role }
+            user: { id: user.id, email: user.email, username: user.username, role: user.role, type: user.type }
         });
 
     } catch (error) {
@@ -222,10 +236,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
         }
 
         // Generate a fresh Access Token
-        const newAccessToken = generateAccessToken({ 
-            userId: storedToken.user.id, 
-            role: storedToken.user.role 
-        });
+        const newAccessToken = generateAccessToken({  userId: storedToken.user.id, role: storedToken.user.role , type: storedToken.user.type });
 
         return res.json({ accessToken: newAccessToken });
 

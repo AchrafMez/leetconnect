@@ -2,9 +2,21 @@
 // All requests go through Nginx proxy (relative paths)
 // Automatically attaches JWT token from localStorage
 
+import type { Conversation } from '../pages/chat/ConverLayer';
+import type { Message } from '../pages/chat/MessageLayer';
+
 const API_BASE = '/api';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+// storing access token in this variable that will live in RAM so its not accessable by XSS attack :3
+let _accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+    _accessToken = token;
+};
+
+export const getAccessToken = () => _accessToken;
 
 
 interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
@@ -16,7 +28,12 @@ interface ApiOptions extends Omit<RequestInit, 'body' | 'method'> {
 export interface User {
     id: string;
     email: string;
-    name: string;
+    username: string; // Used 'username' instead of 'name'
+    firstname: string;
+    lastname: string;
+    // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
+    role: 'ADMIN' | 'USER' | 'MODERATOR';
+    type: 'CLIENT' | 'FREELANCER';
 }
 
 export interface Job {
@@ -26,18 +43,18 @@ export interface Job {
     createdAt: string;
 }
 
-export interface Conversation {
-    id: string;
-    title: string;
-    updatedAt: string;
-}
+// export interface Conversation {
+//     id: string;
+//     title: string;
+//     updatedAt: string;
+// }
 
-export interface Message {
-    id: string;
-    conversationId: string;
-    content: string;
-    createdAt: string;
-}
+// export interface Message {
+//     id: string;
+//     conversationId: string;
+//     content: string;
+//     createdAt: string;
+// }
 
 export interface HealthResponse {
     status: 'ok' | 'degraded' | 'down';
@@ -48,10 +65,15 @@ export interface LoginRequest {
     password: string;
 }
 
+// what the frontend sends during register 
 export interface RegisterRequest {
     email: string;
+    username: string;
+    firstname: string;
+    lastname: string;
     password: string;
-    name: string;
+    // role: 'CLIENT' | 'FREELANCER'; old
+    type: 'CLIENT' | 'FREELANCER'; // Changed from role
 }
 
 export interface AuthResponse {
@@ -60,16 +82,16 @@ export interface AuthResponse {
 }
 
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
-    const token = localStorage.getItem('token');
     const { body, headers: extraHeaders, ...restOptions } = options;
 
+    // used httpOnly cookie instead of localstorage
     const config : RequestInit = {
         ...restOptions,
+        credentials: 'include', 
         headers: {
             'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
+            ...(_accessToken && { Authorization: `Bearer ${_accessToken}` }),
             ...extraHeaders,
-
         },
         // Stringify body if it's an object
         ...(body !== undefined && { body: JSON.stringify(body) }),
@@ -77,6 +99,20 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const res = await fetch(`${API_BASE}${path}`, config);
 
+    // If token expired (401) refresh to get a new one
+    if (res.status === 401 && !path.includes('/auth/login')) {
+        const refreshRes = await fetch(`${API_BASE}/auth/refresh`, { 
+            method: 'POST', 
+            credentials: 'include' 
+        });
+
+        if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            setAccessToken(data.accessToken);
+            // Retry the original request with the new token
+            return api<T>(path, options);
+        }
+    }
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
@@ -102,10 +138,149 @@ export const marketApi = {
     health: () => api<HealthResponse>('/market/health'),
 };
 
+interface PaginatedMessages {
+	messages: 		Message[];
+	next_cursor:	number | null;
+}
+
+interface CreateConversPayload {
+    type: 'Direct' | 'Group';
+    name?: string;
+    member_ids: string[];
+}
+
+export interface UserProfile {
+    id: string;
+    username: string;
+    firstname?: string;
+    lastname?: string;
+    avatar: string;
+    isOnline: boolean;
+    createdAt: string;
+}
+
 export const chatApi = {
-    getConversations: () => api<Conversation[]>('/chat/conversations'),
-    getMessages: (convId: string) => api<Message[]>(`/chat/conversations/${convId}/messages`),
-    health: () => api<HealthResponse>('/chat/health'),
+	// ---------------------- Conversations ----------------------
+	listConversations: () =>
+		api<Conversation[]>(`/chat/convers`),
+
+	getConversation: (convers_id: number) =>
+		api<Conversation>(`/chat/convers/${convers_id}`),
+
+	leaveConversation: (convers_id: number, user_id: string) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}`, {
+			method: 'DELETE',
+			body: { user_id: user_id },
+		}),
+
+	// ---------------------- Messages ----------------------
+	listMessages: (convers_id: number, limit = 20, cursor?: number) => {
+		let url = `/chat/convers/${convers_id}/messages?limit=${limit}`;
+		if (cursor)
+            url += `&cursor=${cursor}`;
+		return api<PaginatedMessages>(url);
+	},
+
+	sendMessage: (convers_id: number, content: string) =>
+		api<Message>(`/chat/convers/${convers_id}/messages`, {
+			method: 'POST',
+			body: { content: content },
+		}),
+
+	getMessage: (convers_id: number, msg_id: number) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
+			body: { msg_id: msg_id },
+		}),
+
+	deleteMessage: (convers_id: number, msg_id: number) =>
+		api<{ message: string }>(`/chat/convers/${convers_id}/messages/${msg_id}`, {
+			method: 'DELETE'
+		}),
+
+	// ---------------------- Convers ----------------------
+        createConversation: (data: CreateConversPayload) =>
+        api<Conversation>('/chat/convers', {
+            method: 'POST',
+            body: {
+                type: data.type,
+                name: data.name,
+                member_ids: data.member_ids,
+            },
+        }),
+	// ---------------------- Health ----------------------
+	health: () => api<HealthResponse>('/chat/health'),
+    
+	// ---------------------- Users ----------------------
+    getUser: (username: string) => api<UserProfile>(`/chat/users/${username}`),
+};
+
+export interface FriendRequest {
+    id:             number;
+    sender_id:      string;
+    receiver_id:    string;
+    status:         'PENDING' | 'ACCEPTED' | 'REJECTED';
+    created_at:     string;
+    updated_at:     string;
+
+    sender?:   {id: string, username: string, avatar: string};
+    receiver?: {id: string, username: string, avatar: string};
+}
+
+export interface Friend {
+    id:         string;
+    username:   string;
+    avatar:     string;
+    is_online:  boolean;
+}
+
+export const friendApi = {
+    sendRequest: (receiver_id: string) =>
+        api<FriendRequest>('/friend/requests', {
+            method: 'POST',
+            body: {receiver_id}
+        }),
+    
+    acceptRequest: (request_id: number) =>
+        api<FriendRequest>(`/friend/requests/${request_id}/accept`, {
+            method: 'PATCH'
+        }),
+
+    rejectRequest: (request_id: number) =>
+        api<FriendRequest>(`/friend/requests/${request_id}/reject`, {
+            method: 'PATCH'
+        }),
+
+    cancelRequest: (request_id: number) =>
+        api<void>(`/friend/requests/${request_id}`, {
+            method: 'DELETE'
+        }),
+
+    listIncoming: () => api<FriendRequest[]>('/friend/requests/incoming'),
+    listOutgoing: () => api<FriendRequest[]>('/friend/requests/outgoing'),
+    listFriends: () => api<Friend[]>('/friend/requests/friends'),
+
+    removeFriend: (friend_id: string) => api<void>('/friend/requests/friends', {
+            method: 'DELETE',
+            body: {friend_id},
+        })
+}
+
+export interface ChatNotif {
+    id: number;
+    user_id: string;
+    type: 'MESSAGE' | 'FRIEND_REQ' | 'SYSTEM';
+    title: string;
+    body: string | null;
+    is_read: boolean;
+    created_at: string;
+}
+
+export const notifApi = {
+    list: (): Promise<ChatNotif[]> => api('/notifs'),
+    markRead: (id: number): Promise<ChatNotif> =>
+        api(`/notifs/${id}/read`, { method: 'PATCH' }),
+    markAllRead: (): Promise<{ message: string }> =>
+        api('/notifs/read-all', { method: 'PATCH' }),
 };
 
 export const analyticsApi = {

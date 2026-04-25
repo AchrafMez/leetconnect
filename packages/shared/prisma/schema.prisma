@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String          @id
+  email           String          @unique
+  username        String          @unique
+
+  firstname       String          @default("")
+  lastname        String          @default("")
+  role            String          @default("USER")
+  type            String          @default("CLIENT")
+  avatar          String          @default("/avatars/default.png")
+  isOnline        Boolean         @default(false)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  conversations   ConversMember[]
+  messages        Message[]
+  notifs          Notification[]
+
+  sent_friend_req FriendRequest[] @relation("SentFriendRequests")
+  recv_friend_req FriendRequest[] @relation("RecvFriendRequests")
+}
+
+model Convers {
+  id              Int             @id @default(autoincrement())
+  name            String?
+  type            ConversType     @default(Direct)
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+
+  members         ConversMember[]
+  messages        Message[]
+}
+
+model ConversMember {
+  id              Int             @id @default(autoincrement())
+  user_id         String
+  convers_id      Int
+  joined_at       DateTime        @default(now())
+
+  user            User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  coversation     Convers         @relation(fields: [convers_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, convers_id])
+}
+
+model Message {
+  id              Int             @id @default(autoincrement())
+  content         String
+  sender_id       String
+  convers_id      Int
+  created_at      DateTime        @default(now())
+
+  sender          User            @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  convers         Convers         @relation(fields: [convers_id], references: [id], onDelete: Cascade)
+
+  @@index([convers_id, created_at])
+}
+
+model Notification {
+  id              Int             @id @default(autoincrement())
+  user_id         String
+  type            NotifType
+  title           String
+  body            String?
+  is_read         Boolean         @default(false)
+  created_at      DateTime        @default(now())
+
+  user            User            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_read])
+}
+
+model FriendRequest {
+  id              Int             @id @default(autoincrement())
+  sender_id       String
+  receiver_id     String
+  status          FriendReqStatus @default(PENDING)
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+
+  sender          User            @relation("SentFriendRequests", fields: [sender_id], references: [id], onDelete: Cascade)
+  receicer        User            @relation("RecvFriendRequests", fields: [receiver_id], references: [id], onDelete: Cascade)
+
+  @@index([receiver_id, status])
+  @@index([sender_id, status])
+  @@unique([sender_id, receiver_id])
+}
+
+enum ConversType {
+  Direct
+  Group
+}
+
+enum NotifType {
+  MESSAGE
+  FRIEND_REQ
+  SYSTEM
+}
+
+enum FriendReqStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}

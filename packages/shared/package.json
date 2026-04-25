@@ -6,7 +6,12 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "npx ts-node prisma/seed.ts",
+    "prisma:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.6.0",
@@ -22,6 +27,8 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^25.4.0",
     "prisma": "^7.6.0",
+    "dotenv": "^16.6.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
 }

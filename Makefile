@@ -64,3 +64,7 @@ health:
 	@echo -n "\nanalytics: "; curl -sk https://localhost/api/analytics/health || echo "not reachable"
 	@echo -n "\nadmin: "; curl -sk https://localhost/api/admin/health || echo "not reachable"
 	@echo ""
+
+seed:
+	docker cp scripts/seed.js auth:/app/service/seed.js
+	docker exec -w /app/service auth node seed.js
