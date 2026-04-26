@@ -52,6 +52,10 @@ docs/
 /tests.md
 Leetconnect Sign In.png
 Leetconnect Sign Up.png
+<<<<<<< HEAD
 
 migrations/
 *.md
+=======
+userContext.md
+>>>>>>> 511467374db4a480adec0fd4f51c50a99a283b78

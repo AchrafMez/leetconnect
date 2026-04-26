@@ -38,6 +38,8 @@ app.use(errorHandler);
 // start server
 async function start() {
   try {
+
+    
     await prisma.$connect();
     console.log('marketplace db connected with Prisma');
 
