@@ -185,24 +185,27 @@ export default function ProfileSettings() {
 
         setSaving(true);
         try {
-            await authApi.updateProfile({
-                username: profileForm.username,
-                email: profileForm.email,
-                firstname: profileForm.firstname,
-                lastname: profileForm.lastname,
-                bio: profileForm.bio,
-                location: profileForm.location,
-                website: profileForm.website,
-                title: profileForm.title
-            });
-            const updatedUser = await authApi.me();
-            setUser(updatedUser);
-            console.log("bio: ", profileForm.bio);
-            console.log("bio: ", updatedUser.bio);
+                const response = await authApi.updateProfile({
+                    username: profileForm.username,
+                    email: profileForm.email,
+                    firstname: profileForm.firstname,
+                    lastname: profileForm.lastname,
+                    bio: profileForm.bio,
+                    location: profileForm.location,
+                    website: profileForm.website,
+                    title: profileForm.title
+                });
 
-            console.log("location: ", updatedUser.location);
-            console.log("website: ", updatedUser.website);
-            console.log("title: ", updatedUser.title);
+            // Update the Context immediately using the response
+            setUser(response.user); 
+            if (!user)
+                return;
+            console.log("bio: ", profileForm.bio);
+            console.log("bio: ", user.bio);
+
+            // console.log("location: ", user.location);
+            // console.log("website: ", user.website);
+            // console.log("title: ", user.title);
             setSuccessMessage('Profile updated successfully!');
         } catch (err: any) {
             setError(err.message || 'Failed to update profile');

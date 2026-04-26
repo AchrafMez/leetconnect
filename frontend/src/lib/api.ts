@@ -83,6 +83,11 @@ export interface AuthResponse {
     user: User;
 }
 
+export interface UpdateProfileResponse {
+    message: string;
+    user: User;
+}
+
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
     const { body, headers: extraHeaders, ...restOptions } = options;
 
@@ -141,7 +146,7 @@ export const authApi = {
     me: () => api<User>('/auth/me'),
     refresh: () => api<{ accessToken: string }>('/auth/refresh', { method: 'POST' }),
     health: () => api<HealthResponse>('/auth/health'),
-    updateProfile: (data: any) => api<User>('/auth/settings', { method: 'PATCH', body: data }),
+    updateProfile: (data: any) => api<UpdateProfileResponse>('/auth/settings', { method: 'PATCH', body: data }),
     changePassword: (data: any) =>api<User>('/auth/change-password', { method: 'POST', body: data }),
     // 2FA
     // remote auth
