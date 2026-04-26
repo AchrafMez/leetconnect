@@ -178,7 +178,7 @@ export async function remove(req: Request, res: Response, next: NextFunction) {
 		await prisma.message.delete({where: {id: msg_id}});
 
 		const io = req.app.get('io');
-		io.to(`covers:${convers_id}`).emit('delete_message', {
+		io.to(`convers:${convers_id}`).emit('delete_message', {
 			id: msg_id, convers_id
 		});
 

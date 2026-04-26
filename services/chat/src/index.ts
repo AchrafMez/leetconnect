@@ -24,12 +24,7 @@ import { authMiddleware } from '@leetconnect/shared';
 
 dotenv.config({ path: '../../.env', quiet: true});
 
-// console.log(process.env);
-
 const PORT = process.env.CHAT_DB_PORT || 3003;
-
-console.log('>>>>>>>>>', process.env.SSL_KEY_PATH);
-console.log('>>>>>>>>>', process.env.SSL_CERT_PATH);
 
 const sslOptions = {
 	key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
@@ -63,15 +58,21 @@ start_chat_server();
 async function start_chat_server() {
 	try {
 		initEventBus();
-		subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, async (channel, message: any) => {
-			const {id, email, username, firstname, lastname, role, type} = message.data;
-
-			await prisma.user.upsert({
-				where:  {id: id },
-				update: {email, username, firstname, lastname, role, type},
-				create: {id, email, username, firstname, lastname, role, type}
-			});
-			console.log(`user synced to chat_db: [${id}](${username})`);
+		subscribeToEvents('user.*', async (channel, message: any) => {
+			const data = message.data;
+			if (channel === AUTH_EVENTS.USER_REGISTERED) {
+				await prisma.user.upsert({
+					where:  {id: data.id },
+					update: {email: data.email, username: data.datasername, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type},
+					create: {id: data.id, email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type}
+				});
+			} else if (channel === AUTH_EVENTS.USER_UPDATED) {
+				await prisma.user.update({
+					where: {id: data.id},
+					data:  {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, avatar: data.avatar, bio: data.bio}
+				});
+			}
+			console.log(`user synced to chat_db: [${data.id}](${data.username})`);
 		});
 		await prisma.$connect().then( () => {
 			console.log('connected to database.');
