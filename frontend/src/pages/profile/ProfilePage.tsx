@@ -1,43 +1,125 @@
-import { useParams, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { chatApi, type UserProfile } from '../../lib/api';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '../../context/userContext';
+import { chatApi, friendApi } from '../../lib/api';
+import ProfileHeader from './ProfileHeader';
+import SidePanel from './SidePanel';
 
 export default function ProfilePage() {
 	const { username } = useParams<{ username: string }>();
-	const [user, setUser]   = useState<UserProfile | null>(null);
-	const [error, setError] = useState<string | null>(null);
+	const { user: currentUser, loading: authLoading } = useAuth();
 
+	const [profileUser, setProfileUser] = useState<any>(null);
+	const [loading, setLoading] = useState(true);
+
+	const [friendStatus, setFriendStatus] = useState<
+		'none' | 'pending_sent' | 'pending_received' | 'friends'
+	>('none');
+	const [friendRequestId, setFriendRequestId] = useState<number | undefined>();
+
+	const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+	const isOwnProfile = !username || username === currentUser?.username;
+
+	// fetch profile data
 	useEffect(() => {
-		if (!username) return;
-		setUser(null);
-		setError(null);
-		chatApi.getUser(username)
-			.then(setUser)
-			.catch((e) => setError(String(e)));
-	}, [username]);
+		const fetchProfile = async () => {
+			setLoading(true);
+			try {
+				if (isOwnProfile) {
+					setProfileUser(currentUser);
+				} else {
+					const data = await chatApi.getUser(username!);
+					setProfileUser(data);
+				}
+			} catch (err) {
+				console.error('Failed to fetch profile:', err);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		if (!authLoading) fetchProfile();
+	}, [username, currentUser, authLoading, isOwnProfile]);
+
+	// check friend status
+	useEffect(() => {
+		const checkFriendStatus = async () => {
+			if (isOwnProfile || !profileUser?.id) return;
+
+			try {
+				const [incoming, outgoing, friends] = await Promise.all([
+					friendApi.listIncoming(),
+					friendApi.listOutgoing(),
+					friendApi.listFriends(),
+				]);
+
+				const targetId = profileUser.id;
+
+				const isFriend = friends.some((f: any) => f.id === targetId);
+				if (isFriend) { setFriendStatus('friends'); return; }
+
+				const inReq = incoming.find((r: any) => r.sender_id === targetId);
+				if (inReq) { setFriendStatus('pending_received'); setFriendRequestId(inReq.id); return; }
+
+				const outReq = outgoing.find((r: any) => r.receiver_id === targetId);
+				if (outReq) { setFriendStatus('pending_sent'); setFriendRequestId(outReq.id); return; }
+
+				setFriendStatus('none');
+			} catch (err) {
+				console.error('Failed to check friend status:', err);
+			}
+		};
+
+		checkFriendStatus();
+	}, [profileUser, isOwnProfile, refreshTrigger]);
+
+	// refresh callback for child components
+	const handleFriendAction = () => {
+		setRefreshTrigger((prev) => prev + 1);
+	};
+
+	// loading state
+	if (authLoading || loading) {
+		return (
+			<div className="flex justify-center items-center min-h-[50vh]">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		);
+	}
+
+	if (!profileUser) {
+		return (
+			<div className="flex justify-center items-center min-h-[50vh]">
+				<p className="text-muted-foreground">User not found.</p>
+			</div>
+		);
+	}
 
 	return (
-		<div className="space-y-4">
-			<Link to="/chat" className="text-sm text-muted-foreground hover:text-foreground">
-				← back
-			</Link>
+		<div className="max-w-5xl mx-auto py-8 px-4">
+			<div className="flex gap-6">
+				<div className="flex-1 min-w-0">
+					<ProfileHeader
+						username={profileUser.username}
+						avatar={profileUser.avatar}
+						type={profileUser.type}
+						isOnline={profileUser.isOnline}
+						isOwnProfile={isOwnProfile}
+						friendStatus={friendStatus}
+						friendRequestId={friendRequestId}
+						targetUserId={profileUser?.id || ''}
+						onFriendAction={handleFriendAction}
+					/>
+				</div>
 
-			<h1 className="text-2xl font-semibold">Profile debug</h1>
-
-			<div className="text-sm">
-				<span className="text-muted-foreground">url param: </span>
-				<code className="font-mono">{username ?? '(none)'}</code>
-			</div>
-
-			<div className="p-4 rounded-lg bg-secondary text-sm">
-				<div className="text-muted-foreground mb-2">GET /api/chat/users/{username}</div>
-				{error && <pre className="text-destructive">{error}</pre>}
-				{user && !error && (
-					<pre className="whitespace-pre-wrap break-all">
-						{JSON.stringify(user, null, 2)}
-					</pre>
+				{isOwnProfile && (
+					<SidePanel
+						refreshTrigger={refreshTrigger}
+						onAction={handleFriendAction}
+					/>
 				)}
-				{!user && !error && <div className="opacity-60">loading…</div>}
 			</div>
 		</div>
 	);

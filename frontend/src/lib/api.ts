@@ -165,6 +165,7 @@ export interface UserProfile {
     lastname?: string;
     avatar: string;
     isOnline: boolean;
+    type: 'CLIENT' | 'FREELANCER';
     createdAt: string;
 }
 

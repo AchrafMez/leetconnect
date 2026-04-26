@@ -123,8 +123,26 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 				return (ids[0] === target[0] && ids[1] === target[1]);
 			});
 
-			if (existing_direct)
-				throw new err.BadRequestError('conversation already exists');
+			if (existing_direct) {
+				const full = await prisma.convers.findUnique({
+					where: {id: existing_direct.id},
+					include: {
+						members: {
+							select: {
+								user_id: true,
+								user: { select: { username: true, avatar: true } },
+							},
+						},
+						messages: {
+							orderBy: { created_at: 'desc' },
+							take: 1,
+							select: { content: true, sender_id: true, created_at: true },
+						},
+					},
+				});
+				res.status(200).json(full);
+				return;
+			}
 		}
 
 		const created = await prisma.$transaction(async (trans) => {

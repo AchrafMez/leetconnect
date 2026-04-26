@@ -1,5 +1,6 @@
 // // @adbouras
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import ChatBox from "./ChatBox";
 import ConversPanel from "./ConversPannel";
@@ -14,6 +15,7 @@ export default function Messages() {
 
 	const { user } = useAuth();
 	const CURRENT_USER_ID = user?.id ?? '';
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	const [conversations, setConversations] = useState<Conversation[]>([]);
 	const [messages, setMessages] = useState<Message[]>([]);
@@ -80,6 +82,19 @@ export default function Messages() {
 			.then(setConversations)
 			.catch(console.error);
 	}, [CURRENT_USER_ID]);
+
+	// auto select conversation from ?conv=<id>
+	useEffect(() => {
+		const conv = searchParams.get('conv');
+		if (!conv || conversations.length === 0) return;
+		const id = parseInt(conv, 10);
+		if (Number.isNaN(id)) return;
+		if (conversations.some((c) => c.id === id)) {
+			setActiveId(id);
+			searchParams.delete('conv');
+			setSearchParams(searchParams, { replace: true });
+		}
+	}, [searchParams, conversations, setSearchParams]);
 
 	// load messages when active conversation changes
 	useEffect(() => {
