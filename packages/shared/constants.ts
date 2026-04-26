@@ -18,6 +18,7 @@ export const USER_TYPES = {
 
 export const AUTH_EVENTS = {
   USER_REGISTERED: 'user.registered',
+  USER_UPDATED: 'user.updated',
 };
 
 // The data sent to other services

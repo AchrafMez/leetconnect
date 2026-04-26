@@ -150,12 +150,12 @@ export default function Login() {
                                     <label htmlFor="password" className="block text-sm font-medium text-foreground">
                                         Password
                                     </label>
-                                    <Link
+                                    {/* <Link
                                         to="/auth/forgot-password"
                                         className="text-xs text-primary hover:text-primary/80 transition-colors"
                                     >
                                         Forgot Password?
-                                    </Link>
+                                    </Link> */}
                                 </div>
                                 <div className="relative">
                                     <input

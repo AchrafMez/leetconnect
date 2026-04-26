@@ -257,3 +257,78 @@ export const logout = async (req: Request, res: Response) => {
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     res.sendStatus(204);
 };
+
+
+// user settings profile method
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.userId; // From JWT
+        const { email, firstname, lastname, username, avatar, bio, location, website, title } = req.body;
+
+        // Update in the Auth Database
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { 
+                email,
+                firstname, 
+                lastname, 
+                username, 
+                avatar, 
+                bio: bio,
+                location: location,
+                website: website,
+                title: title
+            },
+            select: { id: true, username: true, firstname: true, lastname: true, email: true, role: true, type: true, avatar: true, bio:true, title:true, website:true, location:true }
+        });
+
+        // Tell other services the profile changed
+        await publishEvent(AUTH_EVENTS.USER_UPDATED, {
+            id: updatedUser.id,
+            email:updatedUser.email,
+            username: updatedUser.username,
+            avatar: updatedUser.avatar,
+            firstname: updatedUser.firstname,
+            lastname: updatedUser.lastname,
+            bio: updatedUser.bio,
+            location: updatedUser.location,
+            website: updatedUser.website,
+            title: updatedUser.title
+        });
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user: updatedUser
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// change password in profile settings
+export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user!.userId;
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        
+        // verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user!.password!);
+        if (!isMatch) {
+            return res.status(401).json({ error: "Current password is incorrect" });
+        }
+
+        // hash and save new password
+        const hashed = await bcrypt.hash(newPassword, 12);
+        await prisma.user.update({
+            where: { id: userId },
+            data: { password: hashed }
+        });
+
+        res.status(200).json({ message: "Password updated successfully" });
+    } catch (error) {
+        next(error);
+    }
+};
+

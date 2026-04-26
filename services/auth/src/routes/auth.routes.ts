@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, refresh, logout } from '../controllers/auth.controller';
+import { register, login, refresh, logout, updateProfile, changePassword } from '../controllers/auth.controller';
 import { registerValidator, loginValidator } from '../validators/auth.validator';
 import { validate } from '../middlewares/validate';
 import { authMiddleware } from '@leetconnect/shared';
@@ -11,7 +11,8 @@ router.post('/register', registerValidator, validate, register);
 router.post('/login', loginValidator, validate, login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
-
+router.patch('/settings', authMiddleware, updateProfile);
+router.post('/change-password', authMiddleware, changePassword);
 
 // test auth middleware 
 router.get('/me', authMiddleware, async (req, res) => {
