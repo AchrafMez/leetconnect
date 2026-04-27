@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, UserMinus, Loader2, Users } from 'lucide-react';
-import { friendApi, type Friend } from '../../lib/api';
+import { chatApi, friendApi, type Friend } from '../../lib/api';
 import Avatar from '../chat/Avatar';
 
 interface FriendListProps {
@@ -13,7 +13,23 @@ export default function FriendList({ refreshTrigger, onAction }: FriendListProps
 	const [friends, setFriends] = useState<Friend[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [removingId, setRemovingId] = useState<string | null>(null);
+	const [openingId, setOpeningId] = useState<string | null>(null);
 	const navigate = useNavigate();
+
+	const handleMessage = async (friendId: string) => {
+		setOpeningId(friendId);
+		try {
+			const convers = await chatApi.createConversation({
+				type: 'Direct',
+				member_ids: [friendId],
+			});
+			navigate(`/chat?conv=${convers.id}`);
+		} catch (err) {
+			console.error('Failed to open conversation:', err);
+		} finally {
+			setOpeningId(null);
+		}
+	};
 
 	useEffect(() => {
 		setLoading(true);
@@ -82,14 +98,18 @@ export default function FriendList({ refreshTrigger, onAction }: FriendListProps
 							</div>
 
 							<div className="flex gap-1 shrink-0">
-								<button
-									onClick={() => navigate('/chat')}
-									title="Send message"
-									className="p-1.5 text-muted-foreground hover:text-foreground
-										hover:bg-background rounded-lg transition-colors"
-								>
-									<MessageCircle size={14} />
-								</button>
+								{openingId === friend.id ? (
+									<Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground m-1.5" />
+								) : (
+									<button
+										onClick={() => handleMessage(friend.id)}
+										title="Send message"
+										className="p-1.5 text-muted-foreground hover:text-foreground
+											hover:bg-background rounded-lg transition-colors"
+									>
+										<MessageCircle size={14} />
+									</button>
+								)}
 								{removingId === friend.id ? (
 									<Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground m-1.5" />
 								) : (

@@ -114,8 +114,11 @@ export default function ProfileHeader({
 
 		if (isOwnProfile) {
 			return (
-				<button className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground
-					rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+				<button
+					onClick={() => navigate('/settings/profile')}
+					className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground
+						rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+				>
 					<Settings size={14} />
 					Edit Profile
 				</button>

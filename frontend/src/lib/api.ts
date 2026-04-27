@@ -178,6 +178,7 @@ export interface UserProfile {
     avatar: string;
     isOnline: boolean;
     type: 'CLIENT' | 'FREELANCER';
+    bio?: string | null;
     createdAt: string;
 }
 

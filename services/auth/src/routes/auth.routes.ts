@@ -34,6 +34,10 @@ router.get('/me', authMiddleware, async (req, res) => {
         role: true,
         type: true,
         isOnline: true,
+        bio: true,
+        location: true,
+        website: true,
+        title: true,
         createdAt: true,
       }
     });

@@ -70,6 +70,13 @@ export default function Messages() {
 			.catch(console.error);
 	}, [CURRENT_USER_ID]);
 
+	// tell server were on /chat to suppress message notifs
+	useEffect(() => {
+		const socket = getSocket();
+		socket.emit('chat_active', true);
+		return () => { socket.emit('chat_active', false); };
+	}, []);
+
 	// when a group is created
 	const handleGroupCreated = useCallback((convers: Conversation) => {
 		setConversations((prev) => [convers, ...prev]);

@@ -9,13 +9,14 @@ import Register from './pages/auth/Register';
 import Dashboard from './pages/market/Dashboard';
 import Messages from './pages/chat/Messages';
 import Admin from './pages/admin/Admin';
-import ProfileSettingsPage from './pages/settings/profileSettings';
 import Layout from './components/Layout';
 // import Theme from './components/ThemeShowcase';
 // import Navbar from './components/Navbar';
 import { ScrollToTop } from './components/ScrollToTop';
 import { GuestRoute } from './components/GuestRoute';
 import ProfilePage from './pages/profile/ProfilePage';
+import ProfileSettingsPage from './pages/settings/profileSettings';
+import { RequireAuth } from './components/RequireAuth';
 
 export default function App() {
   return (
@@ -27,7 +28,7 @@ export default function App() {
           <Route path="/auth/sign-in" element={<Login />} />
           <Route path="/auth/sign-up" element={<Register />} />
         </Route>
-
+        
         {/*Public routes*/}
         <Route path="/" element={<Landing />} />
         {/* <Route path="/auth/sign-in" element={<Login />} />
@@ -37,12 +38,14 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
 
         {/*authenticated routes (with shared layout)*/}
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/chat" element={<Messages />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/settings/profile" element={<ProfileSettingsPage />} />
-          <Route path="/profile/:username" element={<ProfilePage />} />
+        <Route element={<RequireAuth />}>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/chat" element={<Messages />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/profile/:username" element={<ProfilePage />} />
+            <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+          </Route>
         </Route>
       </Routes>
     </>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/Theme";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/userContext";
+import NotifBell from "@/components/NotifBell";
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
@@ -71,19 +72,21 @@ export default function Navbar() {
               <Button
                 onClick={() => navigate('/auth/sign-up')}
                 variant={isActive('/auth/sign-up') ? 'default' : 'outline'}
-                className={!location.pathname.startsWith('/auth') ? 'bg-white text-black hover:bg-white/90' : ''}
               >
                 Sign up
               </Button>
             </>
-          ) : !loading && user ? (
-            <Button
-              onClick={handleLogout}
-              variant="default"
-            >
-              Logout
-            </Button>
-          ) : null}
+          ) : (
+            <>
+              <NotifBell />
+              <Button
+                onClick={handleLogout}
+                variant="default"
+              >
+                Logout
+              </Button>
+            </>
+          )}
         </div>
       </nav>
     </header>

@@ -44,6 +44,9 @@ export function setup_sockets(io: Server) {
 			console.log(`socket ${socket.id} left room ${room}`);
 			const roomSize = io.sockets.adapter.rooms.get(room)?.size ?? 0;
 		});
+		socket.on('chat_active', (active: boolean) => {
+			socket.data.chatActive = !!active;
+		});
 		socket.on('disconnect', (reason: string) => {
 			console.log(`socket disconnected: ${socket.id} (${reason})`);
 		});

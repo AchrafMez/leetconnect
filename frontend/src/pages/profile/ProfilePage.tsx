@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/userContext';
 import { chatApi, friendApi } from '../../lib/api';
 import ProfileHeader from './ProfileHeader';
+import ProfileBio from './ProfileBio';
 import SidePanel from './SidePanel';
 
 export default function ProfilePage() {
@@ -100,7 +101,7 @@ export default function ProfilePage() {
 	return (
 		<div className="max-w-5xl mx-auto py-8 px-4">
 			<div className="flex gap-6">
-				<div className="flex-1 min-w-0">
+				<div className="flex-1 min-w-0 space-y-4">
 					<ProfileHeader
 						username={profileUser.username}
 						avatar={profileUser.avatar}
@@ -111,6 +112,10 @@ export default function ProfilePage() {
 						friendRequestId={friendRequestId}
 						targetUserId={profileUser?.id || ''}
 						onFriendAction={handleFriendAction}
+					/>
+					<ProfileBio
+						bio={profileUser.bio}
+						isOwnProfile={isOwnProfile}
 					/>
 				</div>
 
