@@ -24,7 +24,6 @@ services:
       context: .
       dockerfile: services/postgres/Dockerfile
     restart: unless-stopped
-    command: ["postgres", "-c", "ssl=on", "-c", "ssl_cert_file=/etc/ssl/internal/postgres.crt", "-c", "ssl_key_file=/etc/ssl/internal/postgres.key"]
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -38,17 +37,19 @@ services:
       - ./scripts/init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
     networks:
       - leetconnect
+    ports:
+      - "5432:5432"
   redis:
     container_name: redis
     build:
       context: .
       dockerfile: services/redis/Dockerfile
     restart: unless-stopped
-    command: ["redis-server", "--tls-port", "6379", "--port", "0", "--tls-cert-file", "/etc/ssl/internal/redis.crt", "--tls-key-file", "/etc/ssl/internal/redis.key", "--tls-ca-cert-file", "/etc/ssl/internal/ca.crt", "--tls-auth-clients", "no"]
+    # command: ["redis-server", "--tls-port", "6379", "--port", "0", "--tls-cert-file", "/etc/ssl/internal/redis.crt", "--tls-key-file", "/etc/ssl/internal/redis.key", "--tls-ca-cert-file", "/etc/ssl/internal/ca.crt", "--tls-auth-clients", "no"]
     networks:
       - leetconnect
     healthcheck:
-      test: [ "CMD", "redis-cli", "--tls", "--cacert", "/etc/ssl/internal/ca.crt", "ping" ]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -78,11 +79,11 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-      - SSL_KEY_PATH=/etc/ssl/internal/auth.key
-      - SSL_CERT_PATH=/etc/ssl/internal/auth.crt
-      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
       - JWT_PRIVATE_KEY_PATH=/etc/ssl/internal/jwt_private.key
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+      # - SSL_KEY_PATH=/etc/ssl/internal/auth.key
+      # - SSL_CERT_PATH=/etc/ssl/internal/auth.crt
+      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
     volumes:
       - ./certs:/etc/ssl/internal:ro
   marketplace:
@@ -103,11 +104,11 @@ services:
       - DATABASE_URL=postgresql://${MARKET_DB_USER}:${MARKET_DB_PASS}@postgres:5432/${MARKET_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
-      - AUTH_SERVICE_URL=https://auth:3001
-      - SSL_KEY_PATH=/etc/ssl/internal/marketplace.key
-      - SSL_CERT_PATH=/etc/ssl/internal/marketplace.crt
-      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - AUTH_SERVICE_URL=http://auth:3001
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+      # - SSL_KEY_PATH=/etc/ssl/internal/marketplace.key
+      # - SSL_CERT_PATH=/etc/ssl/internal/marketplace.crt
+      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
     volumes:
       - ./certs:/etc/ssl/internal:ro
   chat:
@@ -128,11 +129,11 @@ services:
       - DATABASE_URL=postgresql://${CHAT_DB_USER}:${CHAT_DB_PASS}@postgres:5432/${CHAT_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
-      - AUTH_SERVICE_URL=https://auth:3001
-      - SSL_KEY_PATH=/etc/ssl/internal/chat.key
-      - SSL_CERT_PATH=/etc/ssl/internal/chat.crt
-      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - AUTH_SERVICE_URL=http://auth:3001
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+      # - SSL_KEY_PATH=/etc/ssl/internal/chat.key
+      # - SSL_CERT_PATH=/etc/ssl/internal/chat.crt
+      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
     volumes:
       - ./certs:/etc/ssl/internal:ro
   analytics:
@@ -153,11 +154,11 @@ services:
       - DATABASE_URL=postgresql://${ANALYTICS_DB_USER}:${ANALYTICS_DB_PASS}@postgres:5432/${ANALYTICS_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - REDIS_URL=${REDIS_URL}
-      - AUTH_SERVICE_URL=https://auth:3001
-      - SSL_KEY_PATH=/etc/ssl/internal/analytics.key
-      - SSL_CERT_PATH=/etc/ssl/internal/analytics.crt
-      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - AUTH_SERVICE_URL=http://auth:3001
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+      # - SSL_KEY_PATH=/etc/ssl/internal/analytics.key
+      # - SSL_CERT_PATH=/etc/ssl/internal/analytics.crt
+      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
     volumes:
       - ./certs:/etc/ssl/internal:ro
   admin:
@@ -169,25 +170,27 @@ services:
     restart: unless-stopped
     networks:
       - leetconnect
-    ports:
-      - "5432:5432"
     depends_on:
-      - auth
-      - marketplace
-      - analytics
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # - auth
+      # - marketplace
+      # - analytics
     environment:
+      - REDIS_URL=${REDIS_URL} 
       - JWT_SECRET=${JWT_SECRET}
-      - AUTH_SERVICE_URL=https://auth:3001
-      - MARKETPLACE_SERVICE_URL=https://marketplace:3002
-      - ANALYTICS_SERVICE_URL=https://analytics:3004
-      - SSL_KEY_PATH=/etc/ssl/internal/admin.key
-      - SSL_CERT_PATH=/etc/ssl/internal/admin.crt
-      - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - AUTH_SERVICE_URL=http://auth:3001
+      - MARKETPLACE_SERVICE_URL=http://marketplace:3002
+      - ANALYTICS_SERVICE_URL=http://analytics:3004
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
+      - DATABASE_URL=postgresql://${ADMIN_DB_USER}:${ADMIN_DB_PASS}@postgres:5432/${ADMIN_DB_NAME}
     volumes:
       - ./certs:/etc/ssl/internal:ro
-      - ./services/admin:/app/service
-      - /app/service/node_modules
+      # - SSL_KEY_PATH=/etc/ssl/internal/admin.key
+      # - SSL_CERT_PATH=/etc/ssl/internal/admin.crt
+      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
   frontend:
     container_name: frontend
     build: ./frontend
@@ -199,6 +202,56 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - leetconnect
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - leetconnect
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8080:8080"
+    networks:
+      - leetconnect
 
 networks:
   leetconnect:
@@ -207,3 +260,5 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  prometheus_data:
+  grafana_data:

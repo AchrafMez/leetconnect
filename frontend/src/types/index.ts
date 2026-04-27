@@ -1,9 +1,13 @@
-export type Role = 'admin' | 'moderator' | 'user' | 'guest';
+import { User } from "@/lib/api";
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
+export type Role = 'ADMIN' | 'MODERATOR' | 'USER';
+
+export interface AdminUser extends User {
+  // id: string;
+  // name: string;
+  // email: string;
+	firstname: string;
+	lastname: string;
   role: Role;
   avatar?: string;
   createdAt: string;
@@ -26,18 +30,18 @@ export type JobCategory =
 export interface Job {
   id: string;
   title: string;
-  category: JobCategory;
+  description: string;
   budget: number;
   budgetType: 'fixed' | 'hourly';
+  category: JobCategory;
   status: JobStatus;
-  proposalCount: number;
-  postedBy: string;
-  postedByName: string;
-  postedByAvatar: string;
   createdAt: string;
-  deadline?: string;
-  description: string;
+  proposals: number;
   skills: string[];
+  deadline?: string;
+  postedByName: string;
+  // postedByAvatar: string;
+	createdBy: AdminUser;
 }
 
 export interface RoleDefinition {
@@ -64,12 +68,9 @@ export type Permission =
   | 'content:edit'
   | 'content:delete'
   | 'content:moderate'
-  | 'jobs:read'
-  | 'jobs:delete'
-  | 'jobs:moderate';
 
 export interface AuthState {
-  user: User | null;
+  user: AdminUser | null;
   token: string | null;
   isLoading: boolean;
 }

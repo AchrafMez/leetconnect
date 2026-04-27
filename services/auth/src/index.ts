@@ -4,11 +4,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 // shared resources
-import { initEventBus, closeEventBus, errorHandler} from '@leetconnect/shared';
+import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal} from '@leetconnect/shared';
 
 // ensure zero trust 
-import fs from 'fs';
-import https from 'https';
+// import fs from 'fs';
+// import https from 'https';
 import cookieParser from 'cookie-parser'; // to store tokens in cookies
 import prisma from './lib/prisma';
 import authRoutes from './routes/auth.routes';
@@ -18,11 +18,31 @@ import { rateLimit } from 'express-rate-limit';
 const app = express();
 const PORT =  3001;
 
+
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const durationSeconds = (Date.now() - start) / 1000;
+    const route = req.route?.path ?? req.path;
+    const labels = {
+      method: req.method,
+      route,
+      status_code: String(res.statusCode),
+    };
+
+    httpRequestDuration.observe(labels, durationSeconds);
+    httpRequestsTotal.inc(labels);
+  });
+
+  next();
+});
+
 // SSL configuration
-const sslOptions = {
-    key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-    cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
-};
+// const sslOptions = {
+//     key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
+//     cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
+// };
 
 // middleware
 app.use(helmet());
@@ -34,6 +54,11 @@ app.use(morgan('dev')); // display logs
 app.use(express.json()); // takes body of request and turn it into req.body object
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(await getMetrics());
+});
 
 // add rate limiting 
 // const authLimiter = rateLimit({
@@ -69,7 +94,7 @@ async function start() {
     await prisma.$connect(); // connect with postgres database
     console.log('auth db connected');
     initEventBus(process.env.REDIS_URL); // conntect Auth service to Redis ??
-    https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`auth service running on port ${PORT}`);
     });
   } catch (err) {
