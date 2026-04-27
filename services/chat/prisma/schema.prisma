@@ -95,7 +95,7 @@ model FriendRequest {
   updated_at      DateTime        @updatedAt
 
   sender          User            @relation("SentFriendRequests", fields: [sender_id], references: [id], onDelete: Cascade)
-  receicer        User            @relation("RecvFriendRequests", fields: [receiver_id], references: [id], onDelete: Cascade)
+  receiver        User            @relation("RecvFriendRequests", fields: [receiver_id], references: [id], onDelete: Cascade)
 
   @@index([receiver_id, status])
   @@index([sender_id, status])

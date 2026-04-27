@@ -1,7 +1,6 @@
 import dotenv			from 'dotenv';
 import express			from 'express';
-import https			from 'https';
-import fs				from 'fs';
+import http				from 'http';
 import { Server }		from 'socket.io';
 
 import health_routes	from './routes/route.health';
@@ -18,7 +17,11 @@ import { setup_sockets } from './sockets/socket.handler';
 
 import {
 	initEventBus, subscribeToEvents,
-	AUTH_EVENTS } from '@leetconnect/shared';
+	AUTH_EVENTS,
+	getMetrics,
+	httpRequestDuration,
+	httpRequestsTotal,
+} from '@leetconnect/shared';
 
 import { authMiddleware } from '@leetconnect/shared';
 
@@ -26,13 +29,8 @@ dotenv.config({ path: '../../.env', quiet: true});
 
 const PORT = process.env.CHAT_DB_PORT || 3003;
 
-const sslOptions = {
-	key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-	cert: fs.readFileSync(process.env.SSL_CERT_PATH as string),
-};
-
 const app = express();
-const server = https.createServer(sslOptions, app);
+const server = http.createServer(app);
 
 const io = new Server(server, {
 	cors: { origin: '*' },
@@ -40,6 +38,30 @@ const io = new Server(server, {
 
 app.use(express.json());
 app.set('io', io);
+
+app.use((req, res, next) => {
+	const start = Date.now();
+
+	res.on('finish', () => {
+		const durationSeconds = (Date.now() - start) / 1000;
+		const route = req.route?.path ?? req.path;
+		const labels = {
+			method: req.method,
+			route,
+			status_code: String(res.statusCode),
+		};
+
+		httpRequestDuration.observe(labels, durationSeconds);
+		httpRequestsTotal.inc(labels);
+	});
+
+	next();
+});
+
+app.get('/metrics', async (_req, res) => {
+	res.set('Content-Type', 'text/plain; version=0.0.4');
+	res.send(await getMetrics());
+});
 
 app.use('/api/chat', health_routes);
 

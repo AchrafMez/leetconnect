@@ -5,19 +5,37 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import sequelize from './config/database';
 import healthRoutes from './routes/health';
-import { initEventBus, closeEventBus } from '@leetconnect/shared';
-import { errorHandler } from '@leetconnect/shared';
-import fs from 'fs';
-import https from 'https';
+import { closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal, initEventBus } from '@leetconnect/shared';
+// import fs from 'fs';
+// import https from 'https';
 
 const app = express();
 const PORT =  3002;
 
-const sslOptions = {
-    key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-    cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
-};
+// const sslOptions = {
+//     key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
+//     cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
+// };
 
+
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const durationSeconds = (Date.now() - start) / 1000;
+    const route = req.route?.path ?? req.path;
+    const labels = {
+      method: req.method,
+      route,
+      status_code: String(res.statusCode),
+    };
+
+    httpRequestDuration.observe(labels, durationSeconds);
+    httpRequestsTotal.inc(labels);
+  });
+
+  next();
+});
 
 // middleware
 app.use(helmet());
@@ -25,6 +43,11 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(await getMetrics());
+});
 // routes
 app.use('/api/market', healthRoutes);
 
@@ -39,7 +62,7 @@ async function start() {
     await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
     console.log('marketplace models synced');
     initEventBus(process.env.REDIS_URL);
-    https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`marketplace service running on port ${PORT}`);
     });
   } catch (err) {

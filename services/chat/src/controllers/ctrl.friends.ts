@@ -178,7 +178,7 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 				status: 'PENDING'
 			},
 			include: {
-				receicer: {
+				receiver: {
 					select: {
 						id: true,
 						username: true,
@@ -189,13 +189,13 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 			orderBy: {created_at: 'desc'}
 		});
 
-		const mapped = reguest.map(({receicer, ...rest}: 
-			{ receicer: {
+		const mapped = reguest.map(({receiver, ...rest}: 
+			{ receiver: {
 				id: string;
 				username: string;
 				avatar: string
 			}; [key: string]: unknown
-		}) => ({...rest, receiver: receicer}));
+		}) => ({...rest, receiver: receiver}));
 
 		res.status(200).json(mapped);
 

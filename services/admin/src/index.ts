@@ -4,17 +4,36 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import healthRoutes from './routes/health';
-import { errorHandler } from '@leetconnect/shared';
-import fs from 'fs';
-import https from 'https';
+import { errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal } from '@leetconnect/shared';
+// import fs from 'fs';
+// import https from 'https';
+
 
 const app = express();
 const PORT =  3005;
-const sslOptions = {
-    key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-    cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
-};
+// const sslOptions = {
+//     key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
+//     cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
+// };
 
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const durationSeconds = (Date.now() - start) / 1000;
+    const route = req.route?.path ?? req.path;
+    const labels = {
+      method: req.method,
+      route,
+      status_code: String(res.statusCode),
+    };
+
+    httpRequestDuration.observe(labels, durationSeconds);
+    httpRequestsTotal.inc(labels);
+  });
+
+  next();
+});
 
 // middleware
 app.use(helmet());
@@ -23,6 +42,11 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(await getMetrics());
+});
+
 // routes
 app.use('/api/admin', healthRoutes);
 
@@ -30,9 +54,11 @@ app.use('/api/admin', healthRoutes);
 app.use(errorHandler);
 
 // start
-https.createServer(sslOptions, app).listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`admin service running on port ${PORT}`);
 });
+
+
 
 process.on('SIGTERM', () => {
   console.log('shutting down admin service...');

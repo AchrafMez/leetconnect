@@ -1,0 +1,20 @@
+groups:
+  - name: minimal-alerts
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~"auth|marketplace|chat|analytics|admin"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.job }} is not responding"
+
+      - alert: CadvisorDown
+        expr: up{job="cadvisor"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "cAdvisor is down"
+          description: "Prometheus cannot scrape cAdvisor"
