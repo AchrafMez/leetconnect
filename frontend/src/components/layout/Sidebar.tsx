@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/useAuth';
+import { useAuth } from '../../context/userContext';
 import { HiOutlineArrowRightOnRectangle,
 				 HiOutlineBriefcase,
 				 HiOutlineChartPie,
@@ -70,7 +70,7 @@ export const Sidebar = () => {
     }`;
 
   return (
-    <aside className="w-[250px] shrink-0 flex flex-col bg-sidebar border-sidebar-border h-screen overflow-hidden">
+    <aside className="w-[250px] shrink-0 flex flex-col bg-sidebar border-sidebar-border h-screen overflow-hidden pb-3">
       <div className="px-10 py-5 items-center">
 				<Link to="/admin">
             <span className="font-sans font-bold text-[20px] tracking-tighter flex items-baseline cursor-pointer transition-colors hover:opacity-80">
@@ -106,10 +106,10 @@ export const Sidebar = () => {
 
         <button
           onClick={handleLogout}
-          className="w-full flex pl-6 items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors"
+          className="w-full flex pl-6 items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary transition-colors"
         >
           <HiOutlineArrowRightOnRectangle className='w-5 h-5' />
-          Logout
+					<span className='text-destructive'>Logout</span>
         </button>
     </aside>
   );
