@@ -2,17 +2,17 @@ import { useEffect, useState } from 'react';
 import { CanAccess } from '../../components/CanAccess';
 import { RoleBadge, StatusBadge } from '../../components/ui/RoleBadge';
 import { ROLE_META } from '../../lib/permissions';
-import type { AdminUser, Role } from '../../types';
+import type { Role } from '../../types';
 import { HiOutlineMagnifyingGlass, HiOutlineUserMinus } from 'react-icons/hi2';
-import { adminApi } from '@/lib/api';
+import { adminApi, User } from '@/lib/api';
 import { Spin } from '@/components/ui/Spin';
 import { useDebounce } from '@/hooks/useDebounce';
 
 const ALL_ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
 
 export const UsersPage = () => {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -102,7 +102,6 @@ export const UsersPage = () => {
         <p className="text-muted-foreground text-sm mt-1">Manage platform members and their access levels.</p>
       </div>
 
-      
       <div className="grid grid-cols-3 gap-4 mb-8">
         {ALL_ROLES.map(role => {
           const count = allUsers.filter(u => u.role === role).length;

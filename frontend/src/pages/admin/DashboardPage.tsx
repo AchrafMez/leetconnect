@@ -1,7 +1,7 @@
-import { useAuth } from '../../context/useAuth';
+import { useAuth } from '../../context/userContext';
 import { CanAccess } from '../../components/CanAccess';
 import { RoleBadge, StatusBadge } from '../../components/ui/RoleBadge';
-import type { Role, AdminUser, Job } from '../../types';
+import type { Role, Job } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { HiOutlineBookmarkSlash,
 				 HiOutlineCheckCircle,
@@ -9,7 +9,7 @@ import { HiOutlineBookmarkSlash,
 				 HiOutlineShieldCheck,
 				 HiOutlineUsers } from 'react-icons/hi2'
 import { useEffect, useState } from 'react';
-import { adminApi } from '@/lib/api';
+import { adminApi, User } from '@/lib/api';
 import { Spin } from '@/components/ui/Spin';
 
 const ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
@@ -17,16 +17,16 @@ const ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
 const STAT_CARDS = [
   {
     label: 'Total Users',
-    getValue: (u: AdminUser[]) => u.length,
-    getSub: (u: AdminUser[]) => `↑ ${u.filter(x => x.status === 'active').length} active`,
+    getValue: (u: User[]) => u.length,
+    getSub: (u: User[]) => `↑ ${u.filter(x => x.status === 'active').length} active`,
     subColor: 'text-primary',
     iconBg: 'bg-primary/10',
     icon: <HiOutlineUsers className="h-5 w-5 text-primary" />
   },
   {
     label: 'Active',
-    getValue: (u: AdminUser[]) => u.filter(x => x.status === 'active').length,
-    getSub: (u: AdminUser[]) => `${u.filter(x => x.status === 'pending').length} pending`,
+    getValue: (u: User[]) => u.filter(x => x.status === 'active').length,
+    getSub: (u: User[]) => `${u.filter(x => x.status === 'pending').length} pending`,
     subColor: 'text-amber-400',
     iconBg: 'bg-blue-500/10',
     icon: <HiOutlineCheckCircle className="w-5 h-5 text-blue-400" />
@@ -41,7 +41,7 @@ const STAT_CARDS = [
   },
   {
     label: 'Suspended',
-    getValue: (u: AdminUser[]) => u.filter(x => x.status === 'suspended').length,
+    getValue: (u: User[]) => u.filter(x => x.status === 'suspended').length,
     getSub: () => 'accounts restricted',
     subColor: 'text-muted-foreground',
     iconBg: 'bg-destructive/10',
@@ -57,7 +57,7 @@ const JOB_STATUS_STYLES = {
 
 export const DashboardPage = () => {
   const { user } = useAuth();
-	const [users, setUsers] = useState<AdminUser[]>([]);
+	const [users, setUsers] = useState<User[]>([]);
 	const [jobs, setJobs] = useState<Job[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);

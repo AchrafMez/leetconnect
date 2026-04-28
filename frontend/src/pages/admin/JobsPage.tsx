@@ -97,7 +97,6 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
           </button>
         </div>
 
-
 				<div className="px-6 py-5 grid grid-cols-2 gap-4 border-b border-border">
           {[
             { label: 'Budget', value: formatBudget(job) },
@@ -111,7 +110,6 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
             </div>
           ))}
         </div>
-
         
         <div className="px-6 py-4 border-b border-border">
           <p className="text-xs text-muted-foreground mb-3">Posted by</p>
@@ -344,7 +342,6 @@ export const JobsPage = () => {
         </select>
         <span className="ml-auto text-sm font-semibold text-muted-foreground">{jobs.length} jobs</span>
       </div>
-
       
       <div className="bg-card border border-border overflow-hidden">
         <table className="w-full">
@@ -383,7 +380,6 @@ export const JobsPage = () => {
                     </div>
                   </td>
 
-                
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
@@ -392,7 +388,6 @@ export const JobsPage = () => {
                       <span className="text-sm text-foreground">{job.postedByName}</span>
                     </div>
                   </td>
-
                   
                   <td className="px-6 py-4">
                     <span className="text-sm font-medium text-foreground">{formatBudget(job)}</span>
@@ -400,7 +395,6 @@ export const JobsPage = () => {
                       {job.budgetType === 'hourly' ? '/ hr' : 'fixed'}
                     </span>
                   </td>
-
                 
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5">
@@ -409,7 +403,6 @@ export const JobsPage = () => {
                       </span>
                     </div>
                   </td>
-
                   
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${s.badge}`}>
@@ -417,12 +410,10 @@ export const JobsPage = () => {
                       {s.label}
                     </span>
                   </td>
-
                   
                   <td className="px-6 py-4 text-xs text-muted-foreground">
                     {timeAgo(job.createdAt)}
                   </td>
-
             
                   <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

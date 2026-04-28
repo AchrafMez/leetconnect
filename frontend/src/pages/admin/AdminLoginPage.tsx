@@ -1,17 +1,24 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/useAuth';
+import { useAuth } from '../../context/userContext';
 
 export const AdminLoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+	const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+    });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const from = (location.state as any)?.from?.pathname ?? '/admin';
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,7 +26,7 @@ export const AdminLoginPage = () => {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(formData);
       navigate(from, { replace: true });
     } catch (err: any) {
       setError(err.message ?? 'Login failed. Check your credentials.');
@@ -49,8 +56,9 @@ export const AdminLoginPage = () => {
             <label className="text-xs font-medium text-muted-foreground block mb-1.5">Email</label>
             <input
               type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+							name="email"
+              value={formData.email}
+              onChange={handleChange}
               required
               className="w-full bg-input border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               placeholder="admin@leetconnect.com"
@@ -61,8 +69,9 @@ export const AdminLoginPage = () => {
             <label className="text-xs font-medium text-muted-foreground block mb-1.5">Password</label>
             <input
               type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
+							name="password"
+              value={formData.password}
+              onChange={handleChange}
               required
               className="w-full bg-input border border-border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               placeholder="••••••••"
