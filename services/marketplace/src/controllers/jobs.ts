@@ -13,11 +13,13 @@ export const addJob = async (req: Request, res: Response) => {
     const { title, category, budget, description, skills } = req.body;
 
     const user = req.user;
+    console.log(user)
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     const clientId = user.userId;
+    console.log(clientId,'======================================================')
 
     const job = await prisma.job.create({
       data: {

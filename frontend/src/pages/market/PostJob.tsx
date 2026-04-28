@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Plus } from "lucide-react";
 import {categoriesData} from "../../assets/assets"
+import { jobsApi } from "../../lib/api";
 
 const PostJob = () => {
   const [job, setJob] = useState({
@@ -42,12 +43,7 @@ const handleSubmit = async () => {
   }
   try {
     console.log(job);
-    await axios.post("http://localhost:5000/api/jobs/addjob",job,
-      {
-        withCredentials: true,
-      }
-    );
-
+    await jobsApi.addJob(job);
     alert("Job posted successfully");
 
     setJob({title: "",category: "", budget: "", description: "", skills: []});

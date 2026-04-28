@@ -1,9 +1,10 @@
 
 
+import React, { useEffect, useState } from "react";
 
-import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { jobsApi } from "@/lib/api";
 
 type Proposal = {
   id: string;
@@ -56,25 +57,23 @@ export const jobsData: Job[] = [
 const JobDetails: React.FC = () => {
   const { id } = useParams();
   const [state, setState] = useState("")
+  const [job, setJob] = useState<Job | null>(null);
+const [loading, setLoading] = useState<boolean>(true);
+    useEffect(() => {
+    const fetchJob = async () => {
+      try {
+        const res = await jobsApi.getJobById(id)
 
-  // //   useEffect(() => {
-// //     const fetchJob = async () => {
-// //       try {
-// //         const res = await axios.get(
-// //           `http://localhost:5000/api/jobs/${id}`,
-// //           { withCredentials: true }
-// //         );
+        setJob(res.job);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-// //         setJob(res.data.job);
-// //       } catch (err) {
-// //         console.error(err);
-// //       } finally {
-// //         setLoading(false);
-// //       }
-// //     };
-
-// //     fetchJob();
-// //   }, [id]);
+    fetchJob();
+  }, [id]);
 
 const acceptJob = async (id: string) => {
   // try {
@@ -107,7 +106,7 @@ const rejectJob = async (id: string) => {
   // }
 };
 
-  const job = jobsData.find((item) => item.id === id);
+  // const job = jobsData.find((item) => item.id === id);
 
   if (!job) {
     return <p className="text-white p-6">Job not found</p>;

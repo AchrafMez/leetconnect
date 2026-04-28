@@ -140,12 +140,41 @@ export const authApi = {
     health: () => api<HealthResponse>('/auth/health'),
 };
 
-export const marketApi = {
-    getJobs: () => api<Job[]>('/market/jobs'),
-    getJob: (id: String) => api<Job[]>(`/market/jobs/${id}`),
-    createJob: (data: Omit<Job, 'id'>) => api<Job>('/market/jobs', { method: 'POST', body: data }),
-    health: () => api<HealthResponse>('/market/health'),
+export interface JobRequest {
+    title: string;
+    description: string;
+    category: string;
+    budget: number | string;
+    skills: string[];
+}
+
+export const jobsApi = {
+    addJob: (data: JobRequest) =>
+        api<Job>('/market/jobs/addjob', {   
+            method: 'POST',
+            body: data
+        }),
+
+    getMyJobs: () =>
+        api<{ success: boolean; jobs: Job[] }>('/market/jobs/my-jobs'),
+
+    getAllJobs: () =>
+        api<Job[]>('/market/jobs'),
+
+    getJobById: (id: string) =>
+        api<Job>(`/market/jobs/${id}`),
+
+    deleteJob: (id: string) =>
+        api<void>(`/market/jobs/${id}`, {
+            method: 'DELETE'
+        }),
 };
+// export const marketApi = {
+//     getJobs: () => api<Job[]>('/market/jobs'),
+//     getJob: (id: String) => api<Job[]>(`/market/jobs/${id}`),
+//     createJob: (data: Omit<Job, 'id'>) => api<Job>('/market/jobs', { method: 'POST', body: data }),
+//     health: () => api<HealthResponse>('/market/health'),
+// };
 
 interface PaginatedMessages {
 	messages: 		Message[];

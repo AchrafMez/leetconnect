@@ -29,8 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes
 app.use('/api/market', healthRoutes);
-app.use("/api/jobs", jobsRoutes);
-app.use("/api/proposals", proposalsRoutes);
+app.use("/api/market/jobs", jobsRoutes);
+app.use("/api/market/proposals", proposalsRoutes);
 
 // global error handler
 app.use(errorHandler);
