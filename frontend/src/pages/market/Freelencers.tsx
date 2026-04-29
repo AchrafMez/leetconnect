@@ -1,11 +1,13 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Search, Sliders, X } from "lucide-react";
-import { freelencer } from "../../assets/assets";
+// import { freelencer } from "../../assets/assets";
 
 import FreelancerCard from "@/components/market/FreelancerCard";
 import NumberCarousel from "@/components/market/NumberCarousel";
 import FilterModal from "@/components/market/Filters";
-import { context } from "../../context/context";
+// import { context } from "../../context/context";
+import {  userApi } from "@/lib/api";
+import { useAuth } from "@/context/userContext";
 
 
 
@@ -26,8 +28,10 @@ const Freelencers: React.FC = () => {
   const [numberPages, setNumberPages] = useState<number>(0);
   const [currentPages, setcurrentPages] = useState<number>(1);
   const [showFilter, setShowFilter] = useState<boolean>(false);
+  const [freelancers, setFreelancers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const ctx = useContext(context);
+const ctx = useAuth()
 
 if (!ctx) {
   throw new Error("Context must be used inside Provider");
@@ -37,10 +41,30 @@ const {
   allSkills,
   skills,
   setSkills,
-  freelancers,
-  setFreelancers,
+
 } = ctx;
 
+
+useEffect(() => {
+  console.log('hdsjjjjjjjjjjjjjjj')
+    const fetchFreelancers = async () => {
+      console.log('emmmmmmmm')
+      try {
+        const res = await  userApi.getAllFreelancers();
+        console.log('res----->', res)
+        setFreelancers(res.freelancers);
+        console.log("freelancers:", freelancers);
+      } catch (error) {
+        console.error("Erreur lors du fetch :", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFreelancers();
+  }, []);
+
+ 
   
   const removeSkill = (skill: string) => {
     Object.entries(skills).forEach(([key, value]) => {
@@ -50,21 +74,22 @@ const {
   };
 
 
-  const freelancerRange = useMemo(() => {
-    const start = (currentPages - 1) * 6;
-    const end = start + 6;
+const freelancerRange = useMemo(() => {
+  const start = (currentPages - 1) * 6;
+  const end = start + 6;
 
-    const pages = Math.ceil(freelancers.length / 6);
-    setNumberPages(pages);
+  return freelancers.slice(start, end);
+}, [currentPages, freelancers]);
 
-    return freelancers.slice(start, end);
-  }, [currentPages, freelancers]);
-
+useEffect(() => {
+  setNumberPages(Math.ceil(freelancers.length / 6));
+}, [freelancers]);
   
-  useEffect(() => {
-    setFreelancers(freelencer);
-  }, [setFreelancers]);
+  // useEffect(() => {
+  //   setFreelancers(freelencer);
+  // }, []);
 
+  if (loading) return <p>Chargement...</p>;
   return (
     <div className="bg-black text-white w-full min-h-screen px-10 py-10 flex flex-col gap-8">
 

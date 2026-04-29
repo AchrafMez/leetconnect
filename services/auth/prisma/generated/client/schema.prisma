@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  // Used String/UUID for better security in microservices to prevent IDOR attack :3
+  id       String @id @default(uuid())
+  email    String @unique
+  username String @unique
+
+  firstname String   @default("")
+  lastname  String   @default("")
+  status    Status   @default(active)
+  type      UserType @default(CLIENT)
+
+  // Optional password for OAuth users
+  password String?
+  role     Role    @default(USER)
+  avatar   String  @default("/avatars/default.png")
+
+  // Presence state
+  isOnline Boolean @default(false)
+
+  skills   String[]
+  rating   Float    @default(0)
+  category String?
+
+  // Security & 2FA
+  twoFASecret  String?
+  twoFAEnabled Boolean @default(false)
+
+  // OAuth fields
+  oauthProvider String?
+  oauthId       String?
+
+  // I used an array of refresh tokens because a user can log in from multiple devices 
+  //thus have multiple refresh tokens
+  refreshTokens RefreshToken[] // Relation
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // jobs          Job[]
+  // Ensures a unique combination of provider + ID
+  @@unique([oauthProvider, oauthId])
+}
+
+// old
+// enum Role {
+//   FREELANCER
+//   CLIENT
+//   ADMIN
+// }
+
+// to separe admin permissions from users
+enum Role {
+  ADMIN
+  USER
+  MODERATOR
+}
+
+enum UserType {
+  FREELANCER
+  CLIENT
+}
+
+enum Status {
+  active
+  suspended
+  pending
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String // tells the database which user this token belongs to
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) // relation
+  revoked   Boolean  @default(false) //flag used to cancel the user session when the refresh token expired
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

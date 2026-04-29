@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { categoriesData } from "../../assets/assets";
 import { context } from "../../context/context";
 import { freelencer } from "../../assets/assets";
+import { useAuth } from "@/context/userContext";
 
 type FilterModalProps = {
   showFilter: boolean;
@@ -38,7 +39,7 @@ const FilterModal = ({ showFilter, setShowFilter }: FilterModalProps) => {
     Max: 0,
   });
 
-  const { setFreelancers, allSkills } = useContext<any>(context);
+  const { setFreelancers, allSkills } = useAuth();
 
   const ClearFilter = () => {
     setSkills({});

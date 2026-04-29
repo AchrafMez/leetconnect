@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState , useEffect} from "react";
 import { Search, Sliders } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "@/context/userContext";
@@ -6,7 +6,7 @@ import { useAuth } from "@/context/userContext";
 
 import NumberCarousel from "@/components/market/NumberCarousel";
 import FilterModal from "@/components/market/Filters";
-import { proposalsApi } from "@/lib/api";
+import { proposalsApi, userApi } from "@/lib/api";
 
 
 type Job = {
@@ -29,8 +29,14 @@ const FindClients: React.FC = () => {
   const [showFilter, setShowFilter] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
 
+  // const [enriched, setEnriched] = useState<any[]>([]);
 
-    const { jobs } = useAuth();
+
+
+    const { jobs , enriched} = useAuth();
+    if (!jobs) {
+      return <div>Loading...</div>; // ou erreur claire
+  }
 
     const [showApply, setShowApply] = useState(false);
     const [selectedJobId, setSelectedJobId] = useState<string>("");
@@ -45,11 +51,13 @@ const FindClients: React.FC = () => {
       setShowApply(true);
     };
   
+
+
   const jobsRange = useMemo(() => {
-    let filtered = jobs;
+    let filtered = enriched;
 
     if (search) {
-      filtered = jobs.filter((job) =>
+      filtered = enriched.filter((job) =>
         job.title.toLowerCase().includes(search.toLowerCase()) ||
         job.skills.some((s) =>
           s.toLowerCase().includes(search.toLowerCase())
@@ -60,16 +68,13 @@ const FindClients: React.FC = () => {
     const start = (currentPages - 1) * 6;
     const end = start + 6;
 
-    const pages = Math.ceil(filtered.length / 6);
+    const pages = Math.ceil(filtered?.length / 6);
 
     return {
       data: filtered.slice(start, end),
       pages,
     };
-  }, [jobs, currentPages, search]);
-
-  
-
+  }, [enriched, currentPages, search]);
 
   const handleSubmitProposal = async () => {
   
@@ -136,7 +141,7 @@ const FindClients: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-        {jobsRange.data.map((job) => (
+        {enriched.map((job) => (
           <div
             key={job.id}
             className="bg-[#111] p-5 rounded-xl border border-gray-800 hover:border-[#69B34C]"
@@ -159,7 +164,7 @@ const FindClients: React.FC = () => {
             </div>
 
             <div className="flex justify-between mt-4 text-sm text-gray-400">
-              <span>{job.client.name}</span>
+              <span>{job.client.username}</span>
               <span>⭐ {job.client.rating}</span>
             </div>
 

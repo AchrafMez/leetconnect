@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { Job } from "@prisma/client";
 
+const AUTH_SERVICE = process.env.AUTH_SERVICE_URL;
 
 import axios from "axios";
 
@@ -67,53 +68,56 @@ export const getMyJobs = async (req: Request, res: Response) => {
 
 
 
-// export const getAllJobs = async (_req: Request, res: Response) => {
-//   try {
-//     const jobs = await prisma.job.findMany({
-//       include: { proposals: true },
-//       orderBy: { createdAt: "desc" },
-//     });
-
-//     return res.json({ success: true, jobs });
-//   } catch (error: any) {
-//     return res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
-export const getAllJobs = async (req: Request, res: Response) => {
+export const getAllJobs = async (_req: Request, res: Response) => {
   try {
-    const jobs: Job[] = await prisma.job.findMany({
+    const jobs = await prisma.job.findMany({
+      include: { proposals: true },
       orderBy: { createdAt: "desc" },
     });
 
-    const enrichedJobs = await Promise.all(
-      jobs.map(async (job: Job) => {
-        try {
-          const user = await axios.get(
-            `http://auth:5555/users/${job.clientId}`
-          );
-
-          return {...job,client: {
-              name: user.data.name,
-              email: user.data.email,
-              avatar: user.data.avatar,
-            },
-          };
-        } catch (err) {
-          // si user-service down → ne casse pas jobs
-          return {...job,client: null,};
-        }
-      }) 
-    );
-
-    return res.json({ success: true, jobs: enrichedJobs });
+    return res.json({ success: true, jobs });
   } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+
+// export const getAllJobs = async (req: Request, res: Response) => {
+//   try {
+//     const jobs: Job[] = await prisma.job.findMany({
+//       orderBy: { createdAt: "desc" },
+//     });
+
+//     const enrichedJobs = await Promise.all(
+//       jobs.map(async (job: Job) => {
+//         try {
+//           const user = await axios.get(`${AUTH_SERVICE}/api/auth/users/${job.clientId}`)
+//           console.log('user-------------->',user)
+//           return {...job,client: {
+//               username: user.data.username,
+//               email: user.data.email,
+//               avatar: user.data.avatar,
+//             },
+//           };
+          
+//         } catch (err) {
+//           // si user-service down → ne casse pas jobs
+//            console.log("URL:", `http://auth:5555/auth/users/${job.clientId}`);
+//            console.log('================================================')
+//           return {...job,client: null,};
+//         }
+//       }) 
+//     );
+
+//     return res.json({ success: true, jobs: enrichedJobs });
+//   } catch (error: any) {
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 
 export const getSingleJob = async (req: Request, res: Response) => {
   try {

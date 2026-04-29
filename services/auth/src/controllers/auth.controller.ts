@@ -253,3 +253,97 @@ export const logout = async (req: Request, res: Response) => {
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     res.sendStatus(204);
 };
+
+
+export const getAllFreelancers = async (_req: Request, res: Response) => {
+  try {
+    const freelancers = await prisma.user.findMany({
+      where: {
+        type: "FREELANCER",
+      },orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.json({success: true,freelancers,});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+    });
+  }
+};
+
+
+export const getAllClients = async (_req: Request, res: Response) => {
+  try {
+    console.log('emmmmmmmmmmmmmmmmm')
+    const freelancers = await prisma.user.findMany({
+      where: {
+        type: "FREELANCER",
+      },orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.json({success: true,freelancers,});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+    });
+  }
+};
+
+
+
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+
+    // 🔒 Validation propre du paramètre
+    if (typeof id !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user id",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        email: true,
+        avatar: true,
+        role: true,
+        type: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+
+  } catch (error: any) {
+    console.error("GET USER BY ID ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+

@@ -219,6 +219,13 @@ export const proposalsApi = {
         }),
 };
 
+
+export const userApi = {
+  getUserById: (id: string) => api<User>(`/auth/users/${id}`),
+  getAllFreelancers: () => api<{ success: boolean; freelancers: User[] }>('/auth/freelancers'),
+   getAllClients: () => api<{ success: boolean; clients: User[] }>('/auth/clients'),
+};
+
 interface PaginatedMessages {
 	messages: 		Message[];
 	next_cursor:	number | null;

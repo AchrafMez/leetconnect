@@ -1,19 +1,18 @@
-
-
 import React, { useEffect, useState } from "react";
-
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import { jobsApi, proposalsApi } from "@/lib/api";
+import { jobsApi, proposalsApi, userApi } from "@/lib/api";
+import { useAuth } from "@/context/userContext";
 
 type Proposal = {
   id: string;
   freelancer: {
-    name: string;
+    name?: string;
+    username?: string;
   };
   price: number;
   message: string;
   createdAt: string;
+  status?: "PENDING" | "ACCEPTED" | "REJECTED";
 };
 
 type Job = {
@@ -30,19 +29,42 @@ type Job = {
   updatedAt: string;
 };
 
-
-
 const JobDetails: React.FC = () => {
   const { id } = useParams();
-  const [state, setState] = useState("")
+  const { enriched } = useAuth();
+
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-    useEffect(() => {
+
+  if (!enriched) {
+    return <div>Loading...</div>;
+  }
+
+ 
+  useEffect(() => {
     const fetchJob = async () => {
       try {
-        const res = await jobsApi.getJobById(id)
-        console.log(res)
-        setJob(res.job);
+        setLoading(true);
+
+        const { job } = await jobsApi.getJobById(id);
+        const { user: client } = await userApi.getUserById(job.clientId);
+        const users = await userApi.getAllClients();
+
+        const freelancersMap = Object.fromEntries(
+          users.freelancers.map((u: any) => [u.id, u])
+        );
+
+        const enrichedProposals = (job.proposals || []).map((p: any) => ({
+          ...p,
+          freelancer: freelancersMap[p.freelancerId] || null,
+          status: p.status || "PENDING",
+        }));
+
+        setJob({
+          ...job,
+          client,
+          proposals: enrichedProposals,
+        });
       } catch (err) {
         console.error(err);
       } finally {
@@ -53,30 +75,53 @@ const JobDetails: React.FC = () => {
     fetchJob();
   }, [id]);
 
-const acceptJob = async (id: string) => {
-  try {
-    const res =   await proposalsApi.acceptProposal(id)
+  
+  const acceptJob = async (proposalId: string) => {
+    try {
+      await proposalsApi.acceptProposal(proposalId);
 
-    // console.log("Accepted:", data);
-    setState(res.proposal);
-    
-  } catch (err) {
-    console.error(err);
+      setJob((prev) =>
+        prev
+          ? {
+              ...prev,
+              proposals: prev.proposals.map((p) =>
+                p.id === proposalId
+                  ? { ...p, status: "ACCEPTED" }
+                  : p
+              ),
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+ 
+  const rejectJob = async (proposalId: string) => {
+    try {
+      await proposalsApi.rejectProposal(proposalId);
+
+      setJob((prev) =>
+        prev
+          ? {
+              ...prev,
+              proposals: prev.proposals.map((p) =>
+                p.id === proposalId
+                  ? { ...p, status: "REJECTED" }
+                  : p
+              ),
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (loading) {
+    return <p className="text-white p-6">Loading...</p>;
   }
-};
-
-const rejectJob = async (id: string) => {
-  try {
-     const res =   await proposalsApi.rejectProposal(id)
-
-    setState(res.proposal);
-   
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-  // const job = jobsData.find((item) => item.id === id);
 
   if (!job) {
     return <p className="text-white p-6">Job not found</p>;
@@ -136,10 +181,13 @@ const rejectJob = async (id: string) => {
                 key={p.id}
                 className="bg-[#111] border border-gray-800 rounded-xl p-4"
               >
+
                 {/* HEADER */}
                 <div className="flex justify-between items-center">
                   <p className="font-medium">
-                    {p.freelancer.name}
+                    {p.freelancer?.username ||
+                      p.freelancer?.name ||
+                      "Unknown"}
                   </p>
 
                   <span className="text-green-400 font-semibold">
@@ -157,26 +205,39 @@ const rejectJob = async (id: string) => {
                   {new Date(p.createdAt).toLocaleString()}
                 </p>
 
-             
-               { !state ? <div className="flex gap-3 mt-3">
-                  <button onClick={() => acceptJob(p.id) }
-                  className="bg-green-500 text-black px-3 py-1 rounded text-sm">
-                    Accept
-                  </button>
+                {/* ACTIONS */}
+                {p.status === "PENDING" ? (
+                  <div className="flex gap-3 mt-3">
+                    <button
+                      onClick={() => acceptJob(p.id)}
+                      className="bg-green-500 text-black px-3 py-1 rounded text-sm"
+                    >
+                      Accept
+                    </button>
 
-                  <button  onClick={() => rejectJob(p.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded text-sm">
-                    Reject
+                    <button
+                      onClick={() => rejectJob(p.id)}
+                      className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className={
+                      p.status === "ACCEPTED"
+                        ? "bg-green-500 text-black px-3 py-1 rounded text-sm mt-3"
+                        : "bg-red-500 text-white px-3 py-1 rounded text-sm mt-3"
+                    }
+                  >
+                    {p.status}
                   </button>
-                </div> :  <button className={ state === "Accept" ?  "bg-green-500 text-black px-3 py-1 rounded text-sm" :"bg-red-500 text-white px-3 py-1 rounded text-sm" }>
-                    {state}
-                  </button>}
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
-
     </div>
   );
 };
