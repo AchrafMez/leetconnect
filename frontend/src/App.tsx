@@ -27,10 +27,10 @@ export default function App() {
         <Route element={<GuestRoute />}>
           <Route path="/auth/sign-in" element={<Login />} />
           <Route path="/auth/sign-up" element={<Register />} />
+          <Route path="/" element={<Landing />} />
         </Route>
         
         {/*Public routes*/}
-        <Route path="/" element={<Landing />} />
         {/* <Route path="/auth/sign-in" element={<Login />} />
         <Route path="/auth/sign-up" element={<Register />} /> */}
         <Route path="/about" element={<About />} />
