@@ -111,8 +111,13 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const res = await fetch(`${API_BASE}${path}`, config);
 
+    const skipRefresh =
+    path.includes('/auth/login') ||
+    path.includes('/auth/refresh') ||
+    path.includes('/auth/change-password'); // ← add this
+
     // If token expired (401) refresh to get a new one
-    if (res.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
+    if (res.status === 401 && !skipRefresh) {
         try {
             const refreshRes = await fetch(`${API_BASE}/auth/refresh`, {
                 method: 'POST',

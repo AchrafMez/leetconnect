@@ -133,7 +133,7 @@ export default function Register() {
                     <CardHeader className="space-y-2 text-center">
                         <CardTitle className="text-2xl font-semibold">Create your account</CardTitle>
                         <CardDescription>
-                            Start your {formData.type === 'FREELANCER' ? 'freelancing' : 'hiring'} journey in seconds, no credit card required.
+                            Start your {formData.type === 'FREELANCER' ? 'freelancing' : 'hiring'} journey in seconds.
                         </CardDescription>
                     </CardHeader>
 
@@ -178,7 +178,7 @@ export default function Register() {
                                     onClick={() => setFormData({ ...formData, type: r })}
                                     className={`
                                 relative z-10 flex-1 py-2 px-3 rounded-md text-sm font-medium
-                                transition-colors duration-200
+                                transition-colors duration-200 hover:cursor-pointer
                                 ${formData.type === r ? 'text-white' : 'text-foreground-muted hover:text-foreground'}
                             `}
                                 >
