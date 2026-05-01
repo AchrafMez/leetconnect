@@ -43,7 +43,7 @@ export default function ConversPanel({
 					className="w-full h-12 py-3 px-4 rounded-xl bg-primary text-primary-foreground
 							   text-sm font-medium hover:bg-primary/90 transition-colors"
 				>
-					+ Create Group
+					+ Create Network
 				</button>
 			</div>
 

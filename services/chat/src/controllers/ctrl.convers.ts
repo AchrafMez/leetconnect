@@ -241,6 +241,54 @@ async function assert_membership(convers_id: number, user_id: string) {
 		throw new err.ForbiddenError('not a member of conversation');
 }
 
+export async function add_member(req: Request, res: Response, next: NextFunction) {
+	try {
+		const requester_id   = parse_user_id(req.user?.userId, 'user_id');
+		const convers_id     = parse_int_id(req.params.id, 'convers_id');
+		const new_member_id  = parse_user_id(req.body.user_id, 'user_id');
+
+		const convers = await prisma.convers.findUnique({
+			where: {id: convers_id},
+			select: {id: true, type: true},
+		});
+		if (!convers)
+			throw new err.NotFoundError('conversation not found');
+		if (convers.type !== 'Group')
+			throw new err.BadRequestError('can only add members to a Group');
+
+		await assert_membership(convers_id, requester_id);
+
+		const target = await prisma.user.findUnique({
+			where: {id: new_member_id},
+			select: {id: true},
+		});
+		if (!target)
+			throw new err.NotFoundError('user not found');
+
+		const existing = await prisma.conversMember.findFirst({
+			where: {convers_id, user_id: new_member_id},
+			select: {id: true},
+		});
+		if (existing)
+			throw new err.BadRequestError('user is already a member');
+
+		await prisma.conversMember.create({
+			data: {convers_id, user_id: new_member_id},
+		});
+
+		const member = await prisma.conversMember.findFirst({
+			where: {convers_id, user_id: new_member_id},
+			select: {
+				user_id: true,
+				user: {select: {username: true, avatar: true, isOnline: true}},
+			},
+		});
+		res.status(201).json(member);
+	} catch (err) {
+		next(err);
+	}
+}
+
 export async function update(req: Request, res: Response, next: NextFunction) {
 	try {
 		const user_id = parse_user_id(req.user?.userId, 'user_id');

@@ -7,7 +7,7 @@ import ConversPanel from "./ConversPannel";
 import { chatApi, friendApi } from "../../lib/api";
 import { getSocket } from "../../lib/socket";
 import type { Message } from "./MessageLayer";
-import type { Conversation, ConvLastMessage } from "./ConverLayer";
+import type { Conversation, ConvLastMessage, ConvMember } from "./ConverLayer";
 import type { Friend } from "../../lib/api";
 import { useAuth } from '../../context/userContext';
 
@@ -108,6 +108,20 @@ export default function Messages() {
 		setConversations((prev) => [convers, ...prev]);
 		setActiveId(convers.id);
 	}, []);
+
+	const handleLeaveConversation = useCallback((convers_id: number) => {
+		setConversations((prev) => prev.filter((c) => c.id !== convers_id));
+		setActiveId((prev) => (prev === convers_id ? null : prev));
+	}, []);
+
+	const handleMemberAdded = useCallback((convers_id: number, member: ConvMember) => {
+		setConversations((prev) =>
+			prev.map((c) =>
+				c.id === convers_id ? { ...c, members: [...c.members, member] } : c,
+			),
+		);
+	}, []);
+
 	// load conversations
 	useEffect(() => {
 		if (!CURRENT_USER_ID) return;
@@ -196,18 +210,22 @@ export default function Messages() {
 
 			{active_convers ? (
 				<ChatBox
+					convers={active_convers}
 					convers_name={convers_name}
 					convers_avatar={convers_avatar}
 					convers_username={convers_username}
 					is_direct={active_convers.type === 'Direct'}
 					messages={messages}
 					curr_user={CURRENT_USER_ID}
+					friends={friends}
 					onSendMessage={handleSend}
 					onLoadMore={loadMore}
 					has_more={next_cursor !== null}
 					loading_more={loading_more}
 					onDeleteMessage={handleDelete}
 					onBack={() => setActiveId(null)}
+					onLeaveConversation={handleLeaveConversation}
+					onMemberAdded={handleMemberAdded}
 				/>
 			) : (
 				<div className="hidden sm:flex flex-1 items-center justify-center text-muted-foreground">

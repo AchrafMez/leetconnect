@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, X, Clock, Loader2, Send } from 'lucide-react';
 import { friendApi, type FriendRequest } from '../../lib/api';
 import Avatar from '../chat/Avatar';
@@ -10,6 +11,7 @@ interface FriendRequestsProps {
 }
 
 export default function FriendRequests({ refreshTrigger, onAction }: FriendRequestsProps) {
+	const navigate = useNavigate();
 	const [tab, setTab] = useState<'incoming' | 'outgoing'>('incoming');
 	const [incoming, setIncoming] = useState<FriendRequest[]>([]);
 	const [outgoing, setOutgoing] = useState<FriendRequest[]>([]);
@@ -89,7 +91,13 @@ export default function FriendRequests({ refreshTrigger, onAction }: FriendReque
 								key={req.id}
 								className="flex items-center justify-between p-2 rounded-lg hover:bg-secondary transition-colors"
 							>
-								<div className="flex items-center gap-2.5 min-w-0">
+								<div
+									className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0"
+									onClick={() => {
+										const username = tab === 'incoming' ? req.sender?.username : req.receiver?.username;
+										if (username) navigate(`/profile/${username}`);
+									}}
+								>
 									<Avatar
 										name={(tab === 'incoming' ? req.sender?.username : req.receiver?.username) || '?'}
 										image={tab === 'incoming' ? req.sender?.avatar : req.receiver?.avatar}

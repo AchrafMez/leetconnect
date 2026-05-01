@@ -8,9 +8,10 @@ interface ChatHeaderProp {
 	is_online: 	boolean;
 	username?:	string | undefined;
 	onBack:		() => void;
+	onInfoClick: () => void;
 }
 
-export default function ChatHeader({name, avatar, is_online = false, username, onBack}: ChatHeaderProp) {
+export default function ChatHeader({name, avatar, is_online = false, username, onBack, onInfoClick}: ChatHeaderProp) {
 	const navigate = useNavigate();
 
 	return(
@@ -40,10 +41,12 @@ export default function ChatHeader({name, avatar, is_online = false, username, o
 				</div>
 			</div>
 			<div className="flex items-center gap-1">
-				<button className="p-2 text-muted-foreground hover:text-foreground
-									hover:bg-secondary rounded-lg transition-colors"
+				<button
+					onClick={onInfoClick}
+					className="p-2 text-muted-foreground hover:text-foreground
+						hover:bg-secondary rounded-lg transition-colors"
 				>
-					<Info size={18} />			
+					<Info size={18} />
 				</button>
 			</div>
 		</div>

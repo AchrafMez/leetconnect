@@ -237,6 +237,18 @@ export const chatApi = {
                 member_ids: data.member_ids,
             },
         }),
+
+	addMember: (convers_id: number, user_id: string) =>
+		api<{
+            user_id: string;
+            user: {
+                username: string;
+                avatar: string;
+                isOnline: boolean
+            }}>(
+			`/chat/convers/${convers_id}/members`,
+			{ method: 'POST', body: { user_id } },
+		),
 	// ---------------------- Health ----------------------
 	health: () => api<HealthResponse>('/chat/health'),
     

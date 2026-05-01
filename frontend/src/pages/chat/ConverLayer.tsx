@@ -4,7 +4,8 @@ export interface ConvMember {
 	user_id: 	string;
 	user: {
 		username:	string;
-		avatar:	string;
+		avatar:		string;
+		isOnline?:	boolean;
 	};
 }
 
