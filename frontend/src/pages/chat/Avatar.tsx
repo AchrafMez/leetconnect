@@ -22,10 +22,11 @@ export default function Avatar({name, image, size = "md"}: AvatarProp) {
 	}
 	return (
 		<div
-			className={`${sizeClasses} rounded-full bg-primary/20 text-primary
-						flex items-center justify-center font-medium shrink-0`}
+			className={`${sizeClasses} rounded-full bg-background-elevated text-primary
+						flex items-center justify-center font-medium shrink-0 relative overflow-hidden`}
 		>
-			{initials}
+			<span className="absolute inset-0 bg-primary/20" />
+			<span className="relative">{initials}</span>
 		</div>
 	);
 }

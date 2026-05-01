@@ -5,7 +5,6 @@ import { useAuth } from '../../context/userContext';
 import { chatApi, friendApi } from '../../lib/api';
 import ProfileHeader from './ProfileHeader';
 import ProfileBio from './ProfileBio';
-import SidePanel from './SidePanel';
 
 export default function ProfilePage() {
 	const { username } = useParams<{ username: string }>();
@@ -99,29 +98,18 @@ export default function ProfilePage() {
 	}
 
 	return (
-		<div className="max-w-5xl mx-auto py-6 px-4 sm:py-8 pb-20">
-			<div className="flex flex-col lg:flex-row gap-6">
-				<div className="flex-1 min-w-0 space-y-6 sm:space-y-8">
-					<ProfileHeader
-						profileUser={profileUser}
-						isOwnProfile={isOwnProfile}
-						friendStatus={friendStatus}
-						friendRequestId={friendRequestId}
-						onFriendAction={handleFriendAction}
-					/>
-					<ProfileBio
-						profileUser={profileUser}
-						isOwnProfile={isOwnProfile}
-					/>
-				</div>
-
-				{isOwnProfile && (
-					<SidePanel
-						refreshTrigger={refreshTrigger}
-						onAction={handleFriendAction}
-					/>
-				)}
-			</div>
+		<div className="max-w-3xl mx-auto py-6 px-4 sm:py-8 pb-20 space-y-6 sm:space-y-8">
+			<ProfileHeader
+				profileUser={profileUser}
+				isOwnProfile={isOwnProfile}
+				friendStatus={friendStatus}
+				friendRequestId={friendRequestId}
+				onFriendAction={handleFriendAction}
+			/>
+			<ProfileBio
+				profileUser={profileUser}
+				isOwnProfile={isOwnProfile}
+			/>
 		</div>
 	);
 }
