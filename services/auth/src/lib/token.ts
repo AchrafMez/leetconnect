@@ -3,6 +3,7 @@
 import jwt from 'jsonwebtoken'
 import fs from 'fs'
 import { JwtPayload } from '@leetconnect/shared'; 
+import crypto from 'crypto';
 
 const privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
 
@@ -13,7 +14,14 @@ export const generateAccessToken = (payload: JwtPayload) => {
   });
 };
 
+// export const generateRefreshToken = () => {
+//   // a long random string is better than a JWT for refresh tokens => opaque string 
+//   return require('crypto').randomBytes(40).toString('hex');
+// };
+
+
 export const generateRefreshToken = () => {
   // a long random string is better than a JWT for refresh tokens => opaque string 
-  return require('crypto').randomBytes(40).toString('hex');
-};
+  return crypto.randomBytes(40).toString('hex');
+  
+}

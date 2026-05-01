@@ -57,3 +57,5 @@ userContext.md
 
 migrations/
 *.md
+
+/security-test.sh

@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '@/lib/api';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useAuth } from '@/context/userContext';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import DOMPurify from 'dompurify';
 
 export default function ProfileSettings() {
-    const { user, setUser, loading: authLoading , logout} = useAuth();
+    const { user, setUser, loading: authLoading, logout } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -48,7 +49,7 @@ export default function ProfileSettings() {
     // Store initial state for comparison for changed data
     const [initialForm, setInitialForm] = useState(profileForm);
 
-    
+
     // Load user data
     useEffect(() => {
         if (authLoading) return;
@@ -68,16 +69,16 @@ export default function ProfileSettings() {
             });
             setInitialForm(
                 {
-                firstname: user.firstname || '',
-                lastname: user.lastname || '',
-                username: user.username || '',
-                email: user.email || '',
-                bio: user.bio || '',
-                location: user.location || '',
-                website: user.website || '',
-                title: user.title || '',
-                avatar: user.avatar || '',
-            }); 
+                    firstname: user.firstname || '',
+                    lastname: user.lastname || '',
+                    username: user.username || '',
+                    email: user.email || '',
+                    bio: user.bio || '',
+                    location: user.location || '',
+                    website: user.website || '',
+                    title: user.title || '',
+                    avatar: user.avatar || '',
+                });
             setLoading(false);
         } else {
             // If user is null after loading finishes, the ProtectedRoute 
@@ -130,13 +131,62 @@ export default function ProfileSettings() {
             errors.username = 'Username cannot contain spaces';
         }
 
-
+        // email
         if (!profileForm.email.trim()) {
             errors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileForm.email)) {
             errors.email = 'Please enter a valid email address';
         }
 
+        // bio
+        if (profileForm.bio.trim().length > 300) {
+            errors.bio = 'Bio must be 300 characters or less';
+        } else { // protect
+            const sanitized = DOMPurify.sanitize(profileForm.bio.trim(), { ALLOWED_TAGS: [] });
+            if (sanitized !== profileForm.bio.trim()) {
+                errors.bio = 'Bio contains invalid characters';
+            }
+        }
+
+        // Location
+        if (profileForm.location.trim().length > 100) {
+            errors.location = 'Location must be 100 characters or less';
+        } else  {
+            const sanitized = DOMPurify.sanitize(profileForm.location.trim(), { ALLOWED_TAGS: [] });
+            if (sanitized !== profileForm.location.trim()) {
+                errors.location = 'Location contains invalid characters';
+            }
+        }
+
+        // Website
+        if (profileForm.website.trim()) {
+            try {
+                if (profileForm.website.length > 200) {
+                    errors.website = 'Website URL must be 200 characters or less';
+                } else {
+                    const sanitized = DOMPurify.sanitize(profileForm.website.trim(), { ALLOWED_TAGS: [] });
+                    if (sanitized !== profileForm.website.trim()) {
+                        errors.website = 'Website contains invalid characters';
+                    }
+                    const url = new URL(profileForm.website);
+                    if (!['http:', 'https:'].includes(url.protocol)) {
+                        errors.website = 'Website must start with http:// or https://';
+                    }   
+                }
+            } catch {
+                errors.website = 'Please enter a valid URL (e.g. https://example.com)';
+            }
+        }
+
+        // Professional Title
+        if (profileForm.title.trim().length > 100) {
+            errors.title = 'Title must be 100 characters or less';
+        } else {
+            const sanitized = DOMPurify.sanitize(profileForm.title.trim(), { ALLOWED_TAGS: [] });
+            if (sanitized !== profileForm.title.trim()) {
+                errors.title = 'Title contains invalid characters';
+            }
+        }
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -154,7 +204,7 @@ export default function ProfileSettings() {
         // added the same rules for pw as in register
         if (!passwordForm.newPassword.trim()) {
             errors.newPassword = 'New Password is required';
-        }else if (passwordForm.newPassword === passwordForm.currentPassword) {
+        } else if (passwordForm.newPassword === passwordForm.currentPassword) {
             errors.newPassword = 'New password must be different from your current password';
         } else if (passwordForm.newPassword.length < 8) {
             errors.newPassword = 'Password must be at least 8 characters';
@@ -216,15 +266,16 @@ export default function ProfileSettings() {
         setSaving(true);
         try {
             const changedFields = getChangedFields();
-            
+
             // Only send changes!
             const response = await authApi.updateProfile(changedFields);
 
+            const updatedUser = response.user;
+            if (!updatedUser) throw new Error('No user in response');
+            
             // Update the Context immediately using the response
-            setUser(response.user);
-            if (!user)
-                return;
-            setInitialForm(profileForm); // Update after successful save
+            setUser(updatedUser);
+            setInitialForm(profileForm);
             setSuccessMessage('Profile updated successfully!');
 
         } catch (err: any) {
@@ -236,7 +287,7 @@ export default function ProfileSettings() {
 
     // logout 
     const handleLogout = async () => {
-    try {
+        try {
             await logout();
             navigate('/auth/sign-in');
         } catch (error) {
@@ -285,13 +336,13 @@ export default function ProfileSettings() {
 
             handleLogout();
 
-        } 
+        }
         catch (err: any) {
-             if (err.message === 'Current password is incorrect') 
+            if (err.message === 'Current password is incorrect')
                 setFormErrors(prev => ({ ...prev, currentPassword: 'Current password is incorrect' }));
             else
                 setError(err.message || 'Failed to change password');
-            
+
         } finally {
             setSaving(false);
         }
@@ -456,8 +507,17 @@ export default function ProfileSettings() {
                                     disabled={saving}
                                     placeholder="Tell us about yourself..."
                                     rows={3}
-                                    className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50 resize-none"
+                                    className={`w-full px-4 py-2.5 rounded-lg bg-background border ${formErrors.bio
+                                        ? 'border-red-500/50 focus:border-red-500'
+                                        : 'border-border focus:border-primary'
+                                        } text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 ${formErrors.bio
+                                            ? 'focus:ring-red-500/30'
+                                            : 'focus:ring-primary/30'
+                                        } transition-colors disabled:opacity-50 resize-none`}
                                 />
+                                {formErrors.bio && (
+                                    <p className="text-xs text-red-400">{formErrors.bio}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -508,8 +568,15 @@ export default function ProfileSettings() {
                                 onChange={handleProfileChange}
                                 disabled={saving}
                                 placeholder="e.g., Tetouan, Morocco"
-                                className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-background border ${formErrors.location
+                                    ? 'border-red-500/50 focus:border-red-500'
+                                    : 'border-border focus:border-primary'
+                                    } text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 ${formErrors.location ? 'focus:ring-red-500/30' : 'focus:ring-primary/30'
+                                    } transition-colors disabled:opacity-50`}
                             />
+                            {formErrors.location && (
+                                <p className="text-xs text-red-400">{formErrors.location}</p>
+                            )}
                         </div>
                     </div>
 
@@ -528,8 +595,15 @@ export default function ProfileSettings() {
                                 onChange={handleProfileChange}
                                 disabled={saving}
                                 placeholder="https://example.com"
-                                className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-background border ${formErrors.website
+                                    ? 'border-red-500/50 focus:border-red-500'
+                                    : 'border-border focus:border-primary'
+                                    } text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 ${formErrors.website ? 'focus:ring-red-500/30' : 'focus:ring-primary/30'
+                                    } transition-colors disabled:opacity-50`}
                             />
+                            {formErrors.website && (
+                                <p className="text-xs text-red-400">{formErrors.website}</p>
+                            )}
                         </div>
 
 
@@ -545,8 +619,15 @@ export default function ProfileSettings() {
                                 onChange={handleProfileChange}
                                 disabled={saving}
                                 placeholder="e.g., Senior Software Engineer"
-                                className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-background border ${formErrors.title
+                                    ? 'border-red-500/50 focus:border-red-500'
+                                    : 'border-border focus:border-primary'
+                                    } text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 ${formErrors.title ? 'focus:ring-red-500/30' : 'focus:ring-primary/30'
+                                    } transition-colors disabled:opacity-50`}
                             />
+                            {formErrors.title && (
+                                <p className="text-xs text-red-400">{formErrors.title}</p>
+                            )}
                         </div>
                     </div>
                 </CardContent>

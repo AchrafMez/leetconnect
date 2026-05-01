@@ -310,9 +310,19 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
         // verify current password
         const isMatch = await bcrypt.compare(currentPassword, user!.password!);
         if (!isMatch) {
-            return res.status(401).json({ error: "Current password is incorrect" });
+            return res.status(400).json({ 
+                error: 'Validation failed',
+                details: [{ field: 'currentPassword', message: 'Current password is incorrect' }]
+            });
         }
 
+        if (newPassword === currentPassword) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                details: [{ field: 'newPassword', message: 'New password must be different from current password' }]
+            });
+        }
+        
         // hash and save new password
         const hashed = await bcrypt.hash(newPassword, 12);
         await prisma.user.update({

@@ -4,6 +4,7 @@ import { registerValidator, loginValidator } from '../validators/auth.validator'
 import { validate } from '../middlewares/validate';
 import { authMiddleware } from '@leetconnect/shared';
 import prisma from '../lib/prisma';
+import {updateProfileValidator, changePasswordValidator} from '../validators/profileValidator'
 
 const router = Router();
 
@@ -11,8 +12,8 @@ router.post('/register', registerValidator, validate, register);
 router.post('/login', loginValidator, validate, login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
-router.patch('/settings', authMiddleware, updateProfile);
-router.post('/change-password', authMiddleware, changePassword);
+router.patch('/settings', authMiddleware, updateProfileValidator, validate, updateProfile );
+router.post('/change-password', authMiddleware, changePasswordValidator, validate, changePassword);
 
 // test auth middleware 
 router.get('/me', authMiddleware, async (req, res) => {
