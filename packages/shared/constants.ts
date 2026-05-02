@@ -32,6 +32,10 @@ export interface UserRegisteredPayload {
   type: string;
 }
 
+export interface UserPresencePayload {
+    id: string;
+}
+
   export const JOB_STATUS = {
     OPEN: 'open',
     IN_PROGRESS: 'in_progress',
@@ -63,6 +67,7 @@ export interface UserRegisteredPayload {
     // USER_REGISTERED: 'user.registered',
     USER_ONLINE: 'user.online',
     USER_OFFLINE: 'user.offline',
+    PRESENCE_RESET: 'presence.reset',
     JOB_CREATED: 'job.created',
     PROPOSAL_RECEIVED: 'proposal.received',
     CONTRACT_COMPLETED: 'contract.completed',

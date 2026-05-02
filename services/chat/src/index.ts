@@ -24,6 +24,7 @@ import {
 } from '@leetconnect/shared';
 
 import { authMiddleware } from '@leetconnect/shared';
+import { reset_presence, shutdown_presence } from './lib/presence';
 
 dotenv.config({ path: '../../.env', quiet: true});
 
@@ -99,6 +100,7 @@ async function start_chat_server() {
 		await prisma.$connect().then( () => {
 			console.log('connected to database.');
 		});
+		await reset_presence();
 		server.listen(PORT, () => {
 			console.log(`chat server running on port: ${PORT}`);
 		});
@@ -110,6 +112,7 @@ async function start_chat_server() {
 
 async function server_exit() {
 	console.log('\nshutting down chat server');
+	await shutdown_presence();
 	io.close(); 
 	await prisma.$disconnect();
 	console.log('disconnected from database.');
@@ -117,3 +120,4 @@ async function server_exit() {
 }
 
 process.on('SIGINT', server_exit);
+process.on('SIGTERM', server_exit);

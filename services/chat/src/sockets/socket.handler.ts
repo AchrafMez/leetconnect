@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import type { JwtPayload } from '@leetconnect/shared';
+import { mark_offline, mark_online } from '../lib/presence';
 
 const pub_key = fs.readFileSync(process.env.JWT_PUBLIC_KEY_PATH as string);
 
@@ -26,11 +27,16 @@ export function setup_sockets(io: Server) {
 		}
 	});
 
-	io.on('connection', (socket: Socket) => {
+	io.on('connection', async (socket: Socket) => {
 		const userId = socket.data.user.userId;
 		console.log(`socket connected: ${socket.id} (user: ${userId})`);
 		socket.join(`user:${userId}`);
 
+		try {
+			await mark_online(io, userId);
+		} catch (err) {
+			console.error('[presence] mark_online failed:', (err as Error).message);
+		}
 		socket.on('join_convers', (convers_id: number) => {
 			// TODO: verify user is a member of this conversation
 			const room = `convers:${convers_id}`;
@@ -47,7 +53,12 @@ export function setup_sockets(io: Server) {
 		socket.on('chat_active', (active: boolean) => {
 			socket.data.chatActive = !!active;
 		});
-		socket.on('disconnect', (reason: string) => {
+		socket.on('disconnect', async (reason: string) => {
+			try {
+				await mark_offline(io, userId);
+			} catch(err) {
+				console.error('[presence] mark_offline failed:', (err as Error).message);
+			}
 			console.log(`socket disconnected: ${socket.id} (${reason})`);
 		});
 		socket.onAny((event, ...args) => {
