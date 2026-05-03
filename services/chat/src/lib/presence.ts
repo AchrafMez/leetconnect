@@ -17,14 +17,10 @@ export async function mark_online(io: Server, user_id: string): Promise<void> {
 	if (count !== 1)
 		return ;
 
-	try {
-		await prisma.user.update({
-			where: {id: user_id},
-			data:{isOnline: true}
-		});
-	} catch (err) {
-		console.error('[presence] mark_online db update failed:', (err as Error).message);
-	}
+	await prisma.user.updateMany({
+		where: {id: user_id},
+		data:  {isOnline: true}
+	});
 
 	await publishEvent(EVENTS.USER_ONLINE, {id: user_id});
 	io.emit('presence_changed', {id: user_id, isOnline: true});
@@ -39,14 +35,10 @@ export async function mark_offline(io: Server, user_id: string): Promise<void> {
 
 	await redis.del(key);
 
-	try {
-		await prisma.user.update({
-			where: {id: user_id},
-			data: {isOnline: false}
-		});
-	} catch (err) {
-		console.error('[presence] mark_offline db update failed:', (err as Error).message);
-	}
+	await prisma.user.updateMany({
+		where: {id: user_id},
+		data:  {isOnline: false}
+	});
 
 	await publishEvent(EVENTS.USER_OFFLINE, {id: user_id});
 	io.emit('presence_changed', {id: user_id, isOnline: false});

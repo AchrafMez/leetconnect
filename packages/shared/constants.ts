@@ -68,6 +68,7 @@ export interface UserPresencePayload {
     USER_ONLINE: 'user.online',
     USER_OFFLINE: 'user.offline',
     PRESENCE_RESET: 'presence.reset',
+    NOTIF_CREATE: 'notif.create', 
     JOB_CREATED: 'job.created',
     PROPOSAL_RECEIVED: 'proposal.received',
     CONTRACT_COMPLETED: 'contract.completed',

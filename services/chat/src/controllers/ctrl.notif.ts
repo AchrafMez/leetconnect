@@ -35,26 +35,26 @@ function parse_str(value: unknown, label: string, max: number): string {
 	return value.trim();
 }
 
-export async function create(req: Request , res: Response, next: NextFunction) {
-	try {
-		const receiver_id = parse_user_id(req.body.receiver_id);
-		const type  = parse_notif_type(req.body.type);
-		const title = parse_str(req.body.title, 'title', 120);
+// export async function create(req: Request , res: Response, next: NextFunction) {
+// 	try {
+// 		const receiver_id = parse_user_id(req.body.receiver_id);
+// 		const type  = parse_notif_type(req.body.type);
+// 		const title = parse_str(req.body.title, 'title', 120);
 
-		const io = req.app.get('io');
-		const notif = await notify(io, {
-			user_id: receiver_id,
-			type,
-			title,
-			...(req.body.body != null && {
-				body: parse_str(req.body.body, 'body', 500)
-			}),
-		});
-		res.json(notif);
-	} catch (err) {
-		next(err);
-	}
-}
+// 		const io = req.app.get('io');
+// 		const notif = await notify(io, {
+// 			user_id: receiver_id,
+// 			type,
+// 			title,
+// 			...(req.body.body != null && {
+// 				body: parse_str(req.body.body, 'body', 500)
+// 			}),
+// 		});
+// 		res.json(notif);
+// 	} catch (err) {
+// 		next(err);
+// 	}
+// }
 
 export async function list(req: Request, res: Response, next: NextFunction) {
 	try {

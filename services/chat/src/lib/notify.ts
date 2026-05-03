@@ -3,14 +3,14 @@ import prisma from '../config/config.database';
 
 export type NotifType = 'MESSAGE' | 'FRIEND_REQ' | 'SYSTEM';
 
-export interface NotifInput {
+export interface NotifEventPayload {
 	user_id:	string;
 	type: 		NotifType;
 	title: 		string;
 	body?: 		string;
 }
 
-export async function notify(io: Server, input: NotifInput) {
+export async function notify(io: Server, input: NotifEventPayload) {
 	const notif = await prisma.notification.create({
 		data: {
 			user_id: input.user_id,
