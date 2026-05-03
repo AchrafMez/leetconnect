@@ -39,6 +39,12 @@ export interface User {
     location: string,
     website: string,
     title: string
+    twoFAEnabled: boolean;
+}
+
+// Response when starting 2FA setup
+export interface TwoFASetupResponse {
+    qrCode: string;
 }
 
 export interface Job {
@@ -84,6 +90,8 @@ export interface RegisterRequest {
 export interface AuthResponse {
     token: string;
     user: User;
+    requires2FA?: boolean; // If true, frontend must show the 6-digit code input
+    userId?: string;       // Needed to identify which user is finishing 2FA login
 }
 
 export interface UpdateProfileResponse {
@@ -178,6 +186,14 @@ export const authApi = {
     },
 
     // 2FA
+    setup2FA: () =>api<TwoFASetupResponse>('/auth/2fa/setup', { method: 'POST'}),
+    verify2FA: (code: string) =>api<User>('/auth/2fa/verify', { method: 'POST',  body: { code }}),
+    disable2FA: (code: string) =>api<{ message: string }>('/auth/2fa/disable', { method: 'POST', body: { code }}),
+
+    // Second step of Login (If login returns requires2FA: true)
+    login2FA: (userId: string, code: string) =>api<AuthResponse>('/auth/2fa/login', { method: 'POST', body: { userId, code } }),
+
+
     // remote auth
 };
 

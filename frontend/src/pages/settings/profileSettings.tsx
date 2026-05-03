@@ -6,6 +6,8 @@ import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useAuth } from '@/context/userContext';
 import { useNavigate } from "react-router-dom";
 import DOMPurify from 'dompurify';
+import { Shield } from "lucide-react";
+
 
 export default function ProfileSettings() {
     const { user, setUser, loading: authLoading, logout } = useAuth();
@@ -15,6 +17,15 @@ export default function ProfileSettings() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [avatarError, setAvatarError] = useState(false);
+    
+    // 2FA
+    const [is2FALoading, setIs2FALoading] = useState(false);
+    const [TwoFaError, setTwoFaError] = useState<string | null>(null);
+    const [qrCode, setQrCode] = useState<string | null>(null);
+    const [twoFACode, setTwoFACode] = useState('');
+
+    const [showDisable2FA, setShowDisable2FA] = useState(false);
+    const [disableCode, setDisableCode] = useState('');
 
     // Profile form state
     const [profileForm, setProfileForm] = useState({
@@ -57,6 +68,7 @@ export default function ProfileSettings() {
 
         if (user) {
             // Fill the form using the data already in the Context Cloud!
+            
             setProfileForm({
                 firstname: user.firstname || '',
                 lastname: user.lastname || '',
@@ -219,6 +231,10 @@ export default function ProfileSettings() {
             errors.newPassword = 'Password must contain at least one special character';
         }
 
+        if (!passwordForm.confirmPassword.trim()) {
+            errors.confirmPassword = 'Confirmed New Password is required';
+        }
+        
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
             errors.confirmPassword = 'Passwords do not match';
         }
@@ -402,8 +418,73 @@ export default function ProfileSettings() {
     const hasAvatar = (url: string) =>
         !!url &&
         isSafeUrl(url) &&
-        !avatarError; // read error ( 404, ...)
+        !avatarError; // read error ( 404 (image not found..), ...)
     
+    // 2FA
+    const Enable2FA = async () => {
+        setTwoFaError(null);
+        setSuccessMessage(null);
+        console.log(user?.twoFAEnabled)
+        if (user?.twoFAEnabled == true){
+            setTwoFaError("2FA is already enabled on your account.");
+            return;
+        }
+        
+        // reset 
+        
+        setIs2FALoading(true);
+        try {
+            const res = await authApi.setup2FA();
+            setQrCode(res.qrCode);
+        } catch (err: any) {
+            setTwoFaError(err.message);
+        } finally {
+            setIs2FALoading(false);
+        }
+
+    };
+
+    // verify 2FA
+    const Verify2FA = async () => {
+        setTwoFaError(null);
+        setSuccessMessage(null);
+        if (twoFACode.trim().length !== 6) {
+            setTwoFaError("Enter the 6-digit code.");
+            return;
+        }
+        try {
+            await authApi.verify2FA(twoFACode);
+            setSuccessMessage("2FA is now active!");
+            setQrCode(null);
+            // Refresh local user state
+            const updatedUser = await authApi.me();
+            setUser(updatedUser);
+        } catch (err: any) {
+            setTwoFaError("Wrong code, please try again.");
+        }
+    };
+
+    // disable 2FA
+    const disable2FA = async () => {
+        setTwoFaError(null);
+        setSuccessMessage(null);
+        if (disableCode.trim().length !== 6) {
+            setTwoFaError("Enter the 6-digit code to confirm.");
+            return;
+        }
+        try {
+                await authApi.disable2FA(disableCode);  // send code to backend to check if its correct
+                setSuccessMessage("2FA has been disabled.");
+                setShowDisable2FA(false);
+                setDisableCode('');
+                const updatedUser = await authApi.me();
+                setUser(updatedUser);
+            } catch (err: any) {
+                setTwoFaError(err.message || "Failed to disable 2FA.");
+            }
+        }
+
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
@@ -431,7 +512,7 @@ export default function ProfileSettings() {
                 </div>
             )}
             {successMessage && (
-                <div className="rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-sm text-green-400">
+                <div className="rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-sm text-green-200">
                     {successMessage}
                 </div>
             )}
@@ -878,13 +959,102 @@ export default function ProfileSettings() {
 
                         {/* Two-Factor Authentication */}
                         <div className="space-y-4">
-                            <h3 className="font-semibold text-foreground">Two-Factor Authentication</h3>
-                            <p className="text-sm text-foreground-muted">
-                                Add an extra layer of security to your account. We'll ask for a code when you log in on a new device.
-                            </p>
-                            <Button className="w-full bg-primary hover:bg-primary/90 text-white transition-colors">
-                                Enable 2FA
-                            </Button>
+                        <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" />
+                            Two-Factor Authentication
+                        </h3>
+
+                        <p className="text-sm text-foreground-muted">
+                            Add an extra layer of security to your account. We'll ask for a code when you log in on a new device.
+                        </p>
+
+                        {user?.twoFAEnabled ? (
+                            <div className="space-y-4">
+                                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-green-200 text-sm flex items-center justify-between">
+                                <span> 2FA is currently activated on your account</span>
+                                <button
+                                    onClick={() => setShowDisable2FA(prev => !prev)}
+                                    className="text-xs text-red-400 hover:text-red-300 transition-colors underline hover:cursor-pointer"
+                                >
+                                    Disable
+                                </button>
+                                </div>
+
+                                {/* Inline confirm flow — only show when user clicks Disable */}
+                                {showDisable2FA && (
+                                <div className="bg-background p-4 border border-red-500/20 rounded-lg space-y-3 overflow-hidden">
+                                    <p className="text-sm text-foreground-muted">
+                                    Enter your 6-digit authenticator code to confirm:
+                                    </p>
+                                    <div className="flex gap-2 w-full">
+                                        <input
+                                            className="min-w-0 flex-1 bg-background border border-border rounded px-3 py-1 text-center text-lg tracking-widest outline-none focus:border-red-400"
+                                            placeholder="000000"
+                                            maxLength={6}
+                                            value={disableCode}
+                                            onChange={(e) => setDisableCode(e.target.value)}
+                                        />
+                                        <Button
+                                            onClick={disable2FA}
+                                            className="shrink-0 h-auto py-2.5 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                                        >
+                                            Confirm
+                                        </Button>
+                                    </div>
+                                    {TwoFaError && (
+                                        <p className="text-xs text-red-400 mt-1">{TwoFaError}</p>
+                                    )}
+                                </div>
+                                )}
+                            </div>
+                            ) : (
+                            <div className="space-y-4">
+                            {!qrCode ? (
+                                <Button
+                                    onClick={Enable2FA}
+                                    disabled={is2FALoading}
+                                    className="w-full bg-primary hover:bg-primary/90 text-white transition-colors"
+                                >
+                                Set up 2FA
+                                </Button>
+                               
+                            ) : (
+                                <div className="bg-background p-4 border border-border rounded-lg space-y-4">
+                                    <p className="text-sm text-foreground-muted">
+                                        Scan this QR code with Google Authenticator:
+                                    </p>
+
+                                    <img
+                                        src={qrCode}
+                                        alt="QR Code"
+                                        className="mx-auto w-40 h-40 bg-white p-2 rounded-md"
+                                    />
+
+                                    <div className="flex gap-4 w-full">
+                                        <input
+                                            className="min-w-0 flex-1 bg-background border border-border rounded px-3 py-1 text-center text-lg tracking-widest outline-none focus:border-primary"
+                                            placeholder="000000"
+                                            maxLength={6}
+                                            value={twoFACode}
+                                            onChange={(e) => setTwoFACode(e.target.value)}
+                                        />
+                                        <Button 
+                                            className="shrink-0  h-auto py-2.5 px-4" 
+                                            onClick={Verify2FA}>
+                                            Verify
+                                        </Button>
+                                    </div>
+                                    {TwoFaError && (
+                                        <p className="text-xs text-red-400 mt-1">{TwoFaError}</p>
+                                    )}
+                                </div>
+                            )}
+                            </div>
+                        )}
+                        {/* display error message
+                        {TwoFaError && (
+                            <p className="text-xs text-red-400">{TwoFaError}</p>
+                        )} */}
                         </div>
                     </div>
                 </CardContent>

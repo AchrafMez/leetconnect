@@ -8,6 +8,7 @@ import {updateProfileValidator, changePasswordValidator} from '../validators/pro
 import { upload } from '../middlewares/upload';
 import { uploadAvatar } from '../controllers/auth.controller';
 import rateLimit from 'express-rate-limit';
+import * as twoFA from '../controllers/twoFA.controller';
 
 const router = Router();
 
@@ -25,7 +26,13 @@ const avatarUploadLimit = rateLimit({
     message: { error: 'Too many avatar uploads, try again later' }
 });
 
+// Avatar change
 router.post('/avatar', authMiddleware, avatarUploadLimit, upload.single('avatar'), uploadAvatar);
+
+// 2FA
+router.post('/2fa/setup', authMiddleware, twoFA.setup2FA);
+router.post('/2fa/verify', authMiddleware, twoFA.verifyAndEnable2FA);
+router.post('/2fa/disable', authMiddleware, twoFA.disable2FA);
 
 // test auth middleware 
 router.get('/me', authMiddleware, async (req, res) => {
@@ -52,6 +59,8 @@ router.get('/me', authMiddleware, async (req, res) => {
         location: true,
         website: true,
         title: true,
+        twoFAEnabled: true
+        
       }
     });
 
