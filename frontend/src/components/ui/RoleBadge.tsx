@@ -25,9 +25,9 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const styles = {
-    active:    'text-primary border-primary/20',
-    suspended: 'text-destructive border-destructive/20',
-    pending:   'text-amber-400 border-amber-500/20',
+    active:    'bg-primary/20 text-primary border-primary/20',
+    suspended: 'bg-destructive/20 text-destructive border-destructive/20',
+    pending:   'bg-amber-400/20 text-amber-400 border-amber-500/20',
   };
   const dotStyles = {
     active:    'bg-primary',
@@ -35,7 +35,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     pending:   'bg-amber-400',
   };
   return (
-    <span className={`inline-flex items-center gap-1.5 border rounded-full text-xs px-2.5 py-1 font-medium ${styles[status]}`}>
+    <span className={`inline-flex items-center gap-1 border rounded-full text-xs px-2 py-1 font-medium ${styles[status]}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dotStyles[status]}`} />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>

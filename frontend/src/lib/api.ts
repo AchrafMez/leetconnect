@@ -44,6 +44,33 @@ export interface User {
     title: string
 }
 
+export interface OverviewData {
+  totalUsers: number;
+  totalJobs: number;
+  activeJobs: number;
+  flaggedJobs: number;
+  suspendedUsers: number;
+  pendingUsers: number;
+  newUsersThisWeek: number;
+  newJobsThisWeek: number;
+}
+
+export interface UsersAnalytics {
+  range: string;
+  registrationsOverTime: { date: string; count: number }[];
+  byRole: { role: string; count: number }[];
+  byStatus: { status: string; count: number }[];
+}
+
+export interface JobsAnalytics {
+  range: string;
+  jobsOverTime: { date: string; count: number }[];
+  byStatus: { status: string; count: number }[];
+  byCategory: { category: string; count: number }[];
+  byBudgetType: { type: string; count: number }[];
+  avgProposals: number;
+}
+
 /* export interface Job {
     id: string;
     title: string;
@@ -280,7 +307,12 @@ export const friendApi = {
 }
 
 export const analyticsApi = {
-    getDashboard: () => api('/analytics/dashboard'),
+    getAnalyticsOverview: () =>
+			api<OverviewData>('/admin/analytics/overview'),
+		getUsersAnalytics: (params: string) =>
+			api<UsersAnalytics>(`/admin/analytics/users?${params}`),
+		getJobsAnalytics: (params: string) =>
+			api<JobsAnalytics>(`/admin/analytics/jobs?${params}`),
     health: () => api<HealthResponse>('/analytics/health'),
 };
 

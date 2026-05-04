@@ -16,7 +16,7 @@ export const ForbiddenPage = () => {
         <p className="text-xs font-bold text-destructive tracking-widest uppercase mb-2">403 Forbidden</p>
         <h1 className="text-xl font-semibold text-foreground mb-2">Access denied</h1>
         <p className="text-sm text-muted-foreground mb-6">
-          You don't have permission to view this page.
+          You don't have permission to this area.
           {user && <span className="block mt-2">Signed in as <RoleBadge role={user.role} size="sm" /></span>}
         </p>
         <div className="flex gap-3 justify-center">
@@ -25,12 +25,6 @@ export const ForbiddenPage = () => {
             className="px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground bg-card border border-border hover:border-border-hover transition-colors"
           >
             Go back
-          </button>
-          <button
-            onClick={() => navigate('/admin')}
-            className="px-4 py-2.5 rounded-lg text-sm font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity"
-          >
-            Dashboard
           </button>
         </div>
       </div>

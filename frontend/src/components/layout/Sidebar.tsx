@@ -93,9 +93,21 @@ export const Sidebar = () => {
       {user && (
         <div className="px-4 py-4 border-t border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
-              {user.avatar}
-            </div>
+            <div className="w-8 h-8 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
+											{user.avatar ? (
+												<img 
+													src={user.avatar} 
+													alt={`${user.firstname}'s avatar`} 
+													className="w-full h-full object-cover"
+													onError={(e) => {
+														// Fallback if image fails to load
+														e.currentTarget.style.display = 'none';
+													}}
+												/>
+											) : (
+												<span>{`${user.firstname[0]}${user.lastname[0]}`}</span>
+											)}
+										</div>
             <div className="min-w-0">
               <p className="text-xs font-medium text-foreground truncate">{`${user.firstname} ${user.lastname}`}</p>
               <p className="text-[10px] text-muted-foreground capitalize">{user.role} Account</p>

@@ -12,6 +12,7 @@ import { HiOutlineBookmark,
 import { adminApi } from "@/lib/api";
 import { Spin } from "@/components/ui/Spin";
 import { useDebounce } from "@/hooks/useDebounce";
+import { StatCard } from "@/components/ui/StatCard";
 
 const STATUS_STYLES: Record<JobStatus, { badge: string; dot: string; label: string }> = {
   active:  { badge: 'text-primary border-primary/20', dot: 'bg-primary', label: 'Active' },
@@ -38,26 +39,6 @@ function timeAgo(date: string) {
 	const months = Math.floor(days / 30);
 	if(months === 0) return `${days} days ago`;
 	return `${months} month${months > 1 ? 's' : ''} ago`;
-}
-
-function StatCard({ label, value, sub, subColor, iconBg, icon }: {
-	label: string; value: number | string; sub: string;
-	subColor: string; iconBg: string; icon: React.ReactNode;
-}) {
-	return(
-		<div className="bg-card border border-border p-5">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <p className="text-xs text-muted-foreground font-medium mb-1">{label}</p>
-          <p className="text-2xl font-bold text-foreground">{value}</p>
-        </div>
-        <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}>
-          {icon}
-        </div>
-      </div>
-      <p className={`text-xs ${subColor}`}>{sub}</p>
-    </div>
-	)
 }
 
 function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
@@ -114,9 +95,18 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
         <div className="px-6 py-4 border-b border-border">
           <p className="text-xs text-muted-foreground mb-3">Posted by</p>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
-              {job.createdBy.avatar}
-            </div>
+            <div className="w-9 h-9 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
+											{job.createdBy.avatar ? (
+												<img 
+													src={job.createdBy.avatar} 
+													alt={`${job.createdBy.firstname}'s avatar`} 
+													className="w-full h-full object-cover"
+													onError={(e) => { e.currentTarget.style.display = 'none'; }}
+												/>
+											) : (
+												<span>{`${job.createdBy.firstname[0]}${job.createdBy.lastname[0]}`}</span>
+											)}
+										</div>
             <div>
               <p className="text-sm font-medium text-foreground">{job.postedByName}</p>
               <p className="text-xs text-muted-foreground">Client</p>
@@ -207,7 +197,7 @@ export const JobsPage = () => {
 
 	useEffect(() => {
 		async function fetchJobs() {
-			setLoading(true);
+			// setLoading(true);
 			try {
 				const params: any = {};
 				if(debouncedSearch) params.search = debouncedSearch;
@@ -382,9 +372,18 @@ export const JobsPage = () => {
 
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
-                        {job.createdBy.avatar}
-                      </div>
+                      <div className="w-9 h-9 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
+											{job.createdBy.avatar ? (
+												<img 
+													src={job.createdBy.avatar} 
+													alt={`${job.createdBy.firstname}'s avatar`} 
+													className="w-full h-full object-cover"
+													onError={(e) => { e.currentTarget.style.display = 'none'; }}
+												/>
+											) : (
+												<span>{`${job.createdBy.firstname[0]}${job.createdBy.lastname[0]}`}</span>
+											)}
+										</div>
                       <span className="text-sm text-foreground">{job.postedByName}</span>
                     </div>
                   </td>

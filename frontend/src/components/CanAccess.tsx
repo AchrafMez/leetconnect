@@ -48,9 +48,6 @@ export const ProtectedRoute = ({ children, role, roles, permission, minRole, red
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-	console.log("Current User:", user);
-	console.log("Required minRole:", minRole);
-	console.log("Is Allowed?:", canAccess(minRole!));
   let allowed = true;
   if (role) allowed = allowed && hasRole(role);
   if (roles) allowed = allowed && hasRole(roles);

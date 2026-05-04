@@ -11,43 +11,9 @@ import { HiOutlineBookmarkSlash,
 import { useEffect, useState } from 'react';
 import { adminApi, User } from '@/lib/api';
 import { Spin } from '@/components/ui/Spin';
+import { StatCard } from '@/components/ui/StatCard';
 
 const ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
-
-const STAT_CARDS = [
-  {
-    label: 'Total Users',
-    getValue: (u: User[]) => u.length,
-    getSub: (u: User[]) => `↑ ${u.filter(x => x.status === 'active').length} active`,
-    subColor: 'text-primary',
-    iconBg: 'bg-primary/10',
-    icon: <HiOutlineUsers className="h-5 w-5 text-primary" />
-  },
-  {
-    label: 'Active',
-    getValue: (u: User[]) => u.filter(x => x.status === 'active').length,
-    getSub: (u: User[]) => `${u.filter(x => x.status === 'pending').length} pending`,
-    subColor: 'text-amber-400',
-    iconBg: 'bg-blue-500/10',
-    icon: <HiOutlineCheckCircle className="w-5 h-5 text-blue-400" />
-  },
-  {
-    label: 'Roles',
-    getValue: () => 4,
-    getSub: () => 'admin · mod · user',
-    subColor: 'text-muted-foreground',
-    iconBg: 'bg-purple-500/10',
-    icon: <HiOutlineShieldCheck className="w-5 h-5 text-purple-400" />
-  },
-  {
-    label: 'Suspended',
-    getValue: (u: User[]) => u.filter(x => x.status === 'suspended').length,
-    getSub: () => 'accounts restricted',
-    subColor: 'text-muted-foreground',
-    iconBg: 'bg-destructive/10',
-    icon: <HiOutlineMinusCircle className="w-5 h-5 text-destructive" />
-	}
-];
 
 const JOB_STATUS_STYLES = {
   active: { badge: 'text-primary border-primary/20', dot: 'bg-primary' },
@@ -111,20 +77,36 @@ export const DashboardPage = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4 mb-8">
-        {STAT_CARDS.map(card => (
-          <div key={card.label} className="bg-card border border-border p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium mb-1">{card.label}</p>
-                <p className="text-2xl font-bold text-foreground">{card.getValue(users)}</p>
-              </div>
-              <div className={`w-9 h-9 rounded-lg ${card.iconBg} flex items-center justify-center shrink-0`}>
-                {card.icon}
-              </div>
-            </div>
-            <p className={`text-xs ${card.subColor}`}>{card.getSub(users)}</p>
-          </div>
-        ))}
+				<StatCard 
+					label='Total Users'
+					value={users.length}
+					sub={`↑ ${users.filter(x => x.status === 'active').length} active`}
+					iconBg='bg-primary/10'
+					icon={<HiOutlineUsers className="h-5 w-5 text-primary" />} />
+				
+				<StatCard 
+					label='Active'
+					value={users.filter(x => x.status === 'active').length}
+					sub={`${users.filter(x => x.status === 'pending').length} pending`}
+					subColor= 'text-amber-400'
+    			iconBg= 'bg-blue-500/10'
+    			icon= {<HiOutlineCheckCircle className="w-5 h-5 text-blue-400" />} />
+				
+				<StatCard 
+					label= 'Roles'
+    			value= '3'
+    			sub=  'admin · mod · user'
+    			subColor= 'text-muted-foreground'
+    			iconBg= 'bg-purple-500/10'
+    			icon= {<HiOutlineShieldCheck className="w-5 h-5 text-purple-400" />} />
+				
+				<StatCard 
+					label= 'Suspended'
+    			value= {users.filter(x => x.status === 'suspended').length}
+    			sub= 'accounts restricted'
+    			subColor= 'text-muted-foreground'
+    			iconBg= 'bg-destructive/10'
+    			icon= {<HiOutlineMinusCircle className="w-5 h-5 text-destructive" />} />
       </div>
 
       <CanAccess minRole="MODERATOR">
@@ -150,9 +132,18 @@ export const DashboardPage = () => {
                 <tr key={u.id} className="hover:bg-secondary/40 transition-colors">
                   <td className="px-6 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
-                        {u.avatar}
-                      </div>
+                      <div className="w-8 h-8 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
+											{u.avatar ? (
+												<img 
+													src={u.avatar} 
+													alt={`${u.firstname}'s avatar`} 
+													className="w-full h-full object-cover"
+													onError={(e) => { e.currentTarget.style.display = 'none'; }}
+												/>
+											) : (
+												<span>{`${u.firstname[0]}${u.lastname[0]}`}</span>
+											)}
+										</div>
                       <div>
                         <p className="text-sm font-medium text-foreground">{`${u.firstname} ${u.lastname}`}</p>
                         <p className="text-xs text-muted-foreground">{u.email}</p>
@@ -167,9 +158,14 @@ export const DashboardPage = () => {
 										<StatusBadge status={u.status} />
                   </td>
                   <td className="px-6 py-3.5 text-right">
-                    <button onClick={manageUser} className="text-xs text-muted-foreground hover:text-primary font-medium transition-colors">
-                      Manage
-                    </button>
+										<CanAccess permission='users:edit'>
+											<button onClick={manageUser} className="text-xs text-muted-foreground hover:text-primary font-medium transition-colors">
+                      	Manage
+                    	</button>
+
+										</CanAccess>
+										{/* {u.role === 'ADMIN'  && (
+										)} */}
                   </td>
                 </tr>
               ))}
@@ -224,9 +220,18 @@ export const DashboardPage = () => {
  
                     <td className="px-6 py-3.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
-                          {job.createdBy.avatar}
-                        </div>
+                        <div className="w-7 h-7 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
+											{job.createdBy.avatar ? (
+												<img 
+													src={job.createdBy.avatar} 
+													alt={`${job.createdBy.firstname}'s avatar`} 
+													className="w-full h-full object-cover"
+													onError={(e) => { e.currentTarget.style.display = 'none'; }}
+												/>
+											) : (
+												<span>{`${job.createdBy.firstname[0]}${job.createdBy.lastname[0]}`}</span>
+											)}
+										</div>
                         <span className="text-sm text-foreground">{job.postedByName}</span>
                       </div>
                     </td>

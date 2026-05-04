@@ -19,9 +19,9 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
 };
 
 export const ROLE_META: Record<Role, { label: string; color: string; bg: string }> = {
-  ADMIN:     { label: 'Admin', color: 'text-primary', bg: 'bg-primary/10 border-primary/30' },
-  MODERATOR: { label: 'Moderator', color: 'text-foreground', bg: 'bg-secondary border-border-hover',},
-  USER:      { label: 'User', color: 'text-muted-foreground', bg: 'bg-secondary border-border', },
+  ADMIN:     { label: 'Admin', color: 'text-primary', bg: 'border-primary/30' },
+  MODERATOR: { label: 'Moderator', color: 'text-foreground', bg: 'border-border-hover',},
+  USER:      { label: 'User', color: 'text-muted-foreground', bg: 'border-border', },
 };
 
 export const getRoleRank = (role: Role): number => {

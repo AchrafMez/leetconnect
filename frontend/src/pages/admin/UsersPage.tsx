@@ -7,6 +7,7 @@ import { HiOutlineMagnifyingGlass, HiOutlineUserMinus } from 'react-icons/hi2';
 import { adminApi, User } from '@/lib/api';
 import { Spin } from '@/components/ui/Spin';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Button } from '@/components/ui/button';
 
 const ALL_ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
 
@@ -18,11 +19,12 @@ export const UsersPage = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
+	const [roleConfirm, setRoleConfirm] = useState<{ userId: string; newRole: Role } | null>(null);
 	const debouncedSearch = useDebounce(search, 500);
 
 	useEffect(() => {
 		async function fetchUsers() {
-			setLoading(true);
+			// setLoading(true);
 			try {
 				const params: any = {};
 				if(debouncedSearch) params.search = debouncedSearch;
@@ -53,29 +55,40 @@ export const UsersPage = () => {
 		fetchAllUsers();
 	}, [])
 
-  // const filtered = users.filter(u => {
-  //   const matchSearch = u.username.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
-  //   const matchRole   = roleFilter === 'all' || u.role === roleFilter;
-  //   return matchSearch && matchRole;
-  // });
-
   async function handleRoleChange(userId: string, newRole: Role) {
+		// Show confirmation modal when promoting to ADMIN
+		if (newRole === 'ADMIN') {
+			setRoleConfirm({ userId, newRole });
+			return;
+		}
+
+		// For other roles, update immediately
+		await applyRoleChange(userId, newRole);
+  }
+
+	async function applyRoleChange(userId: string, newRole: Role) {
 		const previousUsers = users;
+		const previousAllUsers = allUsers;
+		
 		setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole }: u));
+		setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole }: u));
 
 		try {
 			const updated = await adminApi.updateUserRole(userId, newRole);
 			setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+			setAllUsers(prev => prev.map(u => u.id === userId ? updated : u));
 		} catch (error: any) {
 			setUsers(previousUsers);
+			setAllUsers(previousAllUsers);
 			alert(error.message);
 		}
-  }
+	}
   async function handleStatusToggle(userId: string, currentStatus: string) {
 		const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
 		try {
 			const updated = await adminApi.updateUserStatus(userId, newStatus);
 			setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+			setAllUsers(prev => prev.map(u => u.id === userId ? updated : u));
 		} catch (error: any) {
 			alert(error.message);
 		}
@@ -84,6 +97,7 @@ export const UsersPage = () => {
 		try {
 			await adminApi.deleteUser(userId);
 			setUsers(prev => prev.filter(u => u.id !== userId));
+			setAllUsers(prev => prev.filter(u => u.id !== userId));
 		} catch (error: any) {
 			alert(error.message);
 		}
@@ -165,9 +179,18 @@ export const UsersPage = () => {
               <tr key={user.id} className="hover:bg-secondary/30 transition-colos group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
-                      {user.avatar}
-                    </div>
+                    <div className="w-9 h-9 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
+											{user.avatar ? (
+												<img 
+													src={user.avatar} 
+													alt={`${user.firstname}'s avatar`} 
+													className="w-full h-full object-cover"
+													onError={(e) => { e.currentTarget.style.display = 'none'; }}
+												/>
+											) : (
+												<span>{`${user.firstname[0]}${user.lastname[0]}`}</span>
+											)}
+										</div>
                     <div>
                       <p className="text-sm font-medium text-foreground">{`${user.firstname} ${user.lastname}`}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
@@ -175,17 +198,21 @@ export const UsersPage = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <CanAccess permission="users:edit" fallback={<RoleBadge role={user.role} />}>
-                    <select
-                      value={user.role}
-                      onChange={e => handleRoleChange(user.id, e.target.value as Role)}
-                      className="text-xs font-medium border rounded-full px-2.5 py-1 bg-foreground/10 text-foreground border-foreground/30 focus:outline-none cursor-pointer"
-                    >
-                      {ALL_ROLES.map(r => (
-                        <option key={r} value={r} className="bg-card text-foreground">{ROLE_META[r].label}</option>
-                      ))}
-                    </select>
-                  </CanAccess>
+                  {user.role === 'ADMIN' ? (
+                    <RoleBadge role={user.role} />
+                  ) : (
+                    <CanAccess permission="users:edit" fallback={<RoleBadge role={user.role} />}>
+                      <select
+                        value={user.role}
+                        onChange={e => handleRoleChange(user.id, e.target.value as Role)}
+                        className="text-xs font-medium border rounded-full px-2.5 py-1 bg-foreground/10 text-foreground border-foreground/30 focus:outline-none cursor-pointer"
+                      >
+                        {ALL_ROLES.map(r => (
+                          <option key={r} value={r} className="bg-card text-foreground">{ROLE_META[r].label}</option>
+                        ))}
+                      </select>
+                    </CanAccess>
+                  )}
                 </td>
                 <td className="px-6 py-4"><StatusBadge status={user.status} /></td>
                 <td className="px-6 py-4 text-xs text-muted-foreground">
@@ -193,6 +220,7 @@ export const UsersPage = () => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+										{user.role !== 'ADMIN' && (
                     <CanAccess permission="users:edit">
                       <button
                         onClick={() => handleStatusToggle(user.id, user.status)}
@@ -205,22 +233,25 @@ export const UsersPage = () => {
                         {user.status === 'active' ? 'Suspend' : 'Activate'}
                       </button>
                     </CanAccess>
-                    <CanAccess permission="users:delete">
-                      {deleteConfirm === user.id ? (
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => handleDelete(user.id)} className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-white bg-destructive hover:bg-destructive/80 transition-colors">Confirm</button>
-                          <button onClick={() => setDeleteConfirm(null)} className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors">Cancel</button>
-                        </div>
-                      ) : (
-                        <button
-													title='delete user'
-                          onClick={() => setDeleteConfirm(user.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-                          <HiOutlineUserMinus className='w-4 h-4' />
+										)}
+										{user.role !== 'ADMIN' && (
+											<CanAccess permission="users:delete">
+												{deleteConfirm === user.id ? (
+													<div className="flex items-center gap-1">
+														<button onClick={() => handleDelete(user.id)} className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-white bg-destructive hover:bg-destructive/80 transition-colors">Confirm</button>
+														<button onClick={() => setDeleteConfirm(null)} className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors">Cancel</button>
+													</div>
+												) : (
+													<button
+														title='delete user'
+														onClick={() => setDeleteConfirm(user.id)}
+														className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+														<HiOutlineUserMinus className='w-4 h-4' />
 
-                        </button>
-                      )}
-                    </CanAccess>
+													</button>
+												)}
+											</CanAccess>
+										)}
                   </div>
                 </td>
               </tr>
@@ -231,6 +262,35 @@ export const UsersPage = () => {
           <div className="py-16 text-center text-muted-foreground text-sm">No users match your search.</div>
         )}
       </div>
+
+      {roleConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-sm mx-auto">
+            <h2 className="text-lg font-bold text-foreground mb-2">Promote to Admin?</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              You're about to promote <span className="font-semibold text-foreground">{users.find(u => u.id === roleConfirm.userId)?.firstname} {users.find(u => u.id === roleConfirm.userId)?.lastname}</span> to <span className="font-semibold text-foreground">ADMIN</span>.
+            </p>
+            <p className="text-xs text-amber-400 mb-6 bg-amber-400/10 border border-amber-400/30 rounded p-3">
+              ⚠️ Admins have full system access and can manage all users and settings. This action cannot be easily undone.
+            </p>
+            <div className="flex gap-3">
+							<Button onClick={() => setRoleConfirm(null)}
+									className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+								Cancel
+							</Button>
+							<Button className="bg-primary hover:bg-primary/50"
+								onClick={() => {
+									if(roleConfirm) {
+										applyRoleChange(roleConfirm.userId, roleConfirm.newRole);
+										setRoleConfirm(null);
+									}
+							}}>
+								Confirm Promotion
+							</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
