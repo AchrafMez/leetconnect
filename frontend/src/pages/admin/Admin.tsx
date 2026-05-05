@@ -5,7 +5,7 @@ import { DashboardPage } from './DashboardPage';
 import { UsersPage } from './UsersPage';
 import { RolesPage } from './RolesPage';
 import { ForbiddenPage } from '../ForbiddenPage';
-import { Analytics } from './Analytics';
+import { AnalyticsPage } from './AnalyticsPage';
 import { JobsPage } from './JobsPage';
 import { AdminLoginPage } from './AdminLoginPage';
 
@@ -50,7 +50,7 @@ const Admin = () => {
 					path='analytics'
 					element={
 						<ProtectedRoute minRole='ADMIN'>
-							<Analytics />
+							<AnalyticsPage />
 						</ProtectedRoute>
 					}/>
 
