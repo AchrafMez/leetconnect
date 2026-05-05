@@ -189,6 +189,8 @@ export interface UserProfile {
     isOnline: boolean;
     type: 'CLIENT' | 'FREELANCER';
     bio?: string | null;
+    location?: string | null;
+    website?: string | null;
     createdAt: string;
 }
 
@@ -240,6 +242,18 @@ export const chatApi = {
                 member_ids: data.member_ids,
             },
         }),
+
+	addMember: (convers_id: number, user_id: string) =>
+		api<{
+            user_id: string;
+            user: {
+                username: string;
+                avatar: string;
+                isOnline: boolean
+            }}>(
+			`/chat/convers/${convers_id}/members`,
+			{ method: 'POST', body: { user_id } },
+		),
 	// ---------------------- Health ----------------------
 	health: () => api<HealthResponse>('/chat/health'),
     
@@ -281,11 +295,6 @@ export const friendApi = {
     rejectRequest: (request_id: number) =>
         api<FriendRequest>(`/friend/requests/${request_id}/reject`, {
             method: 'PATCH'
-        }),
-
-    cancelRequest: (request_id: number) =>
-        api<void>(`/friend/requests/${request_id}`, {
-            method: 'DELETE'
         }),
 
     listIncoming: () => api<FriendRequest[]>('/friend/requests/incoming'),

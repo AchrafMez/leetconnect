@@ -1,10 +1,14 @@
 import ChatHeader from "./ChatHeader";
 import MessageBubble, { type Message } from "./MessageLayer";
 import ChatInput from "./ChatInput";
-import { useRef, useEffect, useCallback } from "react";
+import ChatInfoPanel from "./ChatInfoPanel";
+import { useRef, useEffect, useCallback, useState } from "react";
 import { Loader2 } from "lucide-react";
+import type { Conversation, ConvMember } from "./ConverLayer";
+import type { Friend } from "../../lib/api";
 
 interface ChatBoxProp {
+	convers:			Conversation;
 	convers_name: 		string;
 	convers_avatar: 	string;
 	convers_username?: 	string | undefined;
@@ -13,17 +17,25 @@ interface ChatBoxProp {
 	curr_user: 			string;
 	has_more:			boolean;
 	loading_more:		boolean;
+	friends:			Friend[];
+	receiver_id?: 		string | undefined;
+	recv_rest_online:   boolean;
 
 	onSendMessage: 	(content: string) => void;
 	onLoadMore:		() => void;
 	onDeleteMessage: (msg_id: number) => void;
 	onBack:			() => void;
+	onLeaveConversation: (convers_id: number) => void;
+	onMemberAdded:		(convers_id: number, member: ConvMember) => void;
 }
 
 export default function ChatBox({
-	convers_name, convers_avatar, convers_username, is_direct, messages, curr_user,
-	onSendMessage, onLoadMore, has_more, loading_more, onDeleteMessage, onBack
+	convers, convers_name, convers_avatar, convers_username, is_direct,
+	receiver_id, recv_rest_online, messages, curr_user,
+	friends, onSendMessage, onLoadMore, has_more, loading_more,
+	onDeleteMessage, onBack, onLeaveConversation, onMemberAdded,
 }: ChatBoxProp) {
+	const [show_info, setShowInfo] = useState(false);
 	const bottom_ref = useRef<HTMLDivElement>(null);
 	const scroll_ref = useRef<HTMLDivElement>(null);
 	const is_initial_load = useRef(true);
@@ -75,7 +87,16 @@ export default function ChatBox({
 
 	return (
 		<div className="flex-1 flex flex-col min-w-0">
-			<ChatHeader name={convers_name} avatar={convers_avatar} is_online={is_direct} username={convers_username} onBack={onBack}/>
+			<ChatHeader
+				name={convers_name}
+				avatar={convers_avatar}
+				is_direct={is_direct}
+				receiver_id={receiver_id}
+				recv_rest_online={recv_rest_online}
+				username={convers_username}
+				onBack={onBack}
+				onInfoClick={() => setShowInfo(true)}
+			/>
 			<div ref={scroll_ref} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-4">
 				{loading_more && (
 					<div className="flex justify-center py-3">
@@ -93,6 +114,17 @@ export default function ChatBox({
 				<div ref={bottom_ref} />
 			</div>
 			<ChatInput onSend={onSendMessage}/>
+
+			{show_info && (
+				<ChatInfoPanel
+					convers={convers}
+					curr_user={curr_user}
+					friends={friends}
+					onClose={() => setShowInfo(false)}
+					onLeft={onLeaveConversation}
+					onMemberAdded={onMemberAdded}
+				/>
+			)}
 		</div>
 	);
 }

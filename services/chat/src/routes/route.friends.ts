@@ -11,6 +11,5 @@ router.delete('/friends/', friends_ctrl.remove);
 
 router.patch('/:id/accept', friends_ctrl.accept);
 router.patch('/:id/reject', friends_ctrl.reject);
-router.delete('/:id', friends_ctrl.cancel);
 
 export default router;

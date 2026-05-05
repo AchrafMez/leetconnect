@@ -1,28 +1,43 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, UserCheck, UserMinus, UserX, X, Clock, Loader2, MessageCircle, Settings } from 'lucide-react';
+import {
+	UserPlus, UserCheck, UserMinus, X, Clock, Loader2,
+	MessageCircle, Settings, Briefcase, MapPin, Calendar,
+} from 'lucide-react';
 import { chatApi, friendApi } from '../../lib/api';
 import Avatar from '../chat/Avatar';
+import { Card, CardContent } from '@/components/ui/card';
+import { usePresence } from '@/context/PresenceProvider';
 
 interface ProfileHeaderProps {
-	username: 			string;
-	avatar:				string;
-	type:				string;
-	isOnline: 			boolean;
+	profileUser:		any;
 	isOwnProfile:		boolean;
 	friendStatus:		'none' | 'pending_sent' | 'pending_received' | 'friends';
-	friendRequestId?: 	number | undefined;
-	targetUserId: 		string;
-	onFriendAction:	() => void;
+	friendRequestId?:	number | undefined;
+	onFriendAction:		() => void;
 }
 
 export default function ProfileHeader({
-	username, avatar, type, isOnline, isOwnProfile,
-	friendStatus, friendRequestId, targetUserId, onFriendAction,
+	profileUser, isOwnProfile, friendStatus, friendRequestId, onFriendAction,
 }: ProfileHeaderProps) {
 	const [actionLoading, setActionLoading] = useState(false);
 	const [messageLoading, setMessageLoading] = useState(false);
 	const navigate = useNavigate();
+
+	const {
+		id: targetUserId,
+		username, avatar, type, isOnline,
+		firstname, lastname, title, location, createdAt,
+	} = profileUser;
+
+	const live 		= usePresence(targetUserId);
+	const onlineNow = live ?? isOnline;
+
+	const fullName = [firstname, lastname].filter(Boolean).join(' ') || username;
+	const joinedDate = createdAt
+		? new Date(createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+		: null;
+	const typeLabel = type === 'FREELANCER' ? 'Freelancer' : type === 'CLIENT' ? 'Client' : null;
 
 	const handleMessage = async () => {
 		setMessageLoading(true);
@@ -41,65 +56,32 @@ export default function ProfileHeader({
 
 	const handleSendRequest = async () => {
 		setActionLoading(true);
-		try {
-			await friendApi.sendRequest(targetUserId);
-			onFriendAction();
-		} catch (err) {
-			console.error('Failed to send friend request:', err);
-		} finally {
-			setActionLoading(false);
-		}
+		try { await friendApi.sendRequest(targetUserId); onFriendAction(); }
+		catch (err) { console.error('Failed to send friend request:', err); }
+		finally { setActionLoading(false); }
 	};
 
 	const handleAccept = async () => {
 		if (!friendRequestId) return;
 		setActionLoading(true);
-		try {
-			await friendApi.acceptRequest(friendRequestId);
-			onFriendAction();
-		} catch (err) {
-			console.error('Failed to accept request:', err);
-		} finally {
-			setActionLoading(false);
-		}
+		try { await friendApi.acceptRequest(friendRequestId); onFriendAction(); }
+		catch (err) { console.error('Failed to accept request:', err); }
+		finally { setActionLoading(false); }
 	};
 
 	const handleReject = async () => {
 		if (!friendRequestId) return;
 		setActionLoading(true);
-		try {
-			await friendApi.rejectRequest(friendRequestId);
-			onFriendAction();
-		} catch (err) {
-			console.error('Failed to reject request:', err);
-		} finally {
-			setActionLoading(false);
-		}
-	};
-
-	const handleCancel = async () => {
-		if (!friendRequestId) return;
-		setActionLoading(true);
-		try {
-			await friendApi.cancelRequest(friendRequestId);
-			onFriendAction();
-		} catch (err) {
-			console.error('Failed to cancel request:', err);
-		} finally {
-			setActionLoading(false);
-		}
+		try { await friendApi.rejectRequest(friendRequestId); onFriendAction(); }
+		catch (err) { console.error('Failed to reject request:', err); }
+		finally { setActionLoading(false); }
 	};
 
 	const handleUnfriend = async () => {
 		setActionLoading(true);
-		try {
-			await friendApi.removeFriend(targetUserId);
-			onFriendAction();
-		} catch (err) {
-			console.error('Failed to remove friend:', err);
-		} finally {
-			setActionLoading(false);
-		}
+		try { await friendApi.removeFriend(targetUserId); onFriendAction(); }
+		catch (err) { console.error('Failed to remove friend:', err); }
+		finally { setActionLoading(false); }
 	};
 
 	const renderActionButton = () => {
@@ -140,16 +122,11 @@ export default function ProfileHeader({
 
 			case 'pending_sent':
 				return (
-					<button
-						onClick={handleCancel}
-						className="group px-4 py-2 bg-secondary hover:bg-destructive/10 text-muted-foreground hover:text-destructive
-							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-					>
-						<Clock size={14} className="group-hover:hidden" />
-						<UserX size={14} className="hidden group-hover:inline" />
-						<span className="group-hover:hidden">Request Sent</span>
-						<span className="hidden group-hover:inline">Cancel Request</span>
-					</button>
+					<div className="px-4 py-2 bg-secondary text-muted-foreground
+						rounded-lg text-sm font-medium flex items-center gap-2">
+						<Clock size={14} />
+						<span>Request Sent</span>
+					</div>
 				);
 
 			case 'pending_received':
@@ -183,52 +160,92 @@ export default function ProfileHeader({
 					>
 						<UserCheck size={14} className="group-hover:hidden" />
 						<UserMinus size={14} className="hidden group-hover:inline" />
-						<span className="group-hover:hidden">Friends</span>
-						<span className="hidden group-hover:inline">Unfriend</span>
+						<span className="group-hover:hidden"> Connected</span>
+						<span className="hidden group-hover:inline">Disconnect</span>
 					</button>
 				);
 		}
 	};
+
 	return (
-		<div className="bg-secondary/50 rounded-xl p-6 border border-border">
-			<div className="flex items-center gap-5">
-				{/* Avatar with online indicator */}
-				<div className="relative shrink-0">
-					<Avatar name={username} image={avatar} />
-					{!isOwnProfile && (
+		<Card className="border-border/50 bg-background-elevated overflow-hidden">
+			{/* gradient banner */}
+			<div className="h-20 sm:h-24 bg-linear-to-r from-primary/30 via-primary/10 to-transparent" />
 
-						<span className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-secondary ${
-							isOnline ? 'bg-primary' : 'bg-muted-foreground'}`}
-						/>
-					)}
-				</div>
+			<CardContent className="p-4 sm:p-6 -mt-12 sm:-mt-14">
+				<div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+					{/* avatar */}
+					<div className="shrink-0 mx-auto sm:mx-0">
+						<div className="rounded-full ring-4 ring-background-elevated">
+							<Avatar name={fullName} image={avatar} size="lg" />
+						</div>
+					</div>
 
-				{/* user info */}
-				<div className="flex-1 min-w-0">
-					<h1 className="text-xl font-bold text-foreground">{username}</h1>
-					<p className="text-muted-foreground text-sm capitalize">
-						{type?.toLowerCase() ?? 'user'}
-					</p>
-				</div>
+					{/* identity + actions */}
+					<div className="flex-1 min-w-0 sm:pt-12">
+						<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+							<div className="min-w-0 text-center sm:text-left">
+								<div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+									<h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
+										{fullName}
+									</h1>
+								</div>
+								<p className="text-sm text-muted-foreground">@{username}</p>
+								{title && (
+									<p className="mt-1 text-sm font-medium text-foreground/80">
+										{title}
+									</p>
+								)}
+							</div>
 
-				{/* action buttons */}
-				<div className="flex items-center gap-2 shrink-0">
-					{!isOwnProfile && (
-						<button
-							onClick={handleMessage}
-							disabled={messageLoading}
-							className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground
-								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60"
-						>
-							{messageLoading
-								? <Loader2 size={14} className="animate-spin" />
-								: <MessageCircle size={14} />}
-							Message
-						</button>
-					)}
-					{renderActionButton()}
+							<div className="flex items-center justify-center sm:justify-end gap-2 shrink-0 flex-wrap">
+								{!isOwnProfile && (
+									<button
+										onClick={handleMessage}
+										disabled={messageLoading}
+										className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground
+											rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60"
+									>
+										{messageLoading
+											? <Loader2 size={14} className="animate-spin" />
+											: <MessageCircle size={14} />}
+										Message
+									</button>
+								)}
+								{renderActionButton()}
+							</div>
+						</div>
+
+						<div className="mt-4 flex flex-wrap items-center justify-center sm:justify-start
+							gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
+							{typeLabel && (
+								<span className="flex items-center gap-1.5">
+									<Briefcase size={14} className="text-primary/70" />
+									{typeLabel}
+								</span>
+							)}
+							{location && (
+								<span className="flex items-center gap-1.5">
+									<MapPin size={14} className="text-primary/70" />
+									{location}
+								</span>
+							)}
+							{joinedDate && (
+								<span className="flex items-center gap-1.5">
+									<Calendar size={14} className="text-primary/70" />
+									Joined {joinedDate}
+								</span>
+							)}
+							{!isOwnProfile && (
+								<span className={`flex items-center gap-1.5 ${onlineNow ? 'text-primary' : 'text-muted-foreground'}`}>
+									<span className={`w-3 h-2 rounded-full ${onlineNow ? 'bg-primary shadow-[0_0_10px_rgba(34,197,94,0.85)] animate-pulse' : 'bg-muted-foreground'}`} />
+									{onlineNow ? 'Online' : 'Offline'}
+								</span>
+							)}
+						</div>
+					</div>
 				</div>
-			</div>
-		</div>
+			</CardContent>
+		</Card>
 	);
 }

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api, setAccessToken, type User } from '../lib/api';
 import { authApi } from '../lib/api';
+import { disconnectSocket } from '@/lib/socket';
 
 interface AuthContextType {
   user: User | null;
@@ -57,6 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = async () => {
     await api('/auth/logout', { method: 'POST' });
+    disconnectSocket();
     setAccessToken(null);
     setUser(null);
   };

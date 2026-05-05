@@ -1,5 +1,6 @@
 import dotenv			from 'dotenv';
 import express			from 'express';
+import morgan			from 'morgan';
 import http				from 'http';
 import { Server }		from 'socket.io';
 
@@ -21,9 +22,12 @@ import {
 	getMetrics,
 	httpRequestDuration,
 	httpRequestsTotal,
+	EVENTS,
 } from '@leetconnect/shared';
 
 import { authMiddleware } from '@leetconnect/shared';
+import { reset_presence, shutdown_presence } from './lib/presence';
+import {  type NotifEventPayload, notify } from './lib/notify';
 
 dotenv.config({ path: '../../.env', quiet: true});
 
@@ -36,6 +40,7 @@ const io = new Server(server, {
 	cors: { origin: '*' },
 });
 
+app.use(morgan('dev'));
 app.use(express.json());
 app.set('io', io);
 
@@ -85,19 +90,34 @@ async function start_chat_server() {
 			if (channel === AUTH_EVENTS.USER_REGISTERED) {
 				await prisma.user.upsert({
 					where:  {id: data.id },
-					update: {email: data.email, username: data.datasername, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type},
+					update: {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type},
 					create: {id: data.id, email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type}
 				});
 			} else if (channel === AUTH_EVENTS.USER_UPDATED) {
 				await prisma.user.update({
 					where: {id: data.id},
-					data:  {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, avatar: data.avatar, bio: data.bio}
+					data:  {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, avatar: data.avatar, bio: data.bio, location: data.location, website: data.website}
 				});
+			} else {
+				return;
 			}
 			console.log(`user synced to chat_db: [${data.id}](${data.username})`);
 		});
 		await prisma.$connect().then( () => {
 			console.log('connected to database.');
+		});
+		await reset_presence();
+
+		subscribeToEvents(EVENTS.NOTIF_CREATE, async (channel, message: any) => {
+			if (channel !== EVENTS.NOTIF_CREATE) return;
+			const data = message.data as NotifEventPayload;
+
+			await notify(io, {
+				user_id: data.user_id,
+				type:	 data.type,
+				title:	 data.title,
+				...(data.body != null && { body: data.body }),
+			});
 		});
 		server.listen(PORT, () => {
 			console.log(`chat server running on port: ${PORT}`);
@@ -110,6 +130,7 @@ async function start_chat_server() {
 
 async function server_exit() {
 	console.log('\nshutting down chat server');
+	await shutdown_presence();
 	io.close(); 
 	await prisma.$disconnect();
 	console.log('disconnected from database.');
@@ -117,3 +138,4 @@ async function server_exit() {
 }
 
 process.on('SIGINT', server_exit);
+process.on('SIGTERM', server_exit);

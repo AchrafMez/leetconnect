@@ -16,6 +16,7 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { GuestRoute } from './components/GuestRoute';
 import ProfilePage from './pages/profile/ProfilePage';
 import ProfileSettingsPage from './pages/settings/profileSettings';
+import NetworkPage from './pages/network/NetworkPage';
 import { RequireAuth } from './components/RequireAuth';
 
 export default function App() {
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/profile/:username" element={<ProfilePage />} />
             <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+            <Route path="/network" element={<NetworkPage />} />
           </Route>
         </Route>
       </Routes>

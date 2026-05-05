@@ -68,7 +68,10 @@ function Row({n, onRead}: {n: ChatNotif; onRead: (id: number) => void}) {
 						<p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>
 					)}
 					<p className="text-xs text-muted-foreground mt-1">
-						{new Date(n.created_at).toLocaleString()}
+						{new Date(n.created_at).toLocaleString([], {
+							year: 'numeric', month: 'numeric', day: 'numeric',
+							hour: '2-digit', minute: '2-digit',
+						})}
 					</p>
 				</div>
 			</div>

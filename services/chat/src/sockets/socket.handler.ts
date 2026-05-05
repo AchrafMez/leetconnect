@@ -2,6 +2,8 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import type { JwtPayload } from '@leetconnect/shared';
+import prisma from '../config/config.database';
+import { mark_offline, mark_online } from '../lib/presence';
 
 const pub_key = fs.readFileSync(process.env.JWT_PUBLIC_KEY_PATH as string);
 
@@ -26,32 +28,47 @@ export function setup_sockets(io: Server) {
 		}
 	});
 
-	io.on('connection', (socket: Socket) => {
+	io.on('connection', async (socket: Socket) => {
 		const userId = socket.data.user.userId;
 		console.log(`socket connected: ${socket.id} (user: ${userId})`);
 		socket.join(`user:${userId}`);
 
-		socket.on('join_convers', (convers_id: number) => {
-			// TODO: verify user is a member of this conversation
+		try {
+			await mark_online(io, userId);
+		} catch (err) {
+			console.error('[presence] mark_online failed:', (err as Error).message);
+		}
+		socket.on('join_convers', async (convers_id: number) => {
+			
+			if (!Number.isInteger(convers_id) || convers_id <= 0) return;
+			const member = await prisma.conversMember.findFirst({
+				where: {convers_id, user_id: userId},
+				select: {id: true}
+			});
+			if (!member) return;
+
 			const room = `convers:${convers_id}`;
 			socket.join(room);
-			const roomSize = io.sockets.adapter.rooms.get(room)?.size ?? 0;
 			console.log(`socket ${socket.id} joined room ${room}`);
 		});
 		socket.on('leave_covers', (convers_id: number) => {
 			const room = `convers:${convers_id}`;
 			socket.leave(room);
 			console.log(`socket ${socket.id} left room ${room}`);
-			const roomSize = io.sockets.adapter.rooms.get(room)?.size ?? 0;
 		});
 		socket.on('chat_active', (active: boolean) => {
 			socket.data.chatActive = !!active;
 		});
-		socket.on('disconnect', (reason: string) => {
+		socket.on('disconnect', async (reason: string) => {
+			try {
+				await mark_offline(io, userId);
+			} catch(err) {
+				console.error('[presence] mark_offline failed:', (err as Error).message);
+			}
 			console.log(`socket disconnected: ${socket.id} (${reason})`);
 		});
 		socket.onAny((event, ...args) => {
-            console.log('[WS:event]', socket.id, '→', event, JSON.stringify(args));
-        });
+			console.log('[WS:event]', socket.id, '→', event, JSON.stringify(args));
+		});
 	});
 }

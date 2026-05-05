@@ -5,7 +5,7 @@ import { useAuth } from '../../context/userContext';
 import { chatApi, friendApi } from '../../lib/api';
 import ProfileHeader from './ProfileHeader';
 import ProfileBio from './ProfileBio';
-import SidePanel from './SidePanel';
+import { usePresenceSeed } from '@/context/PresenceProvider';
 
 export default function ProfilePage() {
 	const { username } = useParams<{ username: string }>();
@@ -23,6 +23,8 @@ export default function ProfilePage() {
 
 	const isOwnProfile = !username || username === currentUser?.username;
 
+	const seed = usePresenceSeed();
+
 	// fetch profile data
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -33,6 +35,7 @@ export default function ProfilePage() {
 				} else {
 					const data = await chatApi.getUser(username!);
 					setProfileUser(data);
+					seed([{ id: data.id, isOnline: data.isOnline }]);
 				}
 			} catch (err) {
 				console.error('Failed to fetch profile:', err);
@@ -42,7 +45,7 @@ export default function ProfilePage() {
 		};
 
 		if (!authLoading) fetchProfile();
-	}, [username, currentUser, authLoading, isOwnProfile]);
+	}, [username, currentUser, authLoading, isOwnProfile, seed]);
 
 	// check friend status
 	useEffect(() => {
@@ -99,33 +102,18 @@ export default function ProfilePage() {
 	}
 
 	return (
-		<div className="max-w-5xl mx-auto py-8 px-4">
-			<div className="flex gap-6">
-				<div className="flex-1 min-w-0 space-y-4">
-					<ProfileHeader
-						username={profileUser.username}
-						avatar={profileUser.avatar}
-						type={profileUser.type}
-						isOnline={profileUser.isOnline}
-						isOwnProfile={isOwnProfile}
-						friendStatus={friendStatus}
-						friendRequestId={friendRequestId}
-						targetUserId={profileUser?.id || ''}
-						onFriendAction={handleFriendAction}
-					/>
-					<ProfileBio
-						bio={profileUser.bio}
-						isOwnProfile={isOwnProfile}
-					/>
-				</div>
-
-				{isOwnProfile && (
-					<SidePanel
-						refreshTrigger={refreshTrigger}
-						onAction={handleFriendAction}
-					/>
-				)}
-			</div>
+		<div className="max-w-3xl mx-auto py-6 px-4 sm:py-8 pb-20 space-y-6 sm:space-y-8">
+			<ProfileHeader
+				profileUser={profileUser}
+				isOwnProfile={isOwnProfile}
+				friendStatus={friendStatus}
+				friendRequestId={friendRequestId}
+				onFriendAction={handleFriendAction}
+			/>
+			<ProfileBio
+				profileUser={profileUser}
+				isOwnProfile={isOwnProfile}
+			/>
 		</div>
 	);
 }
