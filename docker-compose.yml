@@ -18,6 +18,7 @@ services:
     volumes:
       - ./certs/nginx.crt:/etc/nginx/ssl/cert.pem:ro
       - ./certs/nginx.key:/etc/nginx/ssl/key.pem:ro
+      - avatars_data:/app/service/uploads/avatars:ro
   postgres:
     container_name: postgres
     build:
@@ -86,6 +87,7 @@ services:
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
     volumes:
       - ./certs:/etc/ssl/internal:ro
+      - avatars_data:/app/service/uploads/avatars
   marketplace:
     container_name: marketplace
     # image_name: marketplace
@@ -256,3 +258,4 @@ volumes:
   redis_data:
   prometheus_data:
   grafana_data:
+  avatars_data:

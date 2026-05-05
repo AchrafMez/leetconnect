@@ -41,6 +41,12 @@ export interface User {
     location: string,
     website: string,
     title: string
+    twoFAEnabled: boolean;
+}
+
+// Response when starting 2FA setup
+export interface TwoFASetupResponse {
+    qrCode: string;
 }
 
 export interface Job {
@@ -86,6 +92,8 @@ export interface RegisterRequest {
 export interface AuthResponse {
     token: string;
     user: User;
+    requires2FA?: boolean; // If true, frontend must show the 6-digit code input
+    userId?: string;       // Needed to identify which user is finishing 2FA login
 }
 
 export interface UpdateProfileResponse {
@@ -111,10 +119,14 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     const res = await fetch(`${API_BASE}${path}`, config);
 
+    // dont refresh for these routes 
     const skipRefresh =
     path.includes('/auth/login') ||
+    path.includes('/auth/2fa/login') ||
+    path.includes('/auth/2fa/setup') ||
+    path.includes('/auth/2fa/disable') ||
     path.includes('/auth/refresh') ||
-    path.includes('/auth/change-password'); // ← add this
+    path.includes('/auth/change-password');
 
     // If token expired (401) refresh to get a new one
     if (res.status === 401 && !skipRefresh) {
@@ -158,7 +170,36 @@ export const authApi = {
     health: () => api<HealthResponse>('/auth/health'),
     updateProfile: (data: any) => api<UpdateProfileResponse>('/auth/settings', { method: 'PATCH', body: data }),
     changePassword: (data: any) =>api<User>('/auth/change-password', { method: 'POST', body: data }),
+    uploadAvatar: async (file: File): Promise<{ avatar: string }> => {
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        const res = await fetch(`${API_BASE}/auth/avatar`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+            headers: {
+                ...(_accessToken ? { Authorization: `Bearer ${_accessToken}` } : {}),
+            },
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+            throw new Error(err.error || 'Upload failed');
+        }
+
+        return res.json();
+    },
+
     // 2FA
+    setup2FA: (password: string) =>api<TwoFASetupResponse>('/auth/2fa/setup', { method: 'POST',body: { password }}),
+    verify2FA: (code: string) =>api<User>('/auth/2fa/verify', { method: 'POST',  body: { code }}),
+    disable2FA: (code: string, password: string) =>api<{ message: string }>('/auth/2fa/disable', { method: 'POST', body: { code, password }}),
+
+    // Second step of Login (If login returns requires2FA: true)
+    login2FA: (tempToken: string, code: string) =>api<AuthResponse>('/auth/2fa/login', { method: 'POST', body: { tempToken, code } }),
+
+
     // remote auth
 };
 

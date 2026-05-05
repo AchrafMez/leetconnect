@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
-import jwt from "jsonwebtoken";
 import prisma from '../lib/prisma';
-import { generateAccessToken, generateRefreshToken } from '../lib/token';
+import { generateAccessToken, generateRefreshToken, generateTempToken, verifyTempToken } from '../lib/token';
 import { ROLES, Role ,publishEvent, AUTH_EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
-// import { User } from 'lucide-react';
+import sharp from 'sharp';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
 
 type AuthBody = {
     username?: unknown,
@@ -184,6 +186,18 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
+        // check 2FA 
+        if (user.twoFAEnabled) {
+            // create temp token for 2fa(NOT the real access token)
+            console.log("here in condition")
+            const tempToken = generateTempToken(user.id);
+            return res.status(200).json({
+                requires2FA: true,
+                tempToken,              // frontend uses this to call /2fa/login
+            });
+        }
+        console.log("no 2FA")
+        
         // generate jwt refresh and access tokens using private key :D
         const refreshToken = await prisma.refreshToken.create({
             data: {
@@ -310,9 +324,19 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
         // verify current password
         const isMatch = await bcrypt.compare(currentPassword, user!.password!);
         if (!isMatch) {
-            return res.status(401).json({ error: "Current password is incorrect" });
+            return res.status(400).json({ 
+                error: 'Validation failed',
+                details: [{ field: 'currentPassword', message: 'Current password is incorrect' }]
+            });
         }
 
+        if (newPassword === currentPassword) {
+            return res.status(400).json({
+                error: 'Validation failed',
+                details: [{ field: 'newPassword', message: 'New password must be different from current password' }]
+            });
+        }
+        
         // hash and save new password
         const hashed = await bcrypt.hash(newPassword, 12);
         await prisma.user.update({
@@ -326,3 +350,69 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     }
 };
 
+// upload avatar picture
+
+export const uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+        // check ACTUAL magic bytes of the buffer
+        // This catches spoofed MIME types (e.g. shell.php sent as image/jpeg)
+        const { fileTypeFromBuffer } = await import('file-type');
+        
+        const detected = await fileTypeFromBuffer(req.file.buffer);
+        const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!detected || !allowedMimes.includes(detected.mime)) {
+            return res.status(400).json({ error: 'Invalid file content' });
+        }
+
+        const userId = req.user!.userId;
+        const hash = crypto.randomBytes(8).toString('hex');
+        const uploadDir = path.join(process.cwd(), 'uploads/avatars');
+        fs.mkdirSync(uploadDir, { recursive: true });
+        const filename = `avatar-${userId}-${hash}.webp`;
+        const uploadPath = path.join(uploadDir, filename);
+
+        // Get old avatar BEFORE updating
+        const existingUser = await prisma.user.findUnique({ 
+            where: { id: userId },
+            select: { avatar: true }
+        });
+
+        //  Sharp re-encode destroys any hidden payloads
+        try {
+            await sharp(req.file.buffer)
+                .resize(250, 250)
+                .webp({ quality: 80 })
+                .toFile(uploadPath);
+        } catch (err){
+            // console.error('Sharp error:', err); 
+            return res.status(400).json({ error: 'Invalid or corrupted image file' });
+        }
+
+        const avatarUrl = `/uploads/avatars/${filename}`;
+
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: { avatar: avatarUrl },
+        });
+
+         // Delete old avatar AFTER successful DB update
+        if (existingUser?.avatar && existingUser.avatar.startsWith('/uploads/avatars/')) {
+            const oldFilename = path.basename(existingUser.avatar.split('?')[0] as string);
+            const oldPath = path.join(uploadDir, oldFilename);
+            fs.unlink(oldPath, (err) => {
+                if (err) console.warn('Could not delete old avatar:', err.message);
+            });
+        }
+
+        await publishEvent(AUTH_EVENTS.USER_UPDATED, {
+            id: user.id,
+            avatar: avatarUrl
+        });
+
+        res.json({ message: 'Avatar updated', avatar: avatarUrl });
+    } catch (error) {
+        next(error);
+    }
+};

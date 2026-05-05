@@ -6,16 +6,16 @@ import morgan from 'morgan';
 // shared resources
 import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal} from '@leetconnect/shared';
 
-// ensure zero trust 
 // import fs from 'fs';
-// import https from 'https';
 import cookieParser from 'cookie-parser'; // to store tokens in cookies
 import prisma from './lib/prisma';
 import authRoutes from './routes/auth.routes';
 import healthRoutes from './routes/health';
 import { rateLimit } from 'express-rate-limit';
+import path from 'path';
 
 const app = express();
+app.set('trust proxy', 1); // is this  secure ?
 const PORT =  3001;
 
 
@@ -59,6 +59,8 @@ app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', 'text/plain; version=0.0.4');
   res.send(await getMetrics());
 });
+
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // add rate limiting 
 // const authLimiter = rateLimit({

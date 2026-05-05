@@ -21,7 +21,7 @@ model User {
   // Optional password for OAuth users
   password       String?
   role           Role         @default(USER)
-  avatar         String       @default("/avatars/default.png")
+  avatar         String       @default("")
   
   // Presence state
   isOnline       Boolean      @default(false)

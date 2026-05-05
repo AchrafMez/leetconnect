@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/userContext';
+import { useAuth} from '@/context/userContext';
 import Navbar from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
     const navigate = useNavigate();
-    const auth = useAuth();
-    const { login: loginUser } = auth || { login: async () => { } };
+    const { login: loginUser, login2FA } = useAuth();
 
     // is the form currently sending to the server 
     const [loading, setLoading] = useState(false);
@@ -20,6 +19,12 @@ export default function Login() {
 
     // show plain text or dots for the password
     const [showPassword, setShowPassword] = useState(false);
+
+    // 2FA
+    const [show2FAStep, setShow2FAStep] = useState(false);
+    const [tempToken, setTempToken] = useState('');
+    const [twoFACode, setTwoFACode] = useState('');
+    const [twoFAError, setTwoFAError] = useState<string | null>(null);
 
     // get user's email and password
     const [formData, setFormData] = useState({
@@ -81,8 +86,15 @@ export default function Login() {
 
         try {
             // send email and password to backend and update auth context
-            await loginUser(formData);
+            const result = await loginUser(formData);
 
+            // check 2FA
+            if (result.requires2FA) {
+                // if 2FA is enabled ask the user for the code (6 digit) then navigate to dashboard
+                setTempToken(result.tempToken!);
+                setShow2FAStep(true);
+                return;
+            }
             // Navigate to dashboard
             navigate('/dashboard');
 
@@ -90,6 +102,26 @@ export default function Login() {
             setError(err.message || 'Failed to sign in. Please try again.');
         } finally {
             setLoading(false); // stop showing loading state
+        }
+    };
+
+    // 2FA
+    const handle2FASubmit = async () => {
+
+        if (twoFACode.trim().length !== 6) {
+            setTwoFAError("Enter the full 6-digit code.");
+            return;
+        }
+
+        setTwoFAError(null);
+        setLoading(true);
+        try {
+            await login2FA(tempToken, twoFACode);
+            navigate('/dashboard');
+        } catch (err: any) {
+            setTwoFAError("Wrong code, please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -104,10 +136,23 @@ export default function Login() {
             <main className="flex-1 flex items-center justify-center px-6 py-20">
                 <Card className="w-full max-w-md border-border/50 bg-background-elevated">
                     <CardHeader className="space-y-2 text-center">
-                        <CardTitle className="text-2xl font-semibold">Welcome Back</CardTitle>
-                        <CardDescription>
-                            Enter your credentials to access your workspace
-                        </CardDescription>
+                         {show2FAStep ? (
+                            // 2FA header
+                            <>
+                                <CardTitle className="text-2xl font-semibold">Two-Factor Authentication</CardTitle>
+                                <CardDescription>
+                                    Enter the 6-digit code from your authenticator app.
+                                </CardDescription>
+                            </>
+                        ) : (
+                            // Normal header
+                            <>
+                                <CardTitle className="text-2xl font-semibold">Welcome Back</CardTitle>
+                                <CardDescription>
+                                    Enter your credentials to access your workspace
+                                </CardDescription>
+                            </>
+                        )}
                     </CardHeader>
 
                     <CardContent className="space-y-6">
@@ -116,7 +161,50 @@ export default function Login() {
                                 {error}
                             </div>
                         )}
+                        {/* 2FA Step */}
+                        {show2FAStep ? (
+                            <div className="space-y-4 space-y-4">
+                                <div className="flex flex-col gap-3">
+                                    <input
+                                        className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-center text-2xl tracking-[0.5em] outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors"
+                                        placeholder="000000"
+                                        maxLength={6}
+                                        value={twoFACode}
+                                        onChange={(e) => {
+                                            setTwoFACode(e.target.value.replace(/\D/g, '')); // numbers only
+                                            setTwoFAError(null);
+                                        }}
+                                        autoFocus
+                                    />
 
+                                    {twoFAError && (
+                                        <p className="text-xs text-red-400 text-center">{twoFAError}</p>
+                                    )}
+
+                                    <Button
+                                        onClick={handle2FASubmit}
+                                        disabled={loading}
+                                        className="w-full h-10 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors disabled:opacity-60"
+                                    >
+                                        {loading ? 'Verifying...' : 'Verify'}
+                                    </Button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShow2FAStep(false);
+                                            setTwoFACode('');
+                                            setTwoFAError(null);
+                                            setTempToken('');
+                                        }}
+                                        className="text-xs text-foreground-muted hover:text-foreground transition-colors text-center hover:cursor-pointer"
+                                    >
+                                        ← Back to login
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {/* Email Field */}
                             <div className="space-y-2">
@@ -202,7 +290,8 @@ export default function Login() {
                                 {loading ? 'Signing in...' : 'Sign In'}
                             </Button>
                         </form>
-
+                        
+                        
                         {/* Divider */}
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
@@ -240,8 +329,11 @@ export default function Login() {
                                 Sign Up
                             </Link>
                         </p>
+                    </>
+                    )}
                     </CardContent>
-                </Card>
+                    
+                </Card> 
             </main>
             <Footer />
         </div>

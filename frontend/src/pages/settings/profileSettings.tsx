@@ -1,18 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '@/lib/api';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useAuth } from '@/context/userContext';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import DOMPurify from 'dompurify';
+import { Shield } from "lucide-react";
+
 
 export default function ProfileSettings() {
-    const { user, setUser, loading: authLoading , logout} = useAuth();
+    const { user, setUser, loading: authLoading, logout } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [avatarError, setAvatarError] = useState(false);
+    
+    // 2FA
+    const [is2FALoading, setIs2FALoading] = useState(false);
+    const [TwoFaError, setTwoFaError] = useState<string | null>(null);
+    const [qrCode, setQrCode] = useState<string | null>(null);
+    const [twoFACode, setTwoFACode] = useState('');
+
+    const [showDisable2FA, setShowDisable2FA] = useState(false);
+    const [disableCode, setDisableCode] = useState('');
+
+    // 2FA password check
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
     // Profile form state
     const [profileForm, setProfileForm] = useState({
@@ -48,13 +65,14 @@ export default function ProfileSettings() {
     // Store initial state for comparison for changed data
     const [initialForm, setInitialForm] = useState(profileForm);
 
-    
+
     // Load user data
     useEffect(() => {
         if (authLoading) return;
 
         if (user) {
             // Fill the form using the data already in the Context Cloud!
+            
             setProfileForm({
                 firstname: user.firstname || '',
                 lastname: user.lastname || '',
@@ -68,16 +86,16 @@ export default function ProfileSettings() {
             });
             setInitialForm(
                 {
-                firstname: user.firstname || '',
-                lastname: user.lastname || '',
-                username: user.username || '',
-                email: user.email || '',
-                bio: user.bio || '',
-                location: user.location || '',
-                website: user.website || '',
-                title: user.title || '',
-                avatar: user.avatar || '',
-            }); 
+                    firstname: user.firstname || '',
+                    lastname: user.lastname || '',
+                    username: user.username || '',
+                    email: user.email || '',
+                    bio: user.bio || '',
+                    location: user.location || '',
+                    website: user.website || '',
+                    title: user.title || '',
+                    avatar: user.avatar || '',
+                });
             setLoading(false);
         } else {
             // If user is null after loading finishes, the ProtectedRoute 
@@ -130,13 +148,62 @@ export default function ProfileSettings() {
             errors.username = 'Username cannot contain spaces';
         }
 
-
+        // email
         if (!profileForm.email.trim()) {
             errors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileForm.email)) {
             errors.email = 'Please enter a valid email address';
         }
 
+        // bio
+        if (profileForm.bio.trim().length > 300) {
+            errors.bio = 'Bio must be 300 characters or less';
+        } else { // protect
+            const sanitized = DOMPurify.sanitize(profileForm.bio.trim(), { ALLOWED_TAGS: [] });
+            if (sanitized !== profileForm.bio.trim()) {
+                errors.bio = 'Bio contains invalid characters';
+            }
+        }
+
+        // Location
+        if (profileForm.location.trim().length > 100) {
+            errors.location = 'Location must be 100 characters or less';
+        } else  {
+            const sanitized = DOMPurify.sanitize(profileForm.location.trim(), { ALLOWED_TAGS: [] });
+            if (sanitized !== profileForm.location.trim()) {
+                errors.location = 'Location contains invalid characters';
+            }
+        }
+
+        // Website
+        if (profileForm.website.trim()) {
+            try {
+                if (profileForm.website.length > 200) {
+                    errors.website = 'Website URL must be 200 characters or less';
+                } else {
+                    const sanitized = DOMPurify.sanitize(profileForm.website.trim(), { ALLOWED_TAGS: [] });
+                    if (sanitized !== profileForm.website.trim()) {
+                        errors.website = 'Website contains invalid characters';
+                    }
+                    const url = new URL(profileForm.website);
+                    if (!['http:', 'https:'].includes(url.protocol)) {
+                        errors.website = 'Website must start with http:// or https://';
+                    }   
+                }
+            } catch {
+                errors.website = 'Please enter a valid URL (e.g. https://example.com)';
+            }
+        }
+
+        // Professional Title
+        if (profileForm.title.trim().length > 100) {
+            errors.title = 'Title must be 100 characters or less';
+        } else {
+            const sanitized = DOMPurify.sanitize(profileForm.title.trim(), { ALLOWED_TAGS: [] });
+            if (sanitized !== profileForm.title.trim()) {
+                errors.title = 'Title contains invalid characters';
+            }
+        }
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -154,7 +221,7 @@ export default function ProfileSettings() {
         // added the same rules for pw as in register
         if (!passwordForm.newPassword.trim()) {
             errors.newPassword = 'New Password is required';
-        }else if (passwordForm.newPassword === passwordForm.currentPassword) {
+        } else if (passwordForm.newPassword === passwordForm.currentPassword) {
             errors.newPassword = 'New password must be different from your current password';
         } else if (passwordForm.newPassword.length < 8) {
             errors.newPassword = 'Password must be at least 8 characters';
@@ -168,6 +235,10 @@ export default function ProfileSettings() {
             errors.newPassword = 'Password must contain at least one special character';
         }
 
+        if (!passwordForm.confirmPassword.trim()) {
+            errors.confirmPassword = 'Confirmed New Password is required';
+        }
+        
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
             errors.confirmPassword = 'Passwords do not match';
         }
@@ -216,15 +287,16 @@ export default function ProfileSettings() {
         setSaving(true);
         try {
             const changedFields = getChangedFields();
-            
+
             // Only send changes!
             const response = await authApi.updateProfile(changedFields);
 
+            const updatedUser = response.user;
+            if (!updatedUser) throw new Error('No user in response');
+            
             // Update the Context immediately using the response
-            setUser(response.user);
-            if (!user)
-                return;
-            setInitialForm(profileForm); // Update after successful save
+            setUser(updatedUser);
+            setInitialForm(profileForm);
             setSuccessMessage('Profile updated successfully!');
 
         } catch (err: any) {
@@ -236,7 +308,7 @@ export default function ProfileSettings() {
 
     // logout 
     const handleLogout = async () => {
-    try {
+        try {
             await logout();
             navigate('/auth/sign-in');
         } catch (error) {
@@ -285,17 +357,149 @@ export default function ProfileSettings() {
 
             handleLogout();
 
-        } 
+        }
         catch (err: any) {
-             if (err.message === 'Current password is incorrect') 
+            if (err.message === 'Current password is incorrect')
                 setFormErrors(prev => ({ ...prev, currentPassword: 'Current password is incorrect' }));
             else
                 setError(err.message || 'Failed to change password');
-            
+
         } finally {
             setSaving(false);
         }
     };
+
+    // make a reference to inputfile
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    // reset error whenever avatar changes
+    useEffect(() => {setAvatarError(false);}, [profileForm.avatar]);
+    // change avatar 
+    const changeAvatar = async (e: any) => {
+
+        // Grab the first selected file
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // max 2MB for avatar
+        if (file.size > 2 * 1024 * 1024) {
+            setError('Image must be under 2MB');
+            return;
+        }
+        setSaving(true);
+        try {
+            const res = await authApi.uploadAvatar(file);
+            
+            setProfileForm(prev => ({ 
+                ...prev, 
+                avatar: `${res.avatar}?t=${Date.now()}` // cache bust once
+            }));
+            setSuccessMessage("Photo updated!");
+            
+            // Refresh global state
+            const updatedUser = await authApi.me();
+            setUser({
+                ...updatedUser,
+                avatar: `${updatedUser.avatar}?t=${Date.now()}` // also bust in global state
+            });
+
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    const isSafeUrl = (s: string) => {
+    if (!s) return false;
+        try {
+            const u = new URL(s, window.location.origin);
+            return ['http:', 'https:'].includes(u.protocol);
+            
+        } catch { return false; }
+    };
+
+    const hasAvatar = (url: string) =>
+        !!url &&
+        isSafeUrl(url) &&
+        !avatarError; // read error ( 404 (image not found..), ...)
+    
+    // 2FA
+    const Enable2FA = async () => {
+        setTwoFaError(null);
+        setSuccessMessage(null);
+        if (user?.twoFAEnabled == true){
+            setTwoFaError("2FA is already enabled on your account.");
+            return;
+        }
+
+        // check password before enabling 2FA
+        if (!confirmPassword.trim() || confirmPassword.trim().length < 8) {
+            setTwoFaError("Please enter your password to continue.");
+            return;
+        }
+        setIs2FALoading(true);
+        try {
+            const res = await authApi.setup2FA(confirmPassword);
+            setQrCode(res.qrCode);
+            setConfirmPassword('');
+            setShowPasswordConfirm(false);
+        } catch (err: any) {
+            setTwoFaError(err.message);
+        } finally {
+            setIs2FALoading(false);
+        }
+    };
+
+    // verify 2FA
+    const Verify2FA = async () => {
+        setTwoFaError(null);
+        setSuccessMessage(null);
+        if (twoFACode.trim().length !== 6) {
+            setTwoFaError("Enter the 6-digit code.");
+            return;
+        }
+        try {
+            await authApi.verify2FA(twoFACode);
+            setSuccessMessage("2FA is now active!");
+            setQrCode(null);
+            // Refresh local user state
+            const updatedUser = await authApi.me();
+            setUser(updatedUser);
+        } catch (err: any) {
+            setTwoFaError("Wrong code, please try again.");
+        }
+    };
+
+    // disable 2FA
+    const disable2FA = async () => {
+        setTwoFaError(null);
+        setSuccessMessage(null);
+
+        // check password before enabling 2FA
+        if (!confirmPassword.trim()) {
+            setTwoFaError("Please enter your password to continue.");
+            return;
+        }
+
+        if (disableCode.trim().length !== 6) {
+            setTwoFaError("Enter the 6-digit code to confirm.");
+            return;
+        }
+
+        try {
+                await authApi.disable2FA(disableCode, confirmPassword);  // send code to backend to check if its correct
+                setSuccessMessage("2FA has been disabled.");
+                setShowDisable2FA(false);
+                setDisableCode('');
+                setConfirmPassword('');
+                setShowPasswordConfirm(false);
+                const updatedUser = await authApi.me();
+                setUser(updatedUser);
+            } catch (err: any) {
+                setTwoFaError(err.message || "Failed to disable 2FA.");
+            }
+        }
 
 
     if (loading) {
@@ -325,7 +529,7 @@ export default function ProfileSettings() {
                 </div>
             )}
             {successMessage && (
-                <div className="rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-sm text-green-400">
+                <div className="rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-sm text-green-200">
                     {successMessage}
                 </div>
             )}
@@ -341,23 +545,38 @@ export default function ProfileSettings() {
                     <div className="flex gap-6">
                         <div className="flex flex-col items-center gap-2">
                             <div className="w-24 h-24 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
-                                {profileForm.avatar ? (
+                                {profileForm.avatar && hasAvatar(profileForm.avatar) ? (
+                                    // User has uploaded a photo → show it
                                     <img
-                                        src={profileForm.avatar}
+                                        src={`${profileForm.avatar}?t=${Date.now()}`}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
+                                        onError={() => setAvatarError(true)} // if image is not found display default image
                                     />
                                 ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/20 flex items-center justify-center">
-                                        <span className="text-sm text-primary/60">
-                                            {profileForm.firstname[0]}
+                                    // No avatar → THIS is the "default"
+                                    <div className="w-full h-full bg-gradient-to-br from-primary/40 to-primary/20 
+                                                    flex items-center justify-center">
+                                        <span className="text-3xl font-semibold text-primary">
+                                            {profileForm.firstname?.[0]?.toUpperCase() ?? '?'
+                                            }
                                         </span>
                                     </div>
                                 )}
                             </div>
+
+                            {/* hide the real input and trigger it programmatically from a prettier custom button. */}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                className="hidden"
+                                onChange={changeAvatar}
+                            />
                             <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={saving}
                                 className="text-sm text-primary hover:text-primary/80 transition-colors hover:cursor-pointer"
-                            // onClick={ChangeAvatar}
                             >
                                 Change Avatar
                             </button>
@@ -456,8 +675,17 @@ export default function ProfileSettings() {
                                     disabled={saving}
                                     placeholder="Tell us about yourself..."
                                     rows={3}
-                                    className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50 resize-none"
+                                    className={`w-full px-4 py-2.5 rounded-lg bg-background border ${formErrors.bio
+                                        ? 'border-red-500/50 focus:border-red-500'
+                                        : 'border-border focus:border-primary'
+                                        } text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 ${formErrors.bio
+                                            ? 'focus:ring-red-500/30'
+                                            : 'focus:ring-primary/30'
+                                        } transition-colors disabled:opacity-50 resize-none`}
                                 />
+                                {formErrors.bio && (
+                                    <p className="text-xs text-red-400">{formErrors.bio}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -508,8 +736,15 @@ export default function ProfileSettings() {
                                 onChange={handleProfileChange}
                                 disabled={saving}
                                 placeholder="e.g., Tetouan, Morocco"
-                                className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-background border ${formErrors.location
+                                    ? 'border-red-500/50 focus:border-red-500'
+                                    : 'border-border focus:border-primary'
+                                    } text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 ${formErrors.location ? 'focus:ring-red-500/30' : 'focus:ring-primary/30'
+                                    } transition-colors disabled:opacity-50`}
                             />
+                            {formErrors.location && (
+                                <p className="text-xs text-red-400">{formErrors.location}</p>
+                            )}
                         </div>
                     </div>
 
@@ -528,8 +763,15 @@ export default function ProfileSettings() {
                                 onChange={handleProfileChange}
                                 disabled={saving}
                                 placeholder="https://example.com"
-                                className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-background border ${formErrors.website
+                                    ? 'border-red-500/50 focus:border-red-500'
+                                    : 'border-border focus:border-primary'
+                                    } text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 ${formErrors.website ? 'focus:ring-red-500/30' : 'focus:ring-primary/30'
+                                    } transition-colors disabled:opacity-50`}
                             />
+                            {formErrors.website && (
+                                <p className="text-xs text-red-400">{formErrors.website}</p>
+                            )}
                         </div>
 
 
@@ -545,8 +787,15 @@ export default function ProfileSettings() {
                                 onChange={handleProfileChange}
                                 disabled={saving}
                                 placeholder="e.g., Senior Software Engineer"
-                                className="w-full px-4 py-2.5 rounded-lg bg-background border border-border text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                                className={`w-full px-4 py-2.5 rounded-lg bg-background border ${formErrors.title
+                                    ? 'border-red-500/50 focus:border-red-500'
+                                    : 'border-border focus:border-primary'
+                                    } text-foreground placeholder:text-foreground-muted focus:outline-none focus:ring-1 ${formErrors.title ? 'focus:ring-red-500/30' : 'focus:ring-primary/30'
+                                    } transition-colors disabled:opacity-50`}
                             />
+                            {formErrors.title && (
+                                <p className="text-xs text-red-400">{formErrors.title}</p>
+                            )}
                         </div>
                     </div>
                 </CardContent>
@@ -727,13 +976,160 @@ export default function ProfileSettings() {
 
                         {/* Two-Factor Authentication */}
                         <div className="space-y-4">
-                            <h3 className="font-semibold text-foreground">Two-Factor Authentication</h3>
-                            <p className="text-sm text-foreground-muted">
-                                Add an extra layer of security to your account. We'll ask for a code when you log in on a new device.
-                            </p>
-                            <Button className="w-full bg-primary hover:bg-primary/90 text-white transition-colors">
-                                Enable 2FA
-                            </Button>
+                        <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" />
+                            Two-Factor Authentication
+                        </h3>
+
+                        <p className="text-sm text-foreground-muted">
+                            Add an extra layer of security to your account. We'll ask for a code when you log in on a new device.
+                        </p>
+
+                        {user?.twoFAEnabled ? (
+                            <div className="space-y-4">
+                                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-foreground-muted text-sm flex items-center justify-between">
+                                <span> 2FA is currently activated on your account</span>
+                                <button
+                                    onClick={() => {
+                                        setShowDisable2FA(prev => !prev);
+                                        setConfirmPassword('');
+                                        setDisableCode('');
+                                        setTwoFaError(null);
+                                    }}
+                                    className="text-xs text-red-400 hover:text-red-300 transition-colors underline hover:cursor-pointer"
+                                >
+                                    Disable
+                                </button>
+                                </div>
+
+                                {/* Inline confirm flow — only show when user clicks Disable */}
+                                {showDisable2FA && (
+                                <div className="bg-background p-4 border border-red-500/20 rounded-lg space-y-3 overflow-hidden">
+                                    <p className="text-sm text-foreground-muted">
+                                    Enter your password and 6-digit authenticator code to confirm:
+                                    </p>
+                                    {/* password check before disabling 2FA */}
+                                    <input
+                                        type="password"
+                                        className="w-full bg-background border border-border rounded px-3 py-2 outline-none focus:border-red-400 transition-colors"
+                                        placeholder="Your password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                    <div className="flex gap-2 w-full">
+                                        <input
+                                            className="min-w-0 flex-1 bg-background border border-border rounded px-3 py-1 text-center text-lg tracking-widest outline-none focus:border-red-400"
+                                            placeholder="000000"
+                                            maxLength={6}
+                                            value={disableCode}
+                                            onChange={(e) => setDisableCode(e.target.value)}
+                                        />
+                                        <Button
+                                            onClick={disable2FA}
+                                            className="shrink-0 h-auto py-2.5 px-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                                        >
+                                            Confirm
+                                        </Button>
+                                    </div>
+                                    {TwoFaError && (
+                                        <p className="text-xs text-red-400 mt-1">{TwoFaError}</p>
+                                    )}
+                                </div>
+                                )}
+                            </div>
+                            ) : (
+                            <div className="space-y-4">
+                            {!qrCode ? (
+                               <div className="space-y-3">
+                                {/* show button for enable 2FA */}
+                                {!showPasswordConfirm && (
+                                    <Button
+                                        onClick={() => setShowPasswordConfirm(true)}
+                                        disabled={is2FALoading}
+                                        className="w-full bg-primary hover:bg-primary/90 text-white transition-colors"
+                                    >
+                                        Set up 2FA
+                                    </Button>
+                                )}
+
+                                {/* Ask for password pinput + confirm button (only after clicking Set up 2FA) */}
+                                {showPasswordConfirm && (
+                                    <div className="space-y-3">
+                                        <p className="text-sm text-foreground-muted">
+                                            Confirm your password to continue:
+                                        </p>
+                                        <input
+                                            type="password"
+                                            className="w-full px-4 py-2.5 rounded-lg bg-background border border-border focus:border-primary outline-none focus:ring-1 focus:ring-primary/30 transition-colors"
+                                            placeholder="Your password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            autoFocus
+                                        />
+
+
+                                        <div className="flex gap-2">
+                                            {/* Cancel and  go back to just the button */}
+                                            <Button
+                                                onClick={() => {
+                                                    setShowPasswordConfirm(false);
+                                                    setConfirmPassword('');
+                                                    setTwoFaError(null);
+                                                }}
+                                                className="flex-1 bg-background border border-border hover:bg-surface text-foreground-muted"
+                                                >
+                                                Cancel
+                                            </Button>
+
+                                            {/* Confirm and call Enable2FA with password */}
+                                            <Button
+                                                onClick={Enable2FA}
+                                                disabled={is2FALoading}
+                                                className="flex-1 bg-primary hover:bg-primary/90 text-white transition-colors"
+                                                >
+                                                {is2FALoading ? 'Verifying...' : 'Confirm'}
+                                            </Button>
+                                        </div>
+                                        {TwoFaError && (
+                                            <p className="text-xs text-red-400">{TwoFaError}</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            ) : (
+                                <div className="bg-background p-4 border border-border rounded-lg space-y-4">
+                                    <p className="text-sm text-foreground-muted">
+                                        Scan this QR code with Google Authenticator:
+                                    </p>
+
+                                    <img
+                                        src={qrCode}
+                                        alt="QR Code"
+                                        className="mx-auto w-40 h-40 bg-white p-2 rounded-md"
+                                    />
+
+                                    <div className="flex gap-4 w-full">
+                                        <input
+                                            className="min-w-0 flex-1 bg-background border border-border rounded px-3 py-1 text-center text-lg tracking-widest outline-none focus:border-primary"
+                                            placeholder="000000"
+                                            maxLength={6}
+                                            value={twoFACode}
+                                            onChange={(e) => setTwoFACode(e.target.value)}
+                                        />
+                                        <Button 
+                                            className="shrink-0  h-auto py-2.5 px-4" 
+                                            onClick={Verify2FA}>
+                                            Verify
+                                        </Button>
+                                    </div>
+                                    {TwoFaError && (
+                                        <p className="text-xs text-red-400 mt-1">{TwoFaError}</p>
+                                    )}
+                                </div>
+                            )}
+                            </div>
+                        )}
                         </div>
                     </div>
                 </CardContent>
