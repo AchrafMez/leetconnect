@@ -11,8 +11,13 @@ WORKDIR /app/service
 COPY services/analytics/package.json ./
 RUN npm pkg set dependencies.@leetconnect/shared=file:../shared
 RUN npm install
+
+COPY services/analytics/prisma ./prisma/
+RUN npx --no-install prisma generate
+
 COPY services/analytics/ ./
 RUN npm run build
 
 EXPOSE 3004
-CMD ["node", "dist/index.js"]
+# CMD ["node", "dist/index.js"]
+CMD ["npm", "run", "dev"]

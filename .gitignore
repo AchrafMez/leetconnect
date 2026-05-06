@@ -9,6 +9,8 @@ node_modules/
 # testing and coverage
 coverage/
 
+/generated/prisma
+
 # production builds
 dist/
 build/

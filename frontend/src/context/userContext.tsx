@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api, setAccessToken, type User } from '../lib/api';
 import { authApi } from '../lib/api';
 import { disconnectSocket } from '@/lib/socket';
+import { canAccessMinRole, hasPermission as checkPermission } from '../lib/permissions';
+import { Role, Permission } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +13,9 @@ interface AuthContextType {
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
+	hasRole: (role: Role | Role[]) => boolean;
+	hasPermission: (permission: Permission) => boolean;
+	canAccess: (minRole: Role) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -28,8 +33,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // This populates the _accessToken in api.ts RAM
         const refreshData = await authApi.refresh(); 
         setAccessToken(refreshData.accessToken);
-        const userData = await api<User>('/auth/me');
-        setUser(userData);
+        const response = await api<any>('/auth/me');
+        setUser(response.data || response);
       } catch (e) {
         setUser(null);
       } finally {
@@ -80,8 +85,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
+	function hasRole(role: Role | Role[]): boolean {
+		if (!user) return false;
+		const roles = Array.isArray(role) ? role : [role];
+		return roles.includes(user.role);
+	}
+	
+	function hasPermissionFn(permission: Permission): boolean {
+		if (!user) return false;
+		return checkPermission(user.role, permission);
+	}
+
+	function canAccess(minRole: Role): boolean {
+		if (!user) return false;
+		return canAccessMinRole(user.role, minRole);
+	}
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, login2FA, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, setUser,
+			hasRole, hasPermission: hasPermissionFn, canAccess
+		 }}>
       {children}
     </AuthContext.Provider>
   );

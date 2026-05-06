@@ -4,6 +4,7 @@
 
 import type { Conversation } from '../pages/chat/ConverLayer';
 import type { Message } from '../pages/chat/MessageLayer';
+import type { Job } from '@/types';
 
 const API_BASE = '/api';
 
@@ -35,6 +36,8 @@ export interface User {
     // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
     role: 'ADMIN' | 'USER' | 'MODERATOR';
     type: 'CLIENT' | 'FREELANCER';
+		status: 'active' | 'suspended' | 'pending';
+		createdAt: string;
 
     // profile settings
     bio: string;
@@ -49,12 +52,39 @@ export interface TwoFASetupResponse {
     qrCode: string;
 }
 
-export interface Job {
+export interface OverviewData {
+  totalUsers: number;
+  totalJobs: number;
+  activeJobs: number;
+  flaggedJobs: number;
+  suspendedUsers: number;
+  pendingUsers: number;
+  newUsersThisWeek: number;
+  newJobsThisWeek: number;
+}
+
+export interface UsersAnalytics {
+  range: string;
+  registrationsOverTime: { date: string; count: number }[];
+  byRole: { role: string; count: number }[];
+  byStatus: { status: string; count: number }[];
+}
+
+export interface JobsAnalytics {
+  range: string;
+  jobsOverTime: { date: string; count: number }[];
+  byStatus: { status: string; count: number }[];
+  byCategory: { category: string; count: number }[];
+  byBudgetType: { type: string; count: number }[];
+  avgProposals: number;
+}
+
+/* export interface Job {
     id: string;
     title: string;
     description: string;
     createdAt: string;
-}
+} */
 
 // export interface Conversation {
 //     id: string;
@@ -367,11 +397,50 @@ export const notifApi = {
 };
 
 export const analyticsApi = {
-    getDashboard: () => api('/analytics/dashboard'),
+    getAnalyticsOverview: () =>
+			api<OverviewData>('/admin/analytics/overview'),
+		getUsersAnalytics: (params: string) =>
+			api<UsersAnalytics>(`/admin/analytics/users?${params}`),
+		getJobsAnalytics: (params: string) =>
+			api<JobsAnalytics>(`/admin/analytics/jobs?${params}`),
     health: () => api<HealthResponse>('/analytics/health'),
 };
 
+export interface RoleConfig {
+  id:          string;
+  label:       string;
+  description: string;
+  userCount:   number;
+  permissions: string[];
+}
+
 export const adminApi = {
-    getUsers: () => api('/admin/users'),
-    health: () => api<HealthResponse>('/admin/health'),
+  // users
+  getUsers:         (params?: { search?: string; role?: string; status?: string }) => {
+		const query = new URLSearchParams(params as any).toString();
+		return api<User[]>(`/admin/users?${query}`);
+	},
+  getUserById:      (id: string)              => api<User>(`/admin/users/${id}`),
+  updateUserStatus: (id: string, status: string) =>
+    api<User>(`/admin/users/${id}/status`, { method: 'PATCH', body: { status } }),
+  updateUserRole:   (id: string, role: string) =>
+    api<User>(`/admin/users/${id}/role`, { method: 'PATCH', body: { role } }),
+  deleteUser:       (id: string)              =>
+    api<{ message: string }>(`/admin/users/${id}`, { method: 'DELETE' }),
+
+  // jobs
+  getJobs:          (params?: { search?: string; status?: string; category?: string }) => {
+		const query = new URLSearchParams(params as any).toString();
+		return api<Job[]>(`/admin/jobs?${query}`);
+	},
+  getJobById:       (id: string)              => api<Job>(`/admin/jobs/${id}`),
+  updateJobStatus:  (id: string, status: string) =>
+    api<Job>(`/admin/jobs/${id}/status`, { method: 'PATCH', body: { status } }),
+  deleteJob:        (id: string)              =>
+    api<{ message: string }>(`/admin/jobs/${id}`, { method: 'DELETE' }),
+
+	// roles
+	getRoles: () => api<RoleConfig[]>('/admin/roles'),
+
+  health: () => api<HealthResponse>('/admin/health'),
 };

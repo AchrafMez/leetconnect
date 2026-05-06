@@ -5,12 +5,24 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import sequelize from './config/database';
 import healthRoutes from './routes/health';
-import { initEventBus, closeEventBus } from '@leetconnect/shared';
-import { errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal } from '@leetconnect/shared';
+import { initEventBus,
+				 closeEventBus,
+				 authMiddleware,
+				 errorHandler,
+				 getMetrics,
+				 httpRequestDuration,
+				 httpRequestsTotal,
+				 AUTH_EVENTS,
+				 subscribeToEvents,  
+				 ADMIN_EVENTS } from '@leetconnect/shared';
+import analyticsRoutes from "./routes/analytics.route"
+import { connectDb, prisma } from './config/prisma';
 
 
 // import fs from 'fs';
 // import https from 'https';
+connectDb();
+initEventBus();
 
 const app = express();
 const PORT = 3004;
@@ -44,6 +56,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(authMiddleware);
 
 app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', 'text/plain; version=0.0.4');
@@ -51,6 +64,7 @@ app.get('/metrics', async (_req, res) => {
 });
 // routes
 app.use('/api/analytics', healthRoutes);
+app.use('/api/admin/analytics', analyticsRoutes);
 
 // error handler (must be after all routes)
 app.use(errorHandler);
@@ -73,6 +87,65 @@ async function start() {
   }
 }
 start();
+
+	subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, async(channel, message: any) => {
+		try {
+			const { id, username, avatar, role, email, firstname, lastname, status, createdAt } = message.data;
+
+			await prisma.user.upsert({
+				where: { id: id },
+				update: {
+					username: username, avatar: avatar, firstname: firstname,
+					lastname: lastname, status: status, role: role
+				},
+				create: {
+          id: id, username: username, avatar: avatar, role: role,
+					email: email, firstname: firstname, lastname: lastname,
+					status: status, createdAt: createdAt
+        }
+			});
+
+			console.log(`Synced user ${username} to Analytics DB`);
+		} catch (error) {
+			console.error(`Sync failed for user:`, error);
+		}
+	})
+	subscribeToEvents(AUTH_EVENTS.USER_UPDATED, async(channel, message: any) => {
+		try {
+			const { id, username, avatar, email, firstname, lastname } = message.data;
+	
+			await prisma.user.update({
+				where: { id: id },
+				data: { username, avatar, firstname, lastname, email},
+				select: {
+					id: true, email: true, firstname: true, lastname: true, avatar: true, username: true
+				}
+			});
+			
+			console.log(`Synced user ${username} to Analytics DB`);
+		} catch (error) {
+			console.error(`Sync failed for user:`, error);
+		}
+	})
+	subscribeToEvents(ADMIN_EVENTS.USER_UPDATED, async(channel, message: any) => {
+		try {
+			const { id , username, role, status } = message.data;
+
+			await prisma.user.update({
+				where: { id: id },
+				data: { role },
+				select: {
+					id: true,
+					role: true
+				}
+			});
+
+			console.log(`Synced user ${username} to Analytics DB`);
+		} catch (error) {
+			console.error(`Sync failed for user:`, error);
+		}
+	})
+
 
 // shutdown
 process.on('SIGTERM', async () => {

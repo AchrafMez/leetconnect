@@ -21,6 +21,13 @@ export const AUTH_EVENTS = {
   USER_UPDATED: 'user.updated',
 };
 
+export const ADMIN_EVENTS = {
+	USER_UPDATED: 'user.updated',
+	USER_DELETED: 'user.deleted',
+	CONTENT_UPDATED: 'content.updated',
+	CONTENT_DELETED: 'content.deleted'
+}
+
 // The data sent to other services
 export interface UserRegisteredPayload {
   id: string;

@@ -48,7 +48,15 @@ export default function App() {
             <Route path="/settings/profile" element={<ProfileSettingsPage />} />
             <Route path="/network" element={<NetworkPage />} />
           </Route>
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+          <Route path="/chat" element={<Messages />} />
         </Route>
+				
+				{/*Admin Area*/}
+        <Route path="/admin/*" element={<Admin />} />
       </Routes>
     </>
   );
