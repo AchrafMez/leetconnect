@@ -10,6 +10,7 @@ import { JobStatusChart } from "@/components/analytics/Jobstatuschart";
 import { CategoryChart } from "@/components/analytics/Categorychart";
 import { StatCard } from "@/components/ui/StatCard";
 import { ExportButton } from "@/components/analytics/ExportButton";
+import { LastUpdatedDisplay } from "@/components/analytics/LastUpdatedDisplay";
 
 interface AnalyticsState {
 	overview: OverviewData | null;
@@ -37,9 +38,6 @@ export const AnalyticsPage = () => {
 	const [error, setError] = useState('');
 	const [data, setData] = useState<AnalyticsState>({ overview: null, users: null, jobs: null });
 	const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
-	// const containerRef = useRef<HTMLDivElement>(null);
-  // const [dateRange, setDateRange] = useState({ start: new Date(), end: new Date() });
 
 	const fetchAll = useCallback(async (showLoading = true) => {
 		// don't fetch if custom is selected but dates aren't both set yet
@@ -84,8 +82,6 @@ export const AnalyticsPage = () => {
 		setRange(newRange);
 	}
 
-	const secondsAgo = lastUpdated ? Math.round((Date.now() - lastUpdated.getTime()) / 1000) : null;
-
 	const { overview, users, jobs } = data;
 	const exportData = useMemo(() => ({
 		overview: data.overview,
@@ -114,11 +110,7 @@ export const AnalyticsPage = () => {
 				</div>
 
 				<div className="flex items-center gap-3">
-					{secondsAgo !== null && (
-						<p className="text-xs text-muted-foreground">
-							Updated {secondsAgo < 5 ? 'just now' : `${secondsAgo}s ago`}
-						</p>
-					)}
+					<LastUpdatedDisplay lastUpdated={lastUpdated} />
 					<DateRangePicker value={range} onChange={handleRangeChange} />
 					<ExportButton data={exportData} />
 				</div>
