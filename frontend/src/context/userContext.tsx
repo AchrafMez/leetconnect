@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, setAccessToken, type User } from '../lib/api';
+import { api, setAccessToken, type LoginRequest, type RegisterRequest, type User } from '../lib/api';
 import { authApi } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: any) => Promise<{ requires2FA: boolean; tempToken?: string }>;
-  login2FA: (tempToken: string, code: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  login: (data: LoginRequest) => Promise<{ requires2FA: boolean; tempToken?: string; user?: User}>;
+  login2FA: (tempToken: string, code: string) => Promise<{ user: User }>;
+  register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
 }
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
-  const login = async (data: any): Promise<{ requires2FA: boolean; tempToken?: string }> => {
+  const login = async (data: LoginRequest): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
      const res = await api<{ 
       token?: string;
       user?: User;
@@ -48,22 +48,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // 2Fa required = dont set accesstoken or user yet
     if (res.requires2FA) {
-      return { requires2FA: true, tempToken: res.tempToken as string };
+      return { requires2FA: true, tempToken: res.tempToken as string};
     }
     
     // normal login
     setAccessToken(res.token!);
     setUser(res.user!);
-    return { requires2FA: false };
+   
+    return { requires2FA: false, user: res.user!};
   };
 
-  const login2FA = async (tempToken: string, code: string): Promise<void> => {
+  const login2FA = async (tempToken: string, code: string): Promise<{user: User;}> => {
     const res = await authApi.login2FA(tempToken, code);
     setAccessToken(res.token);
     setUser(res.user!);
+    return {user: res.user! }
   };
 
-  const register = async (data: any) => {
+  const register = async (data: RegisterRequest) => {
     const res = await api<{ accessToken: string, user: User }>('/auth/register', {
       method: 'POST',
       body: data

@@ -7,7 +7,7 @@ import prisma from '../lib/prisma';
 import {updateProfileValidator, changePasswordValidator} from '../validators/profileValidator'
 import { upload } from '../middlewares/upload';
 import { uploadAvatar } from '../controllers/auth.controller';
-import rateLimit from 'express-rate-limit';
+import { rateLimit } from 'express-rate-limit';
 import * as twoFA from '../controllers/twoFA.controller';
 
 const router = Router();
@@ -22,8 +22,8 @@ router.patch('/settings', authMiddleware, updateProfileValidator, validate, upda
 const changePasswordLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 3,
-    message: { error: 'Too many avatar uploads, please try again later' },
-    keyGenerator: (req): string => req.user?.userId ?? req.ip ?? 'unknown', // use user ID instead of ip
+    message: { error: 'Too password change attemps, please try again later' },
+    keyGenerator: (req): string => req.user?.userId ?? req.ip ?? 'uknown', // check security 
 });
 
 router.post('/change-password', authMiddleware, changePasswordLimit ,changePasswordValidator, validate, changePassword);
@@ -32,7 +32,7 @@ router.post('/change-password', authMiddleware, changePasswordLimit ,changePassw
 const avatarUploadLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
-    message: { error: 'Too many avatar uploads, please try again later' }
+    message: { error: 'Too many password change attempts, please try again later' }
 });
 
 // Avatar change

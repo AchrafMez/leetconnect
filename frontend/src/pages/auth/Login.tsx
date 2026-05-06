@@ -96,7 +96,13 @@ export default function Login() {
                 return;
             }
             // Navigate to dashboard
-            navigate('/dashboard');
+            // console.log("type", result.user?.type);
+            // console.log(result.user);
+            if (result.user?.type == "FREELANCER"){
+                navigate('/freedashboard');
+            } else {
+                navigate('/dashboard');
+            }
 
         } catch (err: any) {
             setError(err.message || 'Failed to sign in. Please try again.');
@@ -116,8 +122,12 @@ export default function Login() {
         setTwoFAError(null);
         setLoading(true);
         try {
-            await login2FA(tempToken, twoFACode);
-            navigate('/dashboard');
+            const result = await login2FA(tempToken, twoFACode);
+            if (result.user?.type == "FREELANCER"){
+                navigate('/freedashboard');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err: any) {
             setTwoFAError("Wrong code, please try again.");
         } finally {

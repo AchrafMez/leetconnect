@@ -112,7 +112,12 @@ export default function Register() {
             await registerUser(formData);
 
             // Navigate to dashboard
-            navigate('/dashboard');
+            if (user?.type == "FREELANCER"){
+                navigate('/freedashboard');
+            } else {
+                navigate('/dashboard');
+            }
+
         } catch (err: any) {
             setError(err.message || 'Failed to create account. Please try again.');
         } finally {
