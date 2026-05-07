@@ -45,6 +45,7 @@ export interface User {
     website: string,
     title: string
     twoFAEnabled: boolean;
+    oauthProvider?: string | null;
 }
 
 // Response when starting 2FA setup

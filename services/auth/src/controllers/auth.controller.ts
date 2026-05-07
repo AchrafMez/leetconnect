@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
 import prisma from '../lib/prisma';
 import { generateAccessToken, generateRefreshToken, generateTempToken, verifyTempToken } from '../lib/token';
-import { ROLES, Role ,publishEvent, AUTH_EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
+import { ROLES, Role , JwtPayload, publishEvent, AUTH_EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
@@ -145,7 +145,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         res.status(201).json({
             message: `Welcome to LeetConnect ${username} !`,
             accessToken,
-            user: { id: user.id, username: user.username, type: user.type, role: user.role }
+            user: { id: user.id, username: user.username, type: user.type, role: user.role, avatar: user.avatar, firstname: user.firstname, lastname:user.lastname }
         });
 
     } catch (error) {
@@ -189,14 +189,12 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         // check 2FA 
         if (user.twoFAEnabled) {
             // create temp token for 2fa(NOT the real access token)
-            console.log("here in condition")
             const tempToken = generateTempToken(user.id);
             return res.status(200).json({
                 requires2FA: true,
                 tempToken,              // frontend uses this to call /2fa/login
             });
         }
-        console.log("no 2FA")
         
         // generate jwt refresh and access tokens using private key :D
         const refreshToken = await prisma.refreshToken.create({
@@ -220,7 +218,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         return res.status(200).json({
             message: `Welcome Back ${user.username} !`,
             accessToken,
-            user: { id: user.id, email: user.email, username: user.username, role: user.role, type: user.type }
+            user: { id: user.id, email: user.email, username: user.username, role: user.role, type: user.type, avatar: user.avatar, firstname: user.firstname, lastname:user.lastname}
         });
 
     } catch (error) {
@@ -276,7 +274,9 @@ export const logout = async (req: Request, res: Response) => {
 // user settings profile method
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.user!.userId; // From JWT
+        const authUser = req.user as JwtPayload; 
+        const userId = authUser.userId; // From JWT
+
         const allowedFields = ['email', 'firstname', 'lastname', 'username', 'avatar', 'bio', 'location', 'website', 'title'];
 
         // only include data that was sent in the request
@@ -316,7 +316,8 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
 // change password in profile settings
 export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.user!.userId;
+        const authUser = req.user as JwtPayload; 
+        const userId = authUser.userId; // From JWT
         const { currentPassword, newPassword } = req.body;
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -344,6 +345,19 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
             data: { password: hashed }
         });
 
+        // delete all refresh tokens when the user change the pw
+        // await prisma.$transaction([
+        //     // Update the password
+        //     prisma.user.update({
+        //         where: { id: userId },
+        //         data: { password: hashed }
+        //     }),
+        //     // Kill EVERY session for this user across all devices
+        //     // we use userId, not token
+        //     prisma.refreshToken.deleteMany({
+        //         where: { userId: userId } 
+        //     })
+        // ]);
         res.status(200).json({ message: "Password updated successfully" });
     } catch (error) {
         next(error);
@@ -366,7 +380,8 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
             return res.status(400).json({ error: 'Invalid file content' });
         }
 
-        const userId = req.user!.userId;
+        const authUser = req.user as JwtPayload; 
+        const userId = authUser.userId; // From JWT
         const hash = crypto.randomBytes(8).toString('hex');
         const uploadDir = path.join(process.cwd(), 'uploads/avatars');
         fs.mkdirSync(uploadDir, { recursive: true });

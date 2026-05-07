@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authApi } from '@/lib/api';
-import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Eye, EyeOff, Lock ,ExternalLink, Globe} from 'lucide-react';
 import { useAuth } from '@/context/userContext';
 import { useNavigate } from "react-router-dom";
 import DOMPurify from 'dompurify';
@@ -18,6 +18,9 @@ export default function ProfileSettings() {
     const [saving, setSaving] = useState(false);
     const [avatarError, setAvatarError] = useState(false);
     
+    const isOAuthUser = !!user?.oauthProvider; 
+    const providerOauth = user?.oauthProvider;
+    console.log(isOAuthUser)
     // 2FA
     const [is2FALoading, setIs2FALoading] = useState(false);
     const [TwoFaError, setTwoFaError] = useState<string | null>(null);
@@ -265,6 +268,7 @@ export default function ProfileSettings() {
 
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+        if (isOAuthUser) return; 
         setPasswordForm(prev => ({ ...prev, [name]: value }));
         if (formErrors[name]) {
             setFormErrors(prev => {
@@ -432,11 +436,13 @@ export default function ProfileSettings() {
             setTwoFaError("2FA is already enabled on your account.");
             return;
         }
-
-        // check password before enabling 2FA
-        if (!confirmPassword.trim() || confirmPassword.trim().length < 8) {
-            setTwoFaError("Please enter your password to continue.");
-            return;
+        // Only ask for password for local users
+        if (isOAuthUser){
+            // check password before enabling 2FA
+            if (!confirmPassword.trim() || confirmPassword.trim().length < 8) {
+                setTwoFaError("Please enter your password to continue.");
+                return;
+            }
         }
         setIs2FALoading(true);
         try {
@@ -476,10 +482,13 @@ export default function ProfileSettings() {
         setTwoFaError(null);
         setSuccessMessage(null);
 
-        // check password before enabling 2FA
-        if (!confirmPassword.trim()) {
-            setTwoFaError("Please enter your password to continue.");
-            return;
+        // Only ask for password for local users
+        if (isOAuthUser){
+            // check password before enabling 2FA
+            if (!confirmPassword.trim() || confirmPassword.trim().length < 8) {
+                setTwoFaError("Please enter your password to continue.");
+                return;
+            }
         }
 
         if (disableCode.trim().length !== 6) {
@@ -510,7 +519,7 @@ export default function ProfileSettings() {
         );
     }
 
-
+    console.log("oauthProvider:", providerOauth);
     return (
         <div className="max-w-4xl mx-auto space-y-8 pb-20">
             {/* Header */}
@@ -819,7 +828,26 @@ export default function ProfileSettings() {
                                 Change Password
                             </h3>
 
+                                {/* no change password for Oauth users */}
+                                
+                                {isOAuthUser ? (
+                                   
+                                <div className="p-4 rounded-lg border border-border bg-background/50 space-y-3">
+                                    <div className="flex items-center gap-2 text-primary">
+                                        <Globe className="w-4 h-4" />
+                                        <span className="text-sm font-medium">Logged in via {user?.oauthProvider}</span>
+                                    </div>
+                                    <p className="text-xs text-foreground-muted leading-relaxed">
+                                        Your password and basic security are managed by <strong>{user?.oauthProvider}</strong>. 
+                                        To change your credentials, please visit your provider's settings.
+                                    </p>
+                                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => window.open('https://intra.42.fr')}>
+                                        Go to {user?.oauthProvider} <ExternalLink className="w-3 h-3 ml-2" />
+                                    </Button>
+                                </div>
+                            ) : (
 
+                            // local users
                             <div className="space-y-3">
                                 <div className="space-y-2">
                                     <label
@@ -971,8 +999,9 @@ export default function ProfileSettings() {
                                     {saving ? 'Updating...' : 'Change Password'}
                                 </Button>
                             </div>
+                            )}
                         </div>
-
+                        
 
                         {/* Two-Factor Authentication */}
                         <div className="space-y-4">

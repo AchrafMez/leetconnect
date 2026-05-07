@@ -3,6 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import passport from 'passport';
+import './lib/passport';
+
 // shared resources
 import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal} from '@leetconnect/shared';
 
@@ -53,7 +56,7 @@ app.use(morgan('dev')); // display logs
 app.use(express.json()); // takes body of request and turn it into req.body object
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(passport.initialize());
 app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', 'text/plain; version=0.0.4');
   res.send(await getMetrics());
