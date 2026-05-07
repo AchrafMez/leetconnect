@@ -8,8 +8,9 @@ import healthRoutes from "./routes/health"
 import { connectDb, disconnectDb, prisma } from './config/prisma'
 import { Server } from "http"
 import { authMiddleware, subscribeToEvents, AUTH_EVENTS, initEventBus } from '@leetconnect/shared';
+import { errorHandler } from "./errorHandler"
 
-dotenv.config();
+// dotenv.config();
 connectDb();
 initEventBus();
 
@@ -27,6 +28,8 @@ app.use(authMiddleware);
 app.use('/api/admin/users', usersRoutes);
 app.use('/api/admin/jobs', jobsRoutes);
 app.use('/api/admin/roles', rolesRoutes);
+
+app.use(errorHandler);
 
 const server: Server = app.listen(PORT, () => {
 	console.log(`Admin listening on PORT ${PORT}...`);

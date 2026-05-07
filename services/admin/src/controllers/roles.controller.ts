@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 
@@ -29,7 +29,7 @@ const ROLE_CONFIG = {
   },
 };
 
-export const getRoles = async (req: Request, res: Response) => {
+export const getRoles = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN')
@@ -57,6 +57,7 @@ export const getRoles = async (req: Request, res: Response) => {
 		return res.status(StatusCodes.OK).json(roles);
 	} catch (error) {
 		console.error('[getPermissionConfig]: ', error);
-		return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch roles'});
+		next(error);
+		// return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch roles'});
 	}
 }

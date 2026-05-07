@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { JobStatus } from "../../prisma/generated/client";
 import { ReasonPhrases, StatusCodes } from 'http-status-codes'
 import { ADMIN_EVENTS, publishEvent } from "@leetconnect/shared";
 
-export const getAllJobs = async (req: Request, res: Response) => {
+export const getAllJobs = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
@@ -35,11 +35,12 @@ export const getAllJobs = async (req: Request, res: Response) => {
 		return res.status(StatusCodes.OK).json(jobs);
 	} catch (error) {
 		console.error('[getAllJobs]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch jobs'});
+		next(error);
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch jobs'});
 	}
 }
 
-export const getJob = async (req: Request, res: Response) => {
+export const getJob = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
@@ -66,11 +67,12 @@ export const getJob = async (req: Request, res: Response) => {
 		return res.status(StatusCodes.OK).json(job);
 	} catch (error) {
 		console.error('[getJob]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch job'});
+		next(error);
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch job'});
 	}
 }
 
-export const editJobStatus = async (req: Request, res: Response) => {
+export const editJobStatus = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
@@ -101,11 +103,12 @@ export const editJobStatus = async (req: Request, res: Response) => {
 			return res.status(StatusCodes.NOT_FOUND).json({ message: 'Job not found'});
 		}
 		console.error('[editJob]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update job status'});
+		next(error);
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update job status'});
 	}
 }
 
-export const deleteJob = async (req: Request, res: Response) => {
+export const deleteJob = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
@@ -122,9 +125,10 @@ export const deleteJob = async (req: Request, res: Response) => {
 		await publishEvent(ADMIN_EVENTS.CONTENT_DELETED, { id });
 		return res.status(StatusCodes.OK).json({ message: 'Job deleted successfully'});
 	} catch (error: any) {
-		if(error?.code === 'P2025')
-			return res.status(StatusCodes.NOT_FOUND).json({ message: 'Job not foudn'});
 		console.error('[deleteJob]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to delete job'});
+		next(error);
+		// if(error?.code === 'P2025')
+		// 	return res.status(StatusCodes.NOT_FOUND).json({ message: 'Job not foudn'});
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to delete job'});
 	}
 }

@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { Role, Status } from "../../prisma/generated/client";
 import { ReasonPhrases, StatusCodes } from "http-status-codes";
 import { ADMIN_EVENTS, publishEvent } from "@leetconnect/shared";
 
-export const getAllUsers = async (req: Request, res: Response) => {
+export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 	
 	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
@@ -37,11 +37,12 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 	} catch (error) {
 		console.error('[getAllUsers]', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch users'});
+		next(error);
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch users'});
 	}
 }
 
-export const getUser =  async (req: Request, res: Response) => {
+export const getUser =  async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
@@ -68,11 +69,12 @@ export const getUser =  async (req: Request, res: Response) => {
 			return res.status(StatusCodes.OK).json(u);
 	} catch (error) {
 		console.error('[getUser]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch user'});
+		next(error);
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch user'});
 	}
 }
 
-export const editUserStatus = async (req: Request, res: Response) => {
+export const editUserStatus = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN')
@@ -104,15 +106,16 @@ export const editUserStatus = async (req: Request, res: Response) => {
 			await publishEvent(ADMIN_EVENTS.USER_UPDATED, updatedUser);
 			return res.status(StatusCodes.OK).json(updatedUser);
 	} catch (error: any) {
-		if ( error?.code === 'P2025') {
-			return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
-		}
 		console.error('[updateUserStatus]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update user statsu'});
+		next(error);
+		// if ( error?.code === 'P2025') {
+		// 	return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
+		// }
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update user statsu'});
 	}
 }
 
-export const editUserRole = async (req: Request, res: Response) => {
+export const editUserRole = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN')
@@ -144,15 +147,16 @@ export const editUserRole = async (req: Request, res: Response) => {
 			await publishEvent(ADMIN_EVENTS.USER_UPDATED, updatedUser);
 			return res.status(StatusCodes.OK).json(updatedUser);
 	} catch (error: any) {
-		if (error?.code === 'P2025') {
-			return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
-		}
 		console.error('[updateUserRole]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update user role'});
+		next(error);
+		// if (error?.code === 'P2025') {
+		// 	return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
+		// }
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update user role'});
 	}
 }
 
-export const deleteUser = async (req: Request, res: Response) => {
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
 	if(user?.role !== 'ADMIN')
@@ -175,10 +179,11 @@ export const deleteUser = async (req: Request, res: Response) => {
 			await publishEvent(ADMIN_EVENTS.USER_DELETED, { id });
 			return res.status(StatusCodes.OK).json( { message: 'User deleted successfully'});
 	} catch (error: any) {
-		if(error?.code === 'P2025') {
-			return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
-		}
 		console.error('[deleteUser]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to delete user'});
+		next(error);
+		// if(error?.code === 'P2025') {
+		// 	return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found'});
+		// }
+		// res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to delete user'});
 	}
 }
