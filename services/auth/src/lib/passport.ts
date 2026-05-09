@@ -16,9 +16,12 @@ passport.use('42', new FortyTwoStrategy({
   },
   async (accessToken: string, refreshToken: string, profile: any, done: any) => {
     try {
+        // console.log("=== RAW 42 PROFILE DATA ===");
+        // console.log(JSON.stringify(profile._json, null, 2));
+        // console.log("===========================");
         const email = profile.emails[0].value;
         const fortyTwoId = String(profile.id);
-
+        const intraAvatar = profile._json.image?.link || '';
         // Check if user already exists
         let user = await prisma.user.findFirst({
             where: { OR: [{ oauthId: fortyTwoId }, { email: email }] }
@@ -32,7 +35,7 @@ passport.use('42', new FortyTwoStrategy({
                     username: profile.username,
                     firstname: profile.name.givenName || '',
                     lastname: profile.name.familyName || '',
-                    avatar: profile.photos[0]?.value || '',
+                    avatar: intraAvatar,
                     oauthProvider: '42',
                     oauthId: fortyTwoId,
                     type: 'FREELANCER', // 42 students usually start as Freelancers
@@ -40,7 +43,8 @@ passport.use('42', new FortyTwoStrategy({
                     status: 'active'
                 }
             });
-
+            console.log("user avatar-> [", profile.photos[0]?.value, "]")
+            console.log("user avatar-> [", user.avatar, "]")
             // 3. Shout to Redis so Chat Service sees the new user
             await publishEvent(AUTH_EVENTS.USER_REGISTERED, {
                 id: user.id,
@@ -49,7 +53,8 @@ passport.use('42', new FortyTwoStrategy({
                 firstname: user.firstname,
                 lastname: user.lastname,
                 role: user.role,
-                type: user.type
+                type: user.type,
+                avatar: user.avatar,
             });
         }
 

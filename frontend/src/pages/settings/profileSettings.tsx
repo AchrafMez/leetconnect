@@ -520,6 +520,19 @@ export default function ProfileSettings() {
     }
 
     console.log("oauthProvider:", providerOauth);
+    console.log("avatar: [", profileForm.avatar, "]");
+    const getDisplayAvatar = (avatarUrl: string | null): string | undefined => {
+        if (!avatarUrl) return undefined;
+        
+        // If it's a full URL (like 42's CDN), return it as is
+        if (avatarUrl.startsWith('http')) {
+            return avatarUrl;
+        }
+        
+        // If it's an internal upload, add a timestamp to force refresh if updated
+        return `${avatarUrl}?t=${Date.now()}`;
+    };
+    
     return (
         <div className="max-w-4xl mx-auto space-y-8 pb-20">
             {/* Header */}
@@ -557,7 +570,7 @@ export default function ProfileSettings() {
                                 {profileForm.avatar && hasAvatar(profileForm.avatar) ? (
                                     // User has uploaded a photo → show it
                                     <img
-                                        src={`${profileForm.avatar}?t=${Date.now()}`}
+                                        src={getDisplayAvatar(profileForm.avatar)}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
                                         onError={() => setAvatarError(true)} // if image is not found display default image
