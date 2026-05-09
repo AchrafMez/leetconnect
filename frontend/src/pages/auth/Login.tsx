@@ -140,7 +140,11 @@ export default function Login() {
     const handle42SignIn = () => {
         // console.log('Google sign-in implemented!!');
         // Redirect browser to the backend trigger for 42 OAuth
-        window.location.href = 'https://localhost/api/auth/42';
+        // window.location.href = 'https://localhost/api/auth/42';
+        // dynamic
+        // window.location.origin automatically becomes "https://10.12.4.4" 
+        // or "https://localhost" based on the URL in the browser bar.
+        window.location.href = `${window.location.origin}/api/auth/42`;
     };
 
     return (
