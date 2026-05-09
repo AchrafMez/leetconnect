@@ -5,7 +5,7 @@ import {
 	MessageCircle, Settings, Briefcase, MapPin, Calendar,
 } from 'lucide-react';
 import { chatApi, friendApi } from '../../lib/api';
-import Avatar from '../chat/Avatar';
+import Avatar from '@/components/ui/Avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePresence } from '@/context/PresenceProvider';
 
