@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 import { generateRefreshToken } from '../lib/token';
+import dotenv from 'dotenv'
 
 export const handleOAuthSuccess = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -25,7 +26,13 @@ export const handleOAuthSuccess = async (req: Request, res: Response, next: Next
         });
 
         //  Redirect back to Frontend
-        res.redirect(`https://localhost/dashboard`);
+        // res.redirect(`https://localhost/dashboard`);
+        const currentHost = req.get('host'); // e.g. "10.12.2.1"
+        const protocol = req.protocol;       // e.g. "https"
+        
+        const frontendUrl = `${protocol}://${currentHost}`;
+    
+        res.redirect(`${frontendUrl}/dashboard`); // change to /freedashboard later
     } catch (error) {
         next(error);
     }

@@ -7,12 +7,11 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
-console.log("🛠 Attempting to initialize 42 Strategy...");
 
 passport.use('42', new FortyTwoStrategy({
     clientID: process.env.INTRA_CLIENT_ID!,
     clientSecret: process.env.INTRA_CLIENT_SECRET!,
-    callbackURL: "https://localhost/api/auth/42/callback",
+    callbackURL: process.env.INTRA_CALLBACK_URL || "https://localhost/api/auth/42/callback",
   },
   async (accessToken: string, refreshToken: string, profile: any, done: any) => {
     try {
@@ -43,8 +42,8 @@ passport.use('42', new FortyTwoStrategy({
                     status: 'active'
                 }
             });
-            console.log("user avatar-> [", profile.photos[0]?.value, "]")
-            console.log("user avatar-> [", user.avatar, "]")
+            // console.log("user avatar-> [", profile.photos[0]?.value, "]")
+            // console.log("user avatar-> [", user.avatar, "]")
             // 3. Shout to Redis so Chat Service sees the new user
             await publishEvent(AUTH_EVENTS.USER_REGISTERED, {
                 id: user.id,
@@ -63,5 +62,3 @@ passport.use('42', new FortyTwoStrategy({
         return done(err);
     }
 }));
-
-console.log("✅ 42 Strategy registered successfully!");
