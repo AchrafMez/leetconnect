@@ -126,7 +126,7 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-    token: string;
+    accessToken: string;
     user: User;
     requires2FA?: boolean; // If true, frontend must show the 6-digit code input
     userId?: string;       // Needed to identify which user is finishing 2FA login

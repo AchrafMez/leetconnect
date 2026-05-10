@@ -11,10 +11,19 @@ WORKDIR /app/service
 COPY services/chat/package.json ./
 RUN npm pkg set dependencies.@leetconnect/shared=file:../shared
 RUN npm install
+
+COPY services/chat/prisma ./prisma/
+RUN npx --no-install prisma generate
+
 COPY services/chat/ ./
-COPY services/chat/prisma ./prisma
-RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx prisma generate --schema prisma/schema.prisma
 RUN npm run build
 
+# pg_isready for the shared entrypoint
+RUN apk add --no-cache postgresql-client
+
+COPY scripts/entrypoint-with-prisma.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 3003
-CMD ["sh", "-c", "npx prisma db push && node dist/index.js"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["node", "dist/index.js"]

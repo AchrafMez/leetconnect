@@ -4,6 +4,8 @@ import { authApi } from '../lib/api';
 import { disconnectSocket } from '@/lib/socket';
 import { canAccessMinRole, hasPermission as checkPermission } from '../lib/permissions';
 import type { Role, Permission } from '../types';
+import type { LoginRequest } from '../types/auth';
+
 
 type SkillsState = {
   [key: string]: string[];
@@ -187,8 +189,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
-  const login = async (data: any): Promise<{ requires2FA: boolean; tempToken?: string }> => {
-     const res = await api<{ 
+  const login = async (data: LoginRequest): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
+     const res = await api<{
+      accessToken?: string;
       token?: string;
       user?: User;
       requires2FA?: boolean;
@@ -199,16 +202,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (res.requires2FA) {
       return { requires2FA: true, tempToken: res.tempToken as string };
     }
-    
+
     // normal login
-    setAccessToken(res.token!);
+    setAccessToken(res.accessToken!);
     setUser(res.user!);
-    return { requires2FA: false };
+
+    return { requires2FA: false, user: res.user!};
   };
 
   const login2FA = async (tempToken: string, code: string): Promise<void> => {
     const res = await authApi.login2FA(tempToken, code);
-    setAccessToken(res.token);
+    setAccessToken(res.accessToken);
     setUser(res.user!);
   };
 
