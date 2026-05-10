@@ -16,7 +16,7 @@ export default function UserRow({ name, avatar, online, subtitle, onSelect, chil
 			<button
 				type="button"
 				onClick={onSelect}
-				className="flex items-center gap-3 min-w-0 flex-1 text-left"
+				className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer"
 			>
 				<div className="relative shrink-0">
 					<Avatar name={name || '?'} image={avatar} size="sm" />

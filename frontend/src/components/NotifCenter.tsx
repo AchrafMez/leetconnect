@@ -36,7 +36,7 @@ export default function NotifCenter({onClose, wrapperRef}: Props) {
 					<span className="font-semibold">Notifications</span>
 					{unread > 0 && (
 						<button onClick={markAllRead}
-								className="text-xs text-muted-foreground hover:text-foreground">
+								className="text-xs text-muted-foreground hover:text-foreground cursor-pointer">
 							Mark all read
 						</button>
 					)}
@@ -54,7 +54,7 @@ function Row({n, onRead}: {n: ChatNotif; onRead: (id: number) => void}) {
 	return (
 		<button
 			onClick={() => !n.is_read && onRead(n.id)}
-			className={`w-full text-left px-4 py-3 border-b border-border/50
+			className={`cursor-pointer w-full text-left px-4 py-3 border-b border-border/50
 						hover:bg-accent transition-colors
 						${n.is_read ? 'opacity-60' : ''}`}
 		>

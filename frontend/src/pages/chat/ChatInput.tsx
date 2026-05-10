@@ -18,7 +18,7 @@ export default function ChatInput({onSend}: ChatInputProp) {
 	return (
 		<div className="p-4">
 			<div className="flex items-center gap-3 bg-secondary rounded-xl px-4 py-2">
-				<button className="text-muted-foreground hover:text-foreground transition-colors">
+				<button className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
 					<Smile size={20}/>
 				</button>
 				<input
@@ -36,7 +36,7 @@ export default function ChatInput({onSend}: ChatInputProp) {
 				<button
 					onClick={handleSend}
 					className="bg-primary hover:bg-primary/80 text-foreground
-								rounded-lg p-2 transition-colors"
+								rounded-lg p-2 transition-colors cursor-pointer"
 				>
 					<SendHorizonal size={18}/>
 				</button>
