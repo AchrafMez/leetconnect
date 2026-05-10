@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import Avatar from "./Avatar";
+import Avatar from "@/components/ui/Avatar";
 import { ArrowLeft, Info } from "lucide-react";
 import { usePresence } from "@/context/PresenceProvider";
 

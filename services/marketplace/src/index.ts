@@ -3,46 +3,31 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import sequelize from './config/database';
+import prisma from './config/prisma';
 import healthRoutes from './routes/health';
-import { closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal, initEventBus } from '@leetconnect/shared';
+import { initEventBus, closeEventBus, errorHandler,  getMetrics,  } from '@leetconnect/shared';
 // import fs from 'fs';
 // import https from 'https';
+import jobsRoutes from "./routes/jobs";
+import proposalsRoutes from "./routes/proposals";
 
 const app = express();
-const PORT =  3002;
+
+const PORT = 3002;
+
+
 
 // const sslOptions = {
-//     key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-//     cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
+//   key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
+//   cert: fs.readFileSync(process.env.SSL_CERT_PATH as string),
 // };
 
-
-app.use((req, res, next) => {
-  const start = Date.now();
-
-  res.on('finish', () => {
-    const durationSeconds = (Date.now() - start) / 1000;
-    const route = req.route?.path ?? req.path;
-    const labels = {
-      method: req.method,
-      route,
-      status_code: String(res.statusCode),
-    };
-
-    httpRequestDuration.observe(labels, durationSeconds);
-    httpRequestsTotal.inc(labels);
-  });
-
-  next();
-});
-
-// middleware
+// middlewares
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', 'text/plain; version=0.0.4');
@@ -50,20 +35,24 @@ app.get('/metrics', async (_req, res) => {
 });
 // routes
 app.use('/api/market', healthRoutes);
+app.use("/api/market/jobs", jobsRoutes);
+app.use("/api/market/proposals", proposalsRoutes);
 
-// error handler (must be after all routes)
+// global error handler
 app.use(errorHandler);
 
-// start
+// start server
 async function start() {
   try {
-    await sequelize.authenticate();
-    console.log('marketplace db connected');
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('marketplace models synced');
-    initEventBus(process.env.REDIS_URL);
+
+    
+    await prisma.$connect();
+    console.log('marketplace db connected with Prisma');
+
+    initEventBus(process.env.REDIS_URL as string);
+
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`marketplace service running on port ${PORT}`);
+      console.log(`Marketplace service running on port ${PORT}`);
     });
   } catch (err) {
     const error = err as Error;
@@ -71,12 +60,13 @@ async function start() {
     process.exit(1);
   }
 }
+
 start();
 
-// shutdown
+// graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('Shutting down marketplace service...');
   await closeEventBus();
-  await sequelize.close();
+  await prisma.$disconnect();
   process.exit(0);
 });

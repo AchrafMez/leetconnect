@@ -76,8 +76,12 @@ export interface UserPresencePayload {
     USER_OFFLINE: 'user.offline',
     PRESENCE_RESET: 'presence.reset',
     NOTIF_CREATE: 'notif.create', 
+    NOTIFICATION_CREATED: 'notification.created',
     JOB_CREATED: 'job.created',
     PROPOSAL_RECEIVED: 'proposal.received',
+    PROPOSAL_ACCEPTED: 'proposal.accepted',
+    PROPOSAL_REJECTED: 'proposal.rejected',
+    REVIEW_SUBMITTED: 'review.submitted',
     CONTRACT_COMPLETED: 'contract.completed',
     MESSAGE_SENT: 'message.sent',
   } as const;

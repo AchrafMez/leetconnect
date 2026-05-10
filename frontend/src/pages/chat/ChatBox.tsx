@@ -97,7 +97,7 @@ export default function ChatBox({
 				onBack={onBack}
 				onInfoClick={() => setShowInfo(true)}
 			/>
-			<div ref={scroll_ref} onScroll={handleScroll} className="flex-1 overflow-y-auto px-6 py-4">
+			<div ref={scroll_ref} onScroll={handleScroll} className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4">
 				{loading_more && (
 					<div className="flex justify-center py-3">
 						<Loader2 className="h-5 w-5 animate-spin text-muted-foreground"/>

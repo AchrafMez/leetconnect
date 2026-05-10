@@ -62,3 +62,4 @@ migrations/
 # test scripts
 /security-test.sh
 /rate-limit-test.sh
+/.env.ip
