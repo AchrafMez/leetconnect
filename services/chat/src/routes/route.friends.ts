@@ -1,15 +1,21 @@
 import { Router } from "express";
 import * as friends_ctrl from '../controllers/ctrl.friends';
+import { validate } from "../middleware/midd.validate";
+import {
+	friend_params,
+	friend_send_body,
+	friend_remove_body
+} from "../schemas/schema.friends";
 
 const router = Router();
 
-router.post('/', friends_ctrl.send);
+router.post('/', validate({body: friend_send_body}), friends_ctrl.send);
 router.get('/incoming/', friends_ctrl.list_incoming);
 router.get('/outgoing/', friends_ctrl.list_outgoing);
 router.get('/friends/', friends_ctrl.list);
-router.delete('/friends/', friends_ctrl.remove);
+router.delete('/friends/', validate({body: friend_remove_body}), friends_ctrl.remove);
 
-router.patch('/:id/accept', friends_ctrl.accept);
-router.patch('/:id/reject', friends_ctrl.reject);
+router.patch('/:id/accept', validate({params: friend_params}), friends_ctrl.accept);
+router.patch('/:id/reject', validate({params: friend_params}), friends_ctrl.reject);
 
 export default router;

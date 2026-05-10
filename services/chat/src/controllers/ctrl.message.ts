@@ -4,14 +4,10 @@ import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
 import { notify } from '../lib/notify';
 import {
-	message_params,
-	message_query,
-	message_body,
+	type MessageParams,
+	type MessageQuery, 
+	type MessageBody
 } from '../schemas/schema.message';
-
-type MessageParams = z.infer<typeof message_params>;
-type MessageQuery  = z.infer<typeof message_query>;
-type MessageBody   = z.infer<typeof message_body>;
 
 async function assert_membership(convers_id: number, user_id: string) {
 	const member = await prisma.conversMember.findFirst({

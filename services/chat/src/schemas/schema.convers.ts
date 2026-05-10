@@ -25,3 +25,8 @@ export const convers_update_body = z.object({
 export const convers_add_member_body = z.object({
 	user_id
 });
+
+export type ConversParams = z.infer<typeof convers_params>;
+export type ConversCreateBody = z.infer<typeof convers_create_body>;
+export type ConversUpdateBody = z.infer<typeof convers_update_body>;
+export type ConversAddMemberBody = z.infer<typeof convers_add_member_body>;
