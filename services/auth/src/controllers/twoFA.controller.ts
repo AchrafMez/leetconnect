@@ -4,12 +4,13 @@ import QRCode from 'qrcode';
 import prisma from '../lib/prisma';
 import { generateAccessToken, generateRefreshToken, verifyTempToken } from '../lib/token';
 import bcrypt from 'bcryptjs';
+import { JwtPayload } from '@leetconnect/shared';
 
 // GENERATE SECRET and QR CODE
 export const setup2FA = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        console.log("here")
-        const userId = req.user!.userId;
+        const authUser = req.user as JwtPayload; 
+        const userId = authUser.userId; // From JWT
         const { password } = req.body; 
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -18,13 +19,18 @@ export const setup2FA = async (req: Request, res: Response, next: NextFunction) 
             return res.status(400).json({ error: "2FA is already enabled" });
         }
         
-        // password check before 2FA activation
-        if (!password) {
-            return res.status(400).json({ error: "Password is required" });
-        }
-        const isValid = await bcrypt.compare(password, user!.password!);
-        if (!isValid) {
-            return res.status(401).json({ error: "Incorrect password" });
+        if (user && user.password) {
+            // User has a password
+            if (!password) {
+                return res.status(400).json({ error: "Password is required" });
+            }
+            const isValidPassword = await bcrypt.compare(password, user!.password!);
+            if (!isValidPassword) {
+                return res.status(401).json({ error: "Incorrect password" });
+            }
+        } else {
+            // User is an OAuth user
+            console.log(`[2FA Setup] ${user!.username} is using OAuth, skipping password check.`);
         }
 
         // Generate a 32-character secret
@@ -51,7 +57,8 @@ export const setup2FA = async (req: Request, res: Response, next: NextFunction) 
 // VERIFY & ENABLE
 export const verifyAndEnable2FA = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.user!.userId;
+        const authUser = req.user as JwtPayload; 
+        const userId = authUser.userId;
         const { code } = req.body;
 
         const user = await prisma.user.findUnique({ 
@@ -89,7 +96,8 @@ export const verifyAndEnable2FA = async (req: Request, res: Response, next: Next
 // DISABLE 2FA
 export const disable2FA = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req.user!.userId;
+    const authUser = req.user as JwtPayload; 
+    const userId = authUser.userId; 
     const { code , password} = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: userId }} );
@@ -98,13 +106,19 @@ export const disable2FA = async (req: Request, res: Response, next: NextFunction
       return res.status(400).json({ error: "2FA is not enabled" });
     }
 
-    // check password before disactivating the 2FA
-    if (!password) {
+    // check for password / remote auth dont need password
+    if (user && user.password) {
+        // User has a password
+        if (!password) {
             return res.status(400).json({ error: "Password is required" });
-    }
-    const isValidPassword = await bcrypt.compare(password, user!.password!);
-    if (!isValidPassword) {
-        return res.status(401).json({ error: "Incorrect password" });
+        }
+        const isValidPassword = await bcrypt.compare(password, user!.password!);
+        if (!isValidPassword) {
+            return res.status(401).json({ error: "Incorrect password" });
+        }
+    } else {
+        // User is an OAuth user
+        console.log(`[2FA Setup] ${user.username} is using OAuth, skipping password check.`);
     }
 
     const isValid = authenticator.verify({

@@ -6,10 +6,12 @@ import { useAuth } from '@/context/userContext';
 import Navbar from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Eye, EyeOff } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function Register() {
     const navigate = useNavigate();
     const auth = useAuth();
+    const {user} = useAuth()
     const { register: registerUser } = auth || { register: async () => { } };
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -109,7 +111,7 @@ export default function Register() {
         setLoading(true);
         try {
             // call backend API for register and update auth context
-            const res = await registerUser(formData);
+            await registerUser(formData);
 
             // Navigate to dashboard
             // if (res.user?.type == "FREELANCER"){
@@ -117,6 +119,7 @@ export default function Register() {
             // } else {
             //     navigate('/dashboard');
             // }
+            navigate('/dashboard');
 
         } catch (err: any) {
             setError(err.message || 'Failed to create account. Please try again.');
@@ -125,6 +128,7 @@ export default function Register() {
         }
     };
 
+    
     const handleGoogleSignUp = () => {
         // TODO: Implement Google OAuth flow
         console.log('Google sign-up not yet implemented');

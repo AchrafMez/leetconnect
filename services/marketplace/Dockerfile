@@ -12,7 +12,9 @@ COPY services/marketplace/package.json ./
 RUN npm pkg set dependencies.@leetconnect/shared=file:../shared
 RUN npm install
 COPY services/marketplace/ ./
+RUN npx prisma generate
 RUN npm run build
 
 EXPOSE 3002
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "npx prisma db push && node dist/index.js"]
+# CMD ["node", "dist/index.js"]

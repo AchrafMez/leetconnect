@@ -32,7 +32,12 @@ export interface User {
     username: string; // Used 'username' instead of 'name'
     firstname: string;
     lastname: string;
-    avatar: string;
+    category: string[],
+    skills: string[],
+    rate?: number;
+    expLevel?: string;
+    avatar: string,
+    proposals: Proposal,
     // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
     role: 'ADMIN' | 'USER' | 'MODERATOR';
     type: 'CLIENT' | 'FREELANCER';
@@ -45,6 +50,7 @@ export interface User {
     website: string,
     title: string
     twoFAEnabled: boolean;
+    oauthProvider?: string | null;
 }
 
 // Response when starting 2FA setup
@@ -179,7 +185,8 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
-        const message = typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`;
+        // Try getting message properly from express response { success: false, message: '...' }
+        const message = err?.message || (typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`);
         throw new Error(message);
     }
 
@@ -233,11 +240,125 @@ export const authApi = {
     // remote auth
 };
 
-export const marketApi = {
-    getJobs: () => api<Job[]>('/market/jobs'),
-    getJob: (id: String) => api<Job[]>(`/market/jobs/${id}`),
-    createJob: (data: Omit<Job, 'id'>) => api<Job>('/market/jobs', { method: 'POST', body: data }),
-    health: () => api<HealthResponse>('/market/health'),
+export interface JobRequest {
+    title: string;
+    description: string;
+    category: string;
+    budget: number | string;
+    skills: string[];
+}
+
+export const jobsApi = {
+    addJob: (data: JobRequest) =>
+        api<Job>('/market/jobs/addjob', {   
+            method: 'POST',
+            body: data
+        }),
+
+    getMyJobs: () =>
+        api<{ success: boolean; jobs: Job[] }>('/market/jobs/my-jobs'),
+
+    getAllJobs: () =>
+        api<Job[]>('/market/jobs/getalljobs'),
+
+    getJobById: (id: string) =>
+        api<Job>(`/market/jobs/${id}`),
+
+    deleteJob: (id: string) =>
+        api<void>(`/market/jobs/${id}`, {
+            method: 'DELETE'
+        }),
+};
+// export const marketApi = {
+//     getJobs: () => api<Job[]>('/market/jobs'),
+//     getJob: (id: String) => api<Job[]>(`/market/jobs/${id}`),
+//     createJob: (data: Omit<Job, 'id'>) => api<Job>('/market/jobs', { method: 'POST', body: data }),
+//     health: () => api<HealthResponse>('/market/health'),
+// };
+
+
+export interface ProposalRequest {
+    jobId: string;
+    coverLetter: string;
+    proposedBudget: number;
+    deliveryDays: number;
+}
+
+export interface Proposal {
+    id: string;
+    jobId: string;
+    freelancerId: string;
+    message: string;
+    price: number;
+    status: "PENDING" | "ACCEPTED" | "REJECTED";
+    createdAt: string;
+    updatedAt: string;
+}
+
+
+export const proposalsApi = {
+    createProposal: (jobId: string, data: ProposalRequest) =>
+        api<Proposal>(`/market/proposals/${jobId}`, {
+            method: 'POST',
+            body: data
+        }),
+
+    getMyProposals: () =>
+        api<{ success: boolean; proposals: (Proposal & { job: any })[] }>(
+            `/market/proposals/my-proposals`
+        ),
+
+    getProposalsByJob: (jobId: string) =>
+        api<{ success: boolean; proposals: Proposal[] }>(
+            `/market/proposals/${jobId}`
+        ),
+
+    acceptProposal: (id: string) =>
+        api<Proposal>(`/market/proposals/accept/${id}`, {
+            method: 'PATCH'
+        }),
+
+    rejectProposal: (id: string) =>
+        api<Proposal>(`/market/proposals/reject/${id}`, {
+            method: 'PATCH'
+        }),
+};
+
+
+export const userApi = {
+  getUserById: (id: string) => api<{ success: boolean; user: User }>(`/auth/users/${id}`),
+  getAllFreelancers: () => api<{ success: boolean; freelancers: User[] }>('/auth/freelancers'),
+   getAllClients: () => api<{ success: boolean; clients: User[] }>('/auth/clients'),
+ 
+setupProfile: (data) =>
+  api('/auth/setup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: data,
+  }),
+};
+
+export const paymentsApi = {
+  getById: (id: string) =>
+    api<{ success: boolean; payment: any }>(`/market/jobs/payments/${id}`),
+
+  create: (proposalId: string) =>
+    api<{ success: boolean; payment: any }>(
+      `/payments/create/${proposalId}`,
+      {
+        method: "POST",
+      }
+    ),
+
+  pay: (id: string) =>
+    api<{ success: boolean; payment: any }>(
+      `/market/jobs/payments/${id}/pay`,
+      {
+        method: "POST",
+      }
+    ),
 };
 
 interface PaginatedMessages {
