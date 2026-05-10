@@ -4,6 +4,19 @@ up: certs
 up-d: certs
 	docker compose up --build -d
 
+prod:
+	@if [ -z "$(IP)" ]; then \
+		echo "Error: IP is required for production network access. Usage: make prod IP=<ip_address>"; \
+		exit 1; \
+	fi
+	@echo "Setting up production for IP $(IP)..."
+	@sed -i -E "s/allowedHosts: \['frontend', 'localhost'(, '[^']+')?\]/allowedHosts: ['frontend', 'localhost', '$(IP)']/g" frontend/vite.config.ts
+	@sed -i -E "s/server_name localhost( [0-9\.]+)?;/server_name localhost $(IP);/g" nginx/nginx.conf
+	@sed -i -E "s/CN=[a-zA-Z0-9\.]+/CN=$(IP)/g" scripts/gen-certs.sh
+	$(MAKE) clean
+	$(MAKE) certs
+	docker compose up --build -d
+
 down:
 	docker compose down
 

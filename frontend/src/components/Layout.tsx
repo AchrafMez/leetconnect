@@ -2,7 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import { NotifProvider } from '../context/NotifProvider';
 import { PresenceProvider } from '../context/PresenceProvider';
-import Sidebar from './market/SideBar';
+import FreelancerSetupModal from './market/FreelancerSetupModal';
 
 export default function Layout() {
     return (
@@ -10,14 +10,13 @@ export default function Layout() {
             <NotifProvider>
                 <div className="min-h-screen bg-background">
                     <Navbar />
-                    <div className="flex">
-                <Sidebar/>
-                 <main className="container mx-auto max-w-5xl px-6 pt-20 pb-10">
+                    <div className="flex justify-center w-full">
+                        <main className="container mx-auto w-full max-w-7xl px-6 pt-24 pb-10">
                             <Outlet />
                         </main>
                     </div>
-           
-        </div>
+                    <FreelancerSetupModal />
+                </div>
             </NotifProvider>
         </PresenceProvider>
     );

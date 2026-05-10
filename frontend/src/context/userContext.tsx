@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect} from 'react';
 import { api, setAccessToken, userApi, type User } from '../lib/api';
 import { authApi } from '../lib/api';
 import { disconnectSocket } from '@/lib/socket';
+import { canAccessMinRole, hasPermission as checkPermission } from '../lib/permissions';
+import type { Role, Permission } from '../types';
 
 type SkillsState = {
   [key: string]: string[];
@@ -63,12 +65,12 @@ type AuthContextType = {
   jobs: Job[];
   enriched: Enriched[];
 
-  login: (data: any) => Promise<void>;
   login: (data: any) => Promise<{ requires2FA: boolean; tempToken?: string }>;
   login2FA: (tempToken: string, code: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
+  updateUser: (user: User) => void;
 
   skills: SkillsState;
   setSkills: React.Dispatch<React.SetStateAction<SkillsState>>;
@@ -87,6 +89,10 @@ type AuthContextType = {
 
   allSkills: string[];
   AllCategories: string[];
+
+  hasRole: (role: Role | Role[]) => boolean;
+  hasPermission: (permission: Permission) => boolean;
+  canAccess: (minRole: Role) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -222,12 +228,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(prev => prev ? { ...prev, ...updatedUser } : updatedUser);
+  };
+
+  const hasRole = (role: Role | Role[]) => {
+    if (!user) return false;
+    if (Array.isArray(role)) {
+      return role.includes(user.role as Role);
+    }
+    return user.role === role;
+  };
+
+  const hasPermission = (permission: Permission) => {
+    if (!user) return false;
+    return checkPermission(user.role as Role, permission);
+  };
+
+  const canAccess = (minRole: Role) => {
+    if (!user) return false;
+    return canAccessMinRole(user.role as Role, minRole);
+  };
+
   const value: AuthContextType = {
     user,
     setUser,
+    updateUser,
     loading,
     jobs,
     login,
+    login2FA,
     register,
     logout,
     enriched,
@@ -243,6 +273,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setFreelancers,
     allSkills,
     AllCategories,
+    hasRole,
+    hasPermission,
+    canAccess,
   };
 
   return (

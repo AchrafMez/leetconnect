@@ -34,6 +34,8 @@ export interface User {
     lastname: string;
     category: string[],
     skills: string[],
+    rate?: number;
+    expLevel?: string;
     avatar: string,
     proposals: Proposal,
     // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
@@ -182,7 +184,8 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
-        const message = typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`;
+        // Try getting message properly from express response { success: false, message: '...' }
+        const message = err?.message || (typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`);
         throw new Error(message);
     }
 
@@ -299,6 +302,11 @@ export const proposalsApi = {
             body: data
         }),
 
+    getMyProposals: () =>
+        api<{ success: boolean; proposals: (Proposal & { job: any })[] }>(
+            `/market/proposals/my-proposals`
+        ),
+
     getProposalsByJob: (jobId: string) =>
         api<{ success: boolean; proposals: Proposal[] }>(
             `/market/proposals/${jobId}`
@@ -317,7 +325,7 @@ export const proposalsApi = {
 
 
 export const userApi = {
-  getUserById: (id: string) => api<User>(`/auth/users/${id}`),
+  getUserById: (id: string) => api<{ success: boolean; user: User }>(`/auth/users/${id}`),
   getAllFreelancers: () => api<{ success: boolean; freelancers: User[] }>('/auth/freelancers'),
    getAllClients: () => api<{ success: boolean; clients: User[] }>('/auth/clients'),
  

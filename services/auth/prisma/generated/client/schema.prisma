@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
   output   = "./generated/client"
@@ -27,9 +26,12 @@ model User {
   // Presence state
   isOnline Boolean @default(false)
 
-  skills   String[]
-  rating   Float    @default(0)
-  category String?
+  skills      String[]
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  category    String[]
+  rate        Float?
+  expLevel    String?
 
   // Security & 2FA
   twoFASecret  String?

@@ -136,15 +136,7 @@ const FilterModal = ({ showFilter, setShowFilter }: FilterModalProps) => {
     });
   };
 
-  const categories: string[] = [
-    "Web Development",
-    "UI/UX Design",
-    "Mobile Apps",
-    "Graphic Design",
-    "Digital Marketing",
-    "DevOps",
-    "Data Science",
-  ];
+  const categories: string[] = Object.keys(categoriesData);
 
   if (!showFilter) return null;
 

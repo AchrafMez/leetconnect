@@ -120,7 +120,7 @@ export default function Register() {
             
             if(userData?.type === 'FREELANCER'){
         
-                navigate('/freelancerpage')
+                navigate('/market/dashboard')
                 return;
             }else{
                  navigate('/dashboard');

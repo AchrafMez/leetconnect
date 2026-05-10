@@ -1,12 +1,14 @@
 import { Router } from "express";
-import {addProposal,getJobProposals,acceptProposal,rejectProposal} from "../controllers/proposals";
-import { authMiddleware } from "@leetconnect/shared";
+import { addProposal, getJobProposals, getMyProposals, acceptProposal, rejectProposal } from "../controllers/proposals";
+import { authMiddleware, requireType } from "@leetconnect/shared";
+import { validateProposal, validateIdParam } from "../middlewares/validate";
 
 const router = Router();
 
-router.post("/:jobId", authMiddleware  ,addProposal);
-router.get("/:jobId", getJobProposals);
-router.patch("/accept/:id", acceptProposal);
-router.patch("/reject/:id", rejectProposal);
+router.get("/my-proposals", authMiddleware, getMyProposals);
+router.post("/:jobId", authMiddleware, requireType("FREELANCER"), validateIdParam("jobId"), validateProposal, addProposal);
+router.get("/:jobId", authMiddleware, validateIdParam("jobId"), getJobProposals);
+router.patch("/accept/:id", authMiddleware, validateIdParam("id"), acceptProposal);
+router.patch("/reject/:id", authMiddleware, validateIdParam("id"), rejectProposal);
 
 export default router;

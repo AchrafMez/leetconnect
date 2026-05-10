@@ -6,7 +6,6 @@ import App from './App';
 import './index.css';
 import { Theme } from './components/Theme';
 import { AuthProvider } from './context/userContext';
-// import ContextProvider from './context/context';
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean, error: Error | null }> {
   constructor(props: { children: ReactNode }) {

@@ -278,9 +278,12 @@ export const getAllFreelancers = async (_req: Request, res: Response) => {
     const freelancers = await prisma.user.findMany({
       where: {
         type: "FREELANCER",
-      },orderBy: {
-        createdAt: "desc",
       },
+      orderBy: [
+        { rating: "desc" },
+        { reviewCount: "desc" },
+        { createdAt: "desc" }
+      ],
     });
 
     return res.json({success: true,freelancers,});
@@ -296,16 +299,15 @@ export const getAllFreelancers = async (_req: Request, res: Response) => {
 
 export const getAllClients = async (_req: Request, res: Response) => {
   try {
-    console.log('emmmmmmmmmmmmmmmmm')
-    const freelancers = await prisma.user.findMany({
+    const clients = await prisma.user.findMany({
       where: {
-        type: "FREELANCER",
+        type: "CLIENT",
       },orderBy: {
         createdAt: "desc",
       },
     });
 
-    return res.json({success: true,freelancers,});
+    return res.json({success: true,clients,});
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -333,12 +335,15 @@ export const getUserById = async (req: Request, res: Response) => {
       where: { id },
       select: {
         id: true,
+        username: true,
         firstname: true,
         lastname: true,
         email: true,
         avatar: true,
         role: true,
         type: true,
+        rating: true,
+        reviewCount: true,
       },
     });
 
@@ -513,25 +518,29 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
 
 export const SetupProfile = async (req: Request, res: Response) => {
   try {
-    console.log("BODY =>", req.body);
-
-    const { category, skills, rate, expLevel } = req.body;
+    const { category, skills, rate, expLevel, title, bio } = req.body;
 
     if (!req.user) {
-  return res.status(401).json({ message: "Unauthorized" });
-}
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
-const userId = req.user.userId;
+    const userId = req.user.userId;
+    const dataToUpdate: any = {
+      category,
+      skills,
+      expLevel,
+      title,
+      bio,
+    };
+    if (rate !== undefined) {
+      dataToUpdate.rate = rate ? Number(rate) : null;
+    }
+
     const updatedUser = await prisma.user.update({
       where: {
         id: userId,
       },
-      data: {
-        category,
-        skills,
-        rate: Number(rate),
-        expLevel,
-      },
+      data: dataToUpdate,
     });
 
     return res.json({

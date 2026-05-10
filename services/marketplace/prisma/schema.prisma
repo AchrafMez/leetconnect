@@ -1,22 +1,16 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 
 enum JobStatus {
   OPEN
   IN_PROGRESS
+  PAYMENT_PENDING
   COMPLETED
   CLOSED
 }
@@ -33,6 +27,24 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+model Review {
+  id           String   @id @default(uuid())
+  rating       Int
+  comment      String
+  
+  // Who wrote the review
+  fromUserId   String
+  // Who is being reviewed
+  toUserId     String
+  
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+
+  @@unique([fromUserId, jobId])
 }
 
 model Payment {
@@ -64,6 +76,7 @@ model Job {
 
   clientId    String
   proposals   Proposal[]
+  reviews     Review[]
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -84,4 +97,3 @@ model Proposal {
 
   @@unique([freelancerId, jobId])
 }
-

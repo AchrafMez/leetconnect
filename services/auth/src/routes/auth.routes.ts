@@ -47,9 +47,12 @@ router.get('/me', authMiddleware, async (req, res) => {
         location: true,
         website: true,
         title: true,
+        skills: true,
+        rate: true,
+        category: true,
+        expLevel: true,
         createdAt: true,
         twoFAEnabled: true
-        
       }
     });
 
