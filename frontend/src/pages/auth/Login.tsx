@@ -205,7 +205,10 @@ export default function Login() {
                                     >
                                         {loading ? 'Verifying...' : 'Verify'}
                                     </Button>
-
+                                    {/* <form onSubmit={(e) => { e.preventDefault(); handle2FASubmit(); }}>
+                                        <input ... />
+                                        <Button type="submit">Verify</Button>
+                                    </form> */}
                                     <button
                                         type="button"
                                         onClick={() => {

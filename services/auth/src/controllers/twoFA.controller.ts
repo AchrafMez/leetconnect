@@ -15,24 +15,30 @@ export const setup2FA = async (req: Request, res: Response, next: NextFunction) 
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
 
+        if (!user){
+            return res.status(404).json({ error: "user not found"});
+        }
+
+        // Oauth user cannot enable 2fa
+        if (user.oauthProvider || !user.password) {
+            return res.status(403).json({error: "2FA settings are managed by your sign-in provider."});
+        }
+        
         if (user?.twoFAEnabled) {
             return res.status(400).json({ error: "2FA is already enabled" });
         }
         
-        if (user && user.password) {
-            // User has a password
-            if (!password) {
-                return res.status(400).json({ error: "Password is required" });
-            }
-            const isValidPassword = await bcrypt.compare(password, user!.password!);
-            if (!isValidPassword) {
-                return res.status(401).json({ error: "Incorrect password" });
-            }
-        } else {
-            // User is an OAuth user
-            console.log(`[2FA Setup] ${user!.username} is using OAuth, skipping password check.`);
+        // check password
+        if (!password) {
+            return res.status(400).json({ error: "Password is required" });
         }
 
+        const isValidPassword = await bcrypt.compare(password, user!.password!);
+
+        if (!isValidPassword) {
+            return res.status(401).json({ error: "Incorrect password" });
+        }
+    
         // Generate a 32-character secret
         const secret = authenticator.generateSecret();
         
@@ -57,15 +63,27 @@ export const setup2FA = async (req: Request, res: Response, next: NextFunction) 
 // VERIFY & ENABLE
 export const verifyAndEnable2FA = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        
         const authUser = req.user as JwtPayload; 
         const userId = authUser.userId;
         const { code } = req.body;
 
         const user = await prisma.user.findUnique({ 
             where: { id: userId },
-            select: { twoFASecret: true } 
+            select: { twoFASecret: true ,
+                        password: true,
+                        oauthProvider: true,
+                    } 
         });
 
+        if (!user){
+            return res.status(404).json({ error: "user not found"});
+        }
+
+        if (user.oauthProvider || !user.password) {
+            return res.status(403).json({error: "2FA settings are managed by your sign-in provider."});
+        }
+    
         if (!user?.twoFASecret) {
             return res.status(400).json({ error: "2FA setup not started" });
         }
@@ -79,6 +97,7 @@ export const verifyAndEnable2FA = async (req: Request, res: Response, next: Next
         if (!isValid) {
             return res.status(400).json({ error: "Invalid verification code" });
         }
+        
 
         // Officially enable 2FA
         const updatedUser = await prisma.user.update({
@@ -101,30 +120,35 @@ export const disable2FA = async (req: Request, res: Response, next: NextFunction
     const { code , password} = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: userId }} );
+    if (!user){
+        return res.status(404).json({ error: "user not found"});
+    }
 
+
+    // Oauth user cannot enable 2FA
+    if (user.oauthProvider || !user.password) {
+        return res.status(403).json({error: "2FA settings are managed by your sign-in provider."});
+    }
+    
     if (!user?.twoFAEnabled || !user.twoFASecret) {
       return res.status(400).json({ error: "2FA is not enabled" });
     }
 
-    // check for password / remote auth dont need password
-    if (user && user.password) {
-        // User has a password
-        if (!password) {
-            return res.status(400).json({ error: "Password is required" });
-        }
-        const isValidPassword = await bcrypt.compare(password, user!.password!);
-        if (!isValidPassword) {
-            return res.status(401).json({ error: "Incorrect password" });
-        }
-    } else {
-        // User is an OAuth user
-        console.log(`[2FA Setup] ${user.username} is using OAuth, skipping password check.`);
+    // check ifpassword is correct 
+    if (!password) {
+        return res.status(400).json({ error: "Password is required" });
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user!.password!);
+    
+    if (!isValidPassword) {
+        return res.status(401).json({ error: "Incorrect password" });
     }
 
     const isValid = authenticator.verify({
       token: code,
       secret: user.twoFASecret,
-    }); // usage matches otplib
+    });
 
     if (!isValid) {
       return res.status(403).json({ error: "Invalid 2FA code" });

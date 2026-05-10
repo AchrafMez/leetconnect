@@ -20,7 +20,7 @@ export default function ProfileSettings() {
     
     const isOAuthUser = !!user?.oauthProvider; 
     const providerOauth = user?.oauthProvider;
-    console.log(isOAuthUser)
+
     // 2FA
     const [is2FALoading, setIs2FALoading] = useState(false);
     const [TwoFaError, setTwoFaError] = useState<string | null>(null);
@@ -437,7 +437,7 @@ export default function ProfileSettings() {
             return;
         }
         // Only ask for password for local users
-        if (isOAuthUser){
+        if (!isOAuthUser){
             // check password before enabling 2FA
             if (!confirmPassword.trim() || confirmPassword.trim().length < 8) {
                 setTwoFaError("Please enter your password to continue.");
@@ -483,7 +483,7 @@ export default function ProfileSettings() {
         setSuccessMessage(null);
 
         // Only ask for password for local users
-        if (isOAuthUser){
+        if (!isOAuthUser){
             // check password before enabling 2FA
             if (!confirmPassword.trim() || confirmPassword.trim().length < 8) {
                 setTwoFaError("Please enter your password to continue.");
@@ -519,8 +519,6 @@ export default function ProfileSettings() {
         );
     }
 
-    console.log("oauthProvider:", providerOauth);
-    console.log("avatar: [", profileForm.avatar, "]");
     const getDisplayAvatar = (avatarUrl: string | null): string | undefined => {
         if (!avatarUrl) return undefined;
         
@@ -833,6 +831,32 @@ export default function ProfileSettings() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-8">
+                {isOAuthUser ? (
+                    // ONE unified security card for OAuth users
+                    <div className="p-6 rounded-lg border border-border bg-background/50 space-y-4">
+                        <div className="flex items-center gap-2 text-primary">
+                            <Globe className="w-5 h-5" />
+                            <span className="font-medium">
+                                Security managed by {user?.oauthProvider}
+                            </span>
+                        </div>
+
+                        <p className="text-sm text-foreground-muted leading-relaxed">
+                            Since you signed in using <strong>{user?.oauthProvider}</strong>,
+                            your password and two-factor authentication settings are managed
+                            by your identity provider.
+                        </p>
+
+                        <Button
+                            variant="outline"
+                            className="w-full mx-auto flex"
+                            onClick={() => window.open("https://intra.42.fr/securities")}
+                        >
+                            Manage Security in {user?.oauthProvider}
+                            <ExternalLink className="w-4 h-4 ml-2" />
+                        </Button>
+                    </div>
+                ) : (
                     <div className="grid grid-cols-2 gap-8">
                         {/* Change Password */}
                         <div className="space-y-4">
@@ -840,10 +864,10 @@ export default function ProfileSettings() {
                                 <Lock className="w-4 h-4" />
                                 Change Password
                             </h3>
-
+                        
                                 {/* no change password for Oauth users */}
                                 
-                                {isOAuthUser ? (
+                                {/* {isOAuthUser ? (
                                    
                                 <div className="p-4 rounded-lg border border-border bg-background/50 space-y-3">
                                     <div className="flex items-center gap-2 text-primary">
@@ -858,9 +882,9 @@ export default function ProfileSettings() {
                                         Go to {user?.oauthProvider} <ExternalLink className="w-3 h-3 ml-2" />
                                     </Button>
                                 </div>
-                            ) : (
+                            ) : ( */}
 
-                            // local users
+                            {/* // local users */}
                             <div className="space-y-3">
                                 <div className="space-y-2">
                                     <label
@@ -1012,20 +1036,18 @@ export default function ProfileSettings() {
                                     {saving ? 'Updating...' : 'Change Password'}
                                 </Button>
                             </div>
-                            )}
                         </div>
                         
-
                         {/* Two-Factor Authentication */}
                         <div className="space-y-4">
-                        <h3 className="font-semibold text-foreground flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-primary" />
-                            Two-Factor Authentication
-                        </h3>
+                            <h3 className="font-semibold text-foreground flex items-center gap-2">
+                                <Shield className="w-4 h-4 text-primary" />
+                                Two-Factor Authentication
+                            </h3>
 
-                        <p className="text-sm text-foreground-muted">
-                            Add an extra layer of security to your account. We'll ask for a code when you log in on a new device.
-                        </p>
+                            <p className="text-sm text-foreground-muted">
+                                Add an extra layer of security to your account. We'll ask for a code when you log in on a new device.
+                            </p>
 
                         {user?.twoFAEnabled ? (
                             <div className="space-y-4">
@@ -1174,6 +1196,8 @@ export default function ProfileSettings() {
                         )}
                         </div>
                     </div>
+                    
+                    )}
                 </CardContent>
             </Card>
 
