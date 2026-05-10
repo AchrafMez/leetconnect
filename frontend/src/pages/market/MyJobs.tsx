@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { Search, Plus, Loader2 } from "lucide-react";
+import { Search, Plus, Briefcase, Inbox, ChevronRight } from "lucide-react";
 
 const MyJobs: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const MyJobs: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -44,94 +45,104 @@ const MyJobs: React.FC = () => {
           </p>
         </div>
         <Button onClick={() => navigate("/market/post-job")} size="sm">
-          <Plus size={16} className="mr-1" />
+          <Plus size={16} />
           Post Project
         </Button>
       </div>
 
-      {/* Projects Table */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
-            <Input
-              placeholder="Search projects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-sm"
-            />
-          </div>
-        </div>
+      {/* Search */}
+      <div className="relative w-full sm:max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+        <Input
+          placeholder="Search projects..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 h-9 text-sm"
+        />
+      </div>
 
-        <div className="border border-border rounded-lg overflow-hidden bg-card">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Project Name</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Proposals</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground text-right">Posted On</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center">
-                    <div className="flex justify-center">
-                      <Loader2 className="w-5 h-5 text-primary animate-spin" />
+      {/* Projects List */}
+      <Card className="border-border/50 bg-background-elevated shadow-none">
+        <CardContent className="p-3 sm:p-4">
+          {isLoading ? (
+            <div className="space-y-1">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg">
+                  <div className="w-10 h-10 rounded-full bg-muted animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-1/2 bg-muted rounded animate-pulse" />
+                    <div className="h-3 w-1/3 bg-muted rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+                <Inbox size={20} className="text-muted-foreground" />
+              </div>
+              <p className="text-foreground font-medium">No projects found</p>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                You haven't posted any projects yet, or none match your search.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => navigate("/market/post-job")}
+              >
+                <Plus size={14} />
+                Post your first project
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {filteredJobs.map((job: any) => (
+                <div
+                  key={job.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/market/jobs/${job.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate(`/market/jobs/${job.id}`);
+                    }
+                  }}
+                  className="group flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+                      <span className="absolute inset-0 bg-primary/10" />
+                      <Briefcase size={16} className="text-primary relative" />
                     </div>
-                  </td>
-                </tr>
-              ) : filteredJobs.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center">
-                    <p className="text-sm font-medium text-muted-foreground">No projects found</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      You haven't posted any projects yet, or none match your search.
-                    </p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => navigate("/market/post-job")}
-                    >
-                      Post your first project
-                    </Button>
-                  </td>
-                </tr>
-              ) : (
-                filteredJobs.map((job: any) => (
-                  <tr
-                    key={job.id}
-                    className="group hover:bg-muted/20 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/market/jobs/${job.id}`)}
-                  >
-                    <td className="px-4 py-4">
-                      <p className="text-sm font-medium group-hover:text-primary transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                         {job.title}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{job.category}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge status={job.status} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{job.proposals?.length || 0}</span>
-                        <span className="text-xs text-muted-foreground">received</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(job.createdAt).toLocaleDateString()}
+                      <p className="text-xs text-muted-foreground truncate">
+                        {job.category || "—"} · {new Date(job.createdAt).toLocaleDateString()}
                       </p>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <StatusBadge status={job.status} className="hidden sm:inline-flex" />
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-sm font-semibold">{job.proposals?.length || 0}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">received</span>
+                    </div>
+                    <ChevronRight
+                      size={16}
+                      className="text-muted-foreground group-hover:text-foreground transition-colors"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

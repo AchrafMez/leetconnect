@@ -1,4 +1,4 @@
-import Avatar from "@/components/ui/Avatar";
+import Avatar from './Avatar';
 import { usePresence } from "@/context/PresenceProvider";
 
 export interface ConvMember {

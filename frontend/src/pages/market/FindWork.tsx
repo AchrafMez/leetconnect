@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, Briefcase, Inbox, Send } from "lucide-react";
 
 const FindWork: React.FC = () => {
   const navigate = useNavigate();
@@ -70,8 +71,15 @@ const FindWork: React.FC = () => {
     }
   };
 
+  const openProposal = (e: React.MouseEvent, job: any) => {
+    e.stopPropagation();
+    setSelectedJob(job);
+    setSubmitError(null);
+    setShowApply(true);
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-xl font-semibold tracking-tight">Marketplace</h1>
@@ -92,78 +100,143 @@ const FindWork: React.FC = () => {
       </div>
 
       {/* Jobs List */}
-      <div className="space-y-3">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-5 h-5 text-primary animate-spin" />
-          </div>
-        ) : jobs.length === 0 ? (
-          <div className="py-16 text-center border border-dashed border-border rounded-lg">
-            <p className="text-sm text-muted-foreground">No matching projects found</p>
-          </div>
-        ) : (
-          jobs.map((job: any) => (
-            <div
-              key={job.id}
-              className="border border-border rounded-lg p-5"
-            >
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <h2 className="text-sm font-semibold">
-                    {job.title}
-                  </h2>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="text-primary font-medium">{job.category}</span>
-                    <span>·</span>
-                    <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+      {isLoading ? (
+        <Card className="border-border/50 bg-background-elevated shadow-none">
+          <CardContent className="p-3 sm:p-4 space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="p-4 rounded-lg space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-muted animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-1/2 bg-muted rounded animate-pulse" />
+                    <div className="h-3 w-1/3 bg-muted rounded animate-pulse" />
                   </div>
                 </div>
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wider font-semibold">Est. Budget</p>
-                  <div className="flex items-baseline text-base font-bold"><span className="text-primary">$</span><span className="text-foreground">{job.budget}</span></div>
-                </div>
+                <div className="h-3 w-full bg-muted rounded animate-pulse" />
+                <div className="h-3 w-2/3 bg-muted rounded animate-pulse" />
               </div>
-
-              <p className="text-muted-foreground text-xs line-clamp-2 mt-3 leading-relaxed">
-                {job.description}
+            ))}
+          </CardContent>
+        </Card>
+      ) : jobs.length === 0 ? (
+        <Card className="border-border/50 bg-background-elevated shadow-none">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+                <Inbox size={20} className="text-muted-foreground" />
+              </div>
+              <p className="text-foreground font-medium">No matching projects found</p>
+              <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                Try adjusting your search or check back soon for new opportunities.
               </p>
-
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex flex-wrap gap-1.5">
-                  {job.skills?.slice(0, 4).map((skill: string) => (
-                    <Badge key={skill} variant="secondary" className="text-[10px] font-medium px-2 py-0.5 bg-secondary/50 hover:bg-secondary/80 transition-colors">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-                <button
-                  className="px-3 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-medium flex items-center gap-2 transition-colors duration-200"
-                  onClick={() => {
-                    setSelectedJob(job);
-                    setSubmitError(null);
-                    setShowApply(true);
-                  }}
-                >
-                  Submit Proposal
-                </button>
-              </div>
             </div>
-          ))
-        )}
-      </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-3">
+          {jobs.map((job: any) => (
+            <Card
+              key={job.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/market/jobs/${job.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/market/jobs/${job.id}`);
+                }
+              }}
+              className="group border-border/50 bg-background-elevated shadow-none hover:bg-secondary/50 transition-colors cursor-pointer"
+            >
+              <CardContent className="p-4 sm:p-5">
+                {/* Top row: avatar + title + budget */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+                      <span className="absolute inset-0 bg-primary/10" />
+                      <Briefcase size={16} className="text-primary relative" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-sm font-semibold text-foreground truncate transition-colors">
+                        {job.title}
+                      </h2>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                        <span className="text-primary font-medium truncate">{job.category}</span>
+                        <span>·</span>
+                        <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">
+                      Est. Budget
+                    </p>
+                    <div className="flex items-baseline justify-end text-base font-bold">
+                      <span className="text-primary">$</span>
+                      <span className="text-foreground">{job.budget}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-muted-foreground text-xs line-clamp-2 mt-3 leading-relaxed">
+                  {job.description}
+                </p>
+
+                {/* Footer: skills + apply */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+                  <div className="flex flex-wrap gap-1.5 min-w-0">
+                    {job.skills?.slice(0, 4).map((skill: string) => (
+                      <Badge
+                        key={skill}
+                        variant="secondary"
+                        className="text-[10px] font-medium px-2 py-0.5 bg-secondary/50 hover:bg-secondary/80 transition-colors"
+                      >
+                        {skill}
+                      </Badge>
+                    ))}
+                    {job.skills?.length > 4 && (
+                      <span className="text-[10px] text-muted-foreground self-center">
+                        +{job.skills.length - 4}
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={(e) => openProposal(e, job)}
+                    className="w-full sm:w-auto shrink-0"
+                  >
+                    <Send size={14} />
+                    Submit Proposal
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Proposal Dialog */}
       <Dialog open={showApply} onOpenChange={setShowApply}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Submit Proposal</DialogTitle>
-            <DialogDescription>{selectedJob?.title}</DialogDescription>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+                <span className="absolute inset-0 bg-primary/10" />
+                <Send size={16} className="text-primary relative" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle>Submit Proposal</DialogTitle>
+                <DialogDescription className="truncate">{selectedJob?.title}</DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
           <form onSubmit={handleApply} className="space-y-4 pt-2">
             {submitError && (
-              <div className="p-3 text-xs text-destructive flex items-center justify-center bg-destructive/10 border border-destructive/20 rounded-md text-center max-w-sm ml-auto mr-auto">
-                {submitError}
+              <div className="p-3 text-xs text-destructive flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <span>{submitError}</span>
               </div>
             )}
             <div className="space-y-2">
@@ -177,7 +250,7 @@ const FindWork: React.FC = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Budget ($)</Label>
                 <Input
@@ -200,9 +273,24 @@ const FindWork: React.FC = () => {
               </div>
             </div>
 
-            <Button type="submit" disabled={isSubmitting} className="w-full">
-              {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Send Proposal"}
-            </Button>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:flex-1"
+                onClick={() => setShowApply(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="w-full sm:flex-1">
+                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : (
+                  <>
+                    <Send size={14} />
+                    Send Proposal
+                  </>
+                )}
+              </Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,6 @@ const PostJob = () => {
 
   const [skillInput, setSkillInput] = useState("");
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -88,18 +88,17 @@ const PostJob = () => {
     }
   };
 
-  // Get suggested skills for the selected category, filtered by what's already added
   const suggestedSkills = job.category
     ? (categoriesData[job.category] || []).filter((s) => !job.skills.includes(s))
     : [];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 pb-16">
+    <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8 pb-16">
       {/* Header */}
       <div>
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 cursor-pointer"
         >
           <ArrowLeft size={14} />
           Cancel
@@ -111,146 +110,155 @@ const PostJob = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="border border-border rounded-lg p-6 space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Project Title</Label>
-            <Input
-              id="title"
-              name="title"
-              required
-              value={job.title}
-              onChange={handleChange}
-              placeholder="e.g. Build a Modern Fintech Dashboard"
-            />
-          </div>
-
-          {/* Category & Budget */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Custom Category Dropdown */}
+        <Card className="border-border/50 bg-background-elevated shadow-none">
+          <CardContent className="p-4 sm:p-6 space-y-6">
+            {/* Title */}
             <div className="space-y-2">
-              <Label>Category</Label>
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className={`flex items-center justify-between h-9 w-full rounded-lg border px-3 py-1 text-sm shadow-sm transition-all focus:outline-none focus:ring-1 focus:ring-ring ${
-                    job.category
-                      ? "border-input text-foreground"
-                      : "border-input text-muted-foreground"
-                  }`}
-                >
-                  <span className="truncate">{job.category || "Select a category"}</span>
-                  <ChevronDown
-                    size={14}
-                    className={`ml-2 shrink-0 text-muted-foreground transition-transform duration-200 ${
-                      dropdownOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {dropdownOpen && (
-                  <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-lg overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
-                    <div className="max-h-60 overflow-y-auto custom-scrollbar py-1">
-                      {categories.map((cat) => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => selectCategory(cat)}
-                          className={`flex items-center justify-between w-full px-3 py-2 text-sm transition-colors ${
-                            job.category === cat
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "text-foreground hover:bg-muted/50"
-                          }`}
-                        >
-                          <span className="truncate">{cat}</span>
-                          {job.category === cat && <Check size={14} className="shrink-0 text-primary" />}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="budget">Budget (USD)</Label>
+              <Label htmlFor="title">Project Title</Label>
               <Input
-                id="budget"
-                type="number"
-                name="budget"
+                id="title"
+                name="title"
                 required
-                value={job.budget}
+                value={job.title}
                 onChange={handleChange}
-                placeholder="500"
+                placeholder="e.g. Build a Modern Fintech Dashboard"
               />
             </div>
-          </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              name="description"
-              required
-              rows={5}
-              value={job.description}
-              onChange={handleChange}
-              placeholder="Provide a high-level overview of goals and deliverables..."
-            />
-          </div>
-
-          {/* Skills */}
-          <div className="space-y-2">
-            <Label>Required Expertise</Label>
-            <div className="flex flex-wrap gap-2 p-3 border border-input rounded-lg focus-within:ring-1 focus-within:ring-ring transition-all min-h-[42px]">
-              {job.skills.map((skill) => (
-                <Badge
-                  key={skill}
-                  variant="default"
-                  className="flex items-center gap-1"
-                >
-                  {skill}
-                  <button type="button" onClick={() => removeSkill(skill)}>
-                    <X size={12} className="hover:text-destructive transition-colors" />
+            {/* Category & Budget */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className={`flex items-center justify-between h-9 w-full rounded-lg border px-3 py-1 text-sm shadow-sm transition-all focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer ${
+                      job.category
+                        ? "border-input text-foreground"
+                        : "border-input text-muted-foreground"
+                    }`}
+                  >
+                    <span className="truncate">{job.category || "Select a category"}</span>
+                    <ChevronDown
+                      size={14}
+                      className={`ml-2 shrink-0 text-muted-foreground transition-transform duration-200 ${
+                        dropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
-                </Badge>
-              ))}
-              <input
-                type="text"
-                className="flex-1 bg-transparent border-none outline-none text-sm min-w-[120px] placeholder:text-muted-foreground"
-                placeholder="Press Enter to add skills..."
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={addSkill}
-              />
-            </div>
 
-            {/* Suggested Skills */}
-            {suggestedSkills.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">Suggested skills:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {suggestedSkills.map((skill) => (
-                    <button
-                      key={skill}
-                      type="button"
-                      onClick={() => addSuggestedSkill(skill)}
-                      className="px-2.5 py-1 rounded-md text-xs font-medium border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all"
-                    >
-                      + {skill}
-                    </button>
-                  ))}
+                  {dropdownOpen && (
+                    <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-lg overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
+                      <div className="max-h-60 overflow-y-auto custom-scrollbar py-1">
+                        {categories.map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => selectCategory(cat)}
+                            className={`flex items-center justify-between w-full px-3 py-2 text-sm transition-colors cursor-pointer ${
+                              job.category === cat
+                                ? "bg-primary/10 text-primary font-medium"
+                                : "text-foreground hover:bg-secondary/50"
+                            }`}
+                          >
+                            <span className="truncate">{cat}</span>
+                            {job.category === cat && <Check size={14} className="shrink-0 text-primary" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="budget">Budget (USD)</Label>
+                <Input
+                  id="budget"
+                  type="number"
+                  name="budget"
+                  required
+                  value={job.budget}
+                  onChange={handleChange}
+                  placeholder="500"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                required
+                rows={5}
+                value={job.description}
+                onChange={handleChange}
+                placeholder="Provide a high-level overview of goals and deliverables..."
+              />
+            </div>
+
+            {/* Skills */}
+            <div className="space-y-2">
+              <Label>Required Expertise</Label>
+              <div className="flex flex-wrap gap-2 p-3 border border-input rounded-lg focus-within:ring-1 focus-within:ring-ring transition-all min-h-10.5 bg-background">
+                {job.skills.map((skill) => (
+                  <Badge
+                    key={skill}
+                    variant="default"
+                    className="flex items-center gap-1"
+                  >
+                    {skill}
+                    <button type="button" onClick={() => removeSkill(skill)} className="cursor-pointer">
+                      <X size={12} className="hover:text-destructive transition-colors" />
+                    </button>
+                  </Badge>
+                ))}
+                <input
+                  type="text"
+                  className="flex-1 bg-transparent border-none outline-none text-sm min-w-30 placeholder:text-muted-foreground"
+                  placeholder="Press Enter to add skills..."
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={addSkill}
+                />
+              </div>
+
+              {suggestedSkills.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <p className="text-xs text-muted-foreground">Suggested skills:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {suggestedSkills.map((skill) => (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => addSuggestedSkill(skill)}
+                        className="px-2.5 py-1 rounded-md text-xs font-medium border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all cursor-pointer"
+                      >
+                        + {skill}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Submit */}
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting} size="lg">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            onClick={() => navigate(-1)}
+            className="w-full sm:w-auto"
+          >
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting} size="lg" className="w-full sm:w-auto">
             {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : "Post Project"}
           </Button>
         </div>

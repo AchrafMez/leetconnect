@@ -3,11 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuth } from "@/context/userContext";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Plus, Search } from "lucide-react";
+import {
+  Plus,
+  Search,
+  DollarSign,
+  Briefcase,
+  Send,
+  CheckCircle2,
+  ChevronRight,
+  Inbox,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+interface Stat {
+  label: string;
+  value: React.ReactNode;
+  icon: LucideIcon;
+}
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -74,6 +89,36 @@ const Dashboard: React.FC = () => {
     );
   });
 
+  const isFreelancer = user?.type === "FREELANCER";
+
+  const statItems: Stat[] = [
+    {
+      label: isFreelancer ? "Total Earnings" : "Total Spent",
+      value: (
+        <span className="font-semibold tracking-tight">
+          <span className="text-primary">$</span>
+          <span className="text-foreground">{stats.financials.toLocaleString()}</span>
+        </span>
+      ),
+      icon: DollarSign,
+    },
+    {
+      label: isFreelancer ? "Active Contracts" : "Active Projects",
+      value: stats.active,
+      icon: Briefcase,
+    },
+    {
+      label: isFreelancer ? "Sent Proposals" : "Pending Proposals",
+      value: stats.proposals,
+      icon: Send,
+    },
+    {
+      label: "Completed",
+      value: stats.completed,
+      icon: CheckCircle2,
+    },
+  ];
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -93,28 +138,48 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: user?.type === "FREELANCER" ? "Total Earnings" : "Total Spent", value: <span className="font-bold tracking-tight"><span className="text-primary">$</span><span className="text-foreground">{stats.financials.toLocaleString()}</span></span> },
-          { label: user?.type === "FREELANCER" ? "Active Contracts" : "Active Projects", value: stats.active },
-          { label: user?.type === "FREELANCER" ? "Sent Proposals" : "Pending Proposals", value: stats.proposals },
-          { label: "Completed", value: stats.completed },
-        ].map((stat, i) => (
-          <div key={i} className="border border-border rounded-lg p-5">
-            <p className="text-xs font-medium text-muted-foreground mb-1">{stat.label}</p>
-            <h3 className="text-2xl font-semibold tracking-tight">{stat.value}</h3>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        {statItems.map((stat, i) => {
+          const Icon = stat.icon;
+          return (
+            <Card
+              key={i}
+              className="border-border/50 bg-background-elevated shadow-none hover:bg-secondary/50 transition-colors"
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+                    <span className="absolute inset-0 bg-primary/10" />
+                    <Icon size={18} className="text-primary relative" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-muted-foreground truncate">
+                      {stat.label}
+                    </p>
+                    <h3 className="text-lg sm:text-xl font-semibold tracking-tight truncate">
+                      {stat.value}
+                    </h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <Separator />
-
-      {/* Projects Table */}
+      {/* Recent Proposals / Projects */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold">{user?.type === "FREELANCER" ? "Recent Proposals" : "Recent Projects"}</h2>
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-sm font-semibold">
+            {isFreelancer ? "Recent Proposals" : "Recent Projects"}
+          </h2>
           <div className="flex items-center gap-4">
-            <Button variant="link" size="sm" onClick={() => navigate(user?.type === "FREELANCER" ? "/market/proposals" : "/market/my-jobs")} className="text-xs h-auto p-0">
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() => navigate(isFreelancer ? "/market/proposals" : "/market/my-jobs")}
+              className="text-xs h-auto p-0"
+            >
               View All
             </Button>
             <div className="relative w-48 hidden sm:block">
@@ -129,74 +194,94 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="border border-border rounded-lg overflow-hidden">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">{user?.type === "FREELANCER" ? "Job" : "Project"}</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 text-xs font-medium text-muted-foreground">{user?.type === "FREELANCER" ? "Budget" : "Proposals"}</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {isLoading ? (
-                [...Array(3)].map((_, i) => (
-                  <tr key={i}>
-                    <td className="px-4 py-4" colSpan={4}>
-                      <div className="h-4 w-full bg-muted rounded-lg animate-pulse" />
-                    </td>
-                  </tr>
-                ))
-              ) : filteredJobs.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center">
-                    <p className="text-sm font-medium text-muted-foreground">No projects found</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Your marketplace projects will appear here.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                filteredJobs.slice(0, 5).map((item: any) => (
-                  <tr
-                    key={item.id}
-                    className="group hover:bg-muted/20 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/market/jobs/${user?.type === "FREELANCER" ? item.jobId : item.id}`)}
-                  >
-                    <td className="px-4 py-4">
-                      <p className="text-sm font-medium group-hover:text-primary transition-colors">
-                        {user?.type === "FREELANCER" ? item.job?.title || "Unknown Job" : item.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {user?.type === "FREELANCER" ? item.job?.category : item.category}
-                      </p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge status={user?.type === "FREELANCER" && item.status === "ACCEPTED" && item.job ? item.job.status : item.status} />
-                    </td>
-                    <td className="px-4 py-4">
-                      {user?.type === "FREELANCER" ? (
-                        <div className="flex items-baseline text-sm font-bold"><span className="text-primary">$</span><span className="text-foreground">{item.proposedBudget}</span></div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-medium">{item.proposals?.length || 0}</span>
-                          <span className="text-xs text-muted-foreground">received</span>
+        <Card className="border-border/50 bg-background-elevated shadow-none">
+          <CardContent className="p-3 sm:p-4">
+            {isLoading ? (
+              <div className="space-y-1">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-lg">
+                    <div className="w-10 h-10 rounded-full bg-muted animate-pulse shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-1/2 bg-muted rounded animate-pulse" />
+                      <div className="h-3 w-1/3 bg-muted rounded animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+                  <Inbox size={20} className="text-muted-foreground" />
+                </div>
+                <p className="text-foreground font-medium">No {isFreelancer ? "proposals" : "projects"} found</p>
+                <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                  Your marketplace {isFreelancer ? "proposals" : "projects"} will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {filteredJobs.slice(0, 5).map((item: any) => {
+                  const title = isFreelancer ? item.job?.title || "Unknown Job" : item.title;
+                  const category = isFreelancer ? item.job?.category : item.category;
+                  const status = isFreelancer && item.status === "ACCEPTED" && item.job
+                    ? item.job.status
+                    : item.status;
+                  const targetId = isFreelancer ? item.jobId : item.id;
+
+                  return (
+                    <div
+                      key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/market/jobs/${targetId}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          navigate(`/market/jobs/${targetId}`);
+                        }
+                      }}
+                      className="group flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+                          <span className="absolute inset-0 bg-primary/10" />
+                          <Briefcase size={16} className="text-primary relative" />
                         </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <span className="sr-only">View</span>
-                        <Search size={14} />
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                            {title}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {category || "—"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0 pl-2">
+                        <StatusBadge status={status} className="hidden sm:inline-flex" />
+                        {isFreelancer ? (
+                          <div className="flex items-baseline text-sm font-bold">
+                            <span className="text-primary">$</span>
+                            <span className="text-foreground">{item.proposedBudget}</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-sm font-semibold">{item.proposals?.length || 0}</span>
+                            <span className="text-xs text-muted-foreground hidden sm:inline">received</span>
+                          </div>
+                        )}
+                        <ChevronRight
+                          size={16}
+                          className="text-muted-foreground group-hover:text-foreground transition-colors"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

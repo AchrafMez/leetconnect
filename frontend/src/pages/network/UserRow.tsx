@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import Avatar from '@/components/ui/Avatar';
+import Avatar from '../chat/Avatar';
+
 
 interface UserRowProps {
 	name: 		string;
