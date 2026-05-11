@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import Avatar from "@/components/ui/avatar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Search, Star, Loader2 } from "lucide-react";
 import { categoriesData } from "@/assets/assets";
@@ -113,19 +113,14 @@ const Freelancers: React.FC = () => {
               className="overflow-hidden border-border/60 shadow-sm flex flex-col"
             >
               {/* gradient banner */}
-              <div className="h-16 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent" />
+              <div className="h-16 bg-linear-to-r from-primary/20 via-primary/5 to-transparent" />
 
               <CardContent className="p-5 pt-0 relative flex-1">
                 <div className="flex justify-between items-start">
                   {/* avatar */}
                   <div className="-mt-6 relative z-10">
                     <div className="rounded-xl ring-4 ring-card bg-card overflow-hidden">
-                      <Avatar className="h-14 w-14 rounded-lg">
-                        <AvatarImage src={f.avatar || undefined} alt={f.username} />
-                        <AvatarFallback className="font-semibold rounded-lg bg-primary/10 text-primary">
-                          {f.username?.charAt(0)?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <Avatar name={f.username || "?"} image={f.avatar} size="md" shape="rounded" />
                     </div>
                     {f.isOnline && (
                       <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-primary border-2.5 border-card rounded-full shadow-sm" />

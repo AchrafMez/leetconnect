@@ -5,7 +5,7 @@ import {
 	MessageCircle, Settings, Briefcase, MapPin, Calendar,
 } from 'lucide-react';
 import { chatApi, friendApi } from '../../lib/api';
-import Avatar from '../chat/Avatar';
+import Avatar from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePresence } from '@/context/PresenceProvider';
 
@@ -176,8 +176,8 @@ export default function ProfileHeader({
 				<div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
 					{/* avatar */}
 					<div className="shrink-0 mx-auto sm:mx-0">
-						<div className="rounded-full ring-4 ring-background-elevated">
-							<Avatar name={fullName} image={avatar} size="lg" />
+						<div className="rounded-xl ring-4 ring-background-elevated">
+							<Avatar name={fullName} image={avatar} size="lg" shape="rounded" />
 						</div>
 					</div>
 

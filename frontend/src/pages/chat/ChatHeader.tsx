@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import Avatar from "./Avatar";
+import Avatar from "@/components/ui/avatar";
 import { ArrowLeft, Info } from "lucide-react";
 import { usePresence } from "@/context/PresenceProvider";
 
@@ -36,7 +36,7 @@ export default function ChatHeader({
 					className={username ? "cursor-pointer" : ""}
 					onClick={() => username && navigate(`/profile/${username}`)}
 				>
-					<Avatar name={name} image={avatar}/>
+					<Avatar name={name} image={avatar} />
 				</div>
 				<div>
 					<h2 className="text-foreground font-semibold text-sm">{name}</h2>

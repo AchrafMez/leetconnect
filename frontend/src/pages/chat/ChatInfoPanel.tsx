@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, LogOut, UserPlus, Users, ExternalLink, Loader2 } from 'lucide-react';
-import Avatar from './Avatar';
+import Avatar from '@/components/ui/avatar';
 import type { Conversation, ConvMember } from './ConverLayer';
 import { displayName } from './ConverLayer';
 import type { Friend } from '../../lib/api';

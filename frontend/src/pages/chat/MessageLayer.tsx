@@ -1,4 +1,4 @@
-import Avatar from './Avatar';
+import Avatar from "@/components/ui/avatar";
 import { useState } from "react";
 import { Trash2, Check, X } from "lucide-react";
 
