@@ -6,21 +6,12 @@ import morgan from 'morgan';
 import prisma from './config/prisma';
 import healthRoutes from './routes/health';
 import { initEventBus, closeEventBus, errorHandler,  getMetrics,  } from '@leetconnect/shared';
-// import fs from 'fs';
-// import https from 'https';
 import jobsRoutes from "./routes/jobs";
 import proposalsRoutes from "./routes/proposals";
 
 const app = express();
 
 const PORT = 3002;
-
-
-
-// const sslOptions = {
-//   key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-//   cert: fs.readFileSync(process.env.SSL_CERT_PATH as string),
-// };
 
 // middlewares
 app.use(helmet());

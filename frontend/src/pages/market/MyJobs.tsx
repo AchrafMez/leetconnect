@@ -11,16 +11,22 @@ const MyJobs: React.FC = () => {
   const navigate = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchMyJobs = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const data = await api<{ jobs: any[] }>("/market/jobs/my-jobs");
         setJobs(data.jobs || []);
-      } catch (error) {
-        console.error("Failed to fetch jobs:", error);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Failed to fetch jobs");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -49,6 +55,12 @@ const MyJobs: React.FC = () => {
           Post Project
         </Button>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mb-4 whitespace-pre-wrap">
+          <p className="text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative w-full sm:max-w-sm">

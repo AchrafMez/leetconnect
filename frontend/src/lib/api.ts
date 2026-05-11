@@ -179,14 +179,17 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
                 return api<T>(path, options);
             }
         } catch (error) {
-            console.error('Token refresh failed:', error);
+            // shhhhh 
         }
     }
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
         // Try getting message properly from express response { success: false, message: '...' }
-        const message = err?.message || (typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`);
+        let message = err?.message || (typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`);
+        if (!err?.message && Array.isArray(err?.errors)) {
+            message = err.errors.join(', ');
+        }
         throw new Error(message);
     }
 

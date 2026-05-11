@@ -15,6 +15,7 @@ const categories = Object.keys(categoriesData);
 const PostJob = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -71,18 +72,41 @@ const PostJob = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!job.title || !job.category || !job.description || !job.budget || job.skills.length === 0)
+    if (!job.title || !job.category || !job.description || !job.budget || job.skills.length === 0) {
+      setError("Please fill in all required fields.");
       return;
+    }
+
+    if (job.title.length < 5 || job.title.length > 200) {
+      setError("Title must be between 5 and 200 characters.");
+      return;
+    }
+
+    if (job.description.length < 20 || job.description.length > 5000) {
+      setError("Description must be between 20 and 5000 characters.");
+      return;
+    }
+
+    const budgetNum = Number(job.budget);
+    if (!budgetNum || budgetNum <= 0 || budgetNum > 1000000) {
+      setError("Budget must be a positive number up to 1,000,000.");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
+      setError(null);
       await api("/market/jobs", {
         method: "POST",
         body: { ...job, budget: Number(job.budget) },
       });
       navigate("/market/dashboard");
-    } catch (error) {
-      console.error("Failed to post job:", error);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to post job");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -108,6 +132,12 @@ const PostJob = () => {
           Define your project requirements to reach verified experts.
         </p>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mb-4 whitespace-pre-wrap">
+          <p className="text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="border-border/50 bg-background-elevated shadow-none">

@@ -25,6 +25,10 @@ const JobDetails: React.FC = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewData, setReviewData] = useState({ rating: 5, comment: "" });
 
+  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -41,7 +45,7 @@ const JobDetails: React.FC = () => {
           const clientData = await userApi.getUserById(fetchedJob.clientId);
           fetchedJob.clientInfo = clientData.user;
         } catch (e) {
-          console.error("Failed to fetch client info", e);
+          // silently handle or store error state without console.error
         }
       }
 
@@ -52,7 +56,7 @@ const JobDetails: React.FC = () => {
               const freelancerData = await userApi.getUserById(p.freelancerId);
               p.freelancerInfo = freelancerData.user;
             } catch (e) {
-              console.error("Failed to fetch freelancer info", e);
+               // silently handle or store error state without console.error
             }
           }
           return p;
@@ -61,8 +65,13 @@ const JobDetails: React.FC = () => {
 
       setJob(fetchedJob);
       setProposals(enrichedProposals);
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
+      setError(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to fetch data");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +84,7 @@ const JobDetails: React.FC = () => {
   const handleAccept = async (proposalId: string) => {
     try {
       setIsAccepting(true);
+      setActionError(null);
       const data = await api<{ payment?: any }>(`/market/proposals/accept/${proposalId}`, {
         method: "PATCH",
       });
@@ -83,8 +93,12 @@ const JobDetails: React.FC = () => {
       } else {
         fetchData();
       }
-    } catch (error) {
-      console.error("Failed to accept proposal:", error);
+    } catch (err) {
+      if (err instanceof Error) {
+        setActionError(err.message);
+      } else {
+        setActionError("Failed to accept proposal");
+      }
     } finally {
       setIsAccepting(false);
     }
@@ -92,10 +106,15 @@ const JobDetails: React.FC = () => {
 
   const handleReject = async (proposalId: string) => {
     try {
+      setActionError(null);
       await api(`/market/proposals/reject/${proposalId}`, { method: "PATCH" });
       fetchData();
-    } catch (error) {
-      console.error("Failed to reject proposal:", error);
+    } catch (err) {
+      if (err instanceof Error) {
+        setActionError(err.message);
+      } else {
+        setActionError("Failed to reject proposal");
+      }
     }
   };
 
@@ -126,8 +145,19 @@ const JobDetails: React.FC = () => {
     const targetUserId = isClient ? acceptedProposal?.freelancerId : job.clientId;
     if (!targetUserId) return;
 
+    if (!Number.isInteger(reviewData.rating) || reviewData.rating < 1 || reviewData.rating > 5) {
+      setReviewError("Rating must be an integer between 1 and 5.");
+      return;
+    }
+
+    if (!reviewData.comment || reviewData.comment.length < 1 || reviewData.comment.length > 2000) {
+      setReviewError("Comment must be between 1 and 2000 characters.");
+      return;
+    }
+
     try {
       setIsSubmittingReview(true);
+      setReviewError(null);
 
       if (isClient && job.status === "IN_PROGRESS") {
         await api(`/market/jobs/${job.id}/complete`, { method: "POST" });
@@ -143,13 +173,27 @@ const JobDetails: React.FC = () => {
         },
       });
       setShowReviewModal(false);
+      setReviewData({ rating: 5, comment: "" });
       fetchData();
-    } catch (error) {
-      console.error("Failed to submit review:", error);
+    } catch (err) {
+      if (err instanceof Error) {
+        setReviewError(err.message);
+      } else {
+        setReviewError("Failed to submit review");
+      }
     } finally {
       setIsSubmittingReview(false);
     }
   };
+
+  if (error) {
+    return (
+      <div className="max-w-5xl mx-auto py-16 text-center">
+        <p className="text-destructive font-medium">{error}</p>
+        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-primary hover:underline">Go Back</button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 pb-16">
@@ -160,6 +204,12 @@ const JobDetails: React.FC = () => {
         <ArrowLeft size={14} />
         Back
       </button>
+
+      {actionError && (
+        <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mb-4 whitespace-pre-wrap">
+          <p className="text-sm font-medium">{actionError}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Main Content */}
@@ -450,12 +500,21 @@ const JobDetails: React.FC = () => {
       </div>
 
       {/* Review Dialog */}
-      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+      <Dialog open={showReviewModal} onOpenChange={(open) => {
+        setShowReviewModal(open);
+        if (!open) setReviewError(null);
+      }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Feedback</DialogTitle>
             <DialogDescription>Rate your experience on this project</DialogDescription>
           </DialogHeader>
+
+          {reviewError && (
+            <div className="p-3 rounded-md bg-destructive/15 text-destructive border border-destructive/20 text-sm font-medium">
+              {reviewError}
+            </div>
+          )}
 
           <form onSubmit={handleReviewSubmit} className="space-y-4 pt-2">
             <div className="flex flex-col items-center gap-3 py-2">

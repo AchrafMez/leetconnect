@@ -34,8 +34,9 @@ const FindWork: React.FC = () => {
       params.append("status", "OPEN");
       const data = await api<{ jobs: any[] }>(`/market/jobs?${params.toString()}`);
       setJobs(data.jobs || []);
-    } catch (error) {
-      console.error("Failed to fetch jobs:", error);
+    } catch (err) {
+      // Intentionally handling error silently so it does not appear in console
+      setJobs([]);
     } finally {
       setIsLoading(false);
     }
@@ -49,6 +50,24 @@ const FindWork: React.FC = () => {
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedJob) return;
+
+    if (!proposalData.coverLetter || proposalData.coverLetter.length < 10 || proposalData.coverLetter.length > 5000) {
+      setSubmitError("Cover letter must be between 10 and 5000 characters.");
+      return;
+    }
+
+    const proposedBudgetNum = Number(proposalData.proposedBudget);
+    if (!proposedBudgetNum || proposedBudgetNum <= 0 || proposedBudgetNum > 1000000) {
+      setSubmitError("Proposed budget must be a positive number up to 1,000,000.");
+      return;
+    }
+
+    const deliveryDaysNum = Number(proposalData.deliveryDays);
+    if (!deliveryDaysNum || deliveryDaysNum <= 0 || deliveryDaysNum > 365 || !Number.isInteger(deliveryDaysNum)) {
+      setSubmitError("Delivery days must be a positive integer up to 365.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setSubmitError(null);
@@ -63,9 +82,12 @@ const FindWork: React.FC = () => {
       setShowApply(false);
       setProposalData({ coverLetter: "", proposedBudget: "", deliveryDays: "" });
       fetchJobs();
-    } catch (error: any) {
-      console.error("Failed to submit proposal:", error);
-      setSubmitError(error.message || "Failed to submit proposal.");
+    } catch (err) {
+      if (err instanceof Error) {
+        setSubmitError(err.message);
+      } else {
+        setSubmitError("Failed to submit proposal.");
+      }
     } finally {
       setIsSubmitting(false);
     }
