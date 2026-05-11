@@ -26,6 +26,13 @@ model User {
   // Presence state
   isOnline Boolean @default(false)
 
+  skills      String[]
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  category    String[]
+  rate        Float?
+  expLevel    String?
+
   // Security & 2FA
   twoFASecret  String?
   twoFAEnabled Boolean @default(false)

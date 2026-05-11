@@ -6,10 +6,12 @@ import { useAuth } from '@/context/userContext';
 import Navbar from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Eye, EyeOff } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function Register() {
     const navigate = useNavigate();
     const auth = useAuth();
+    const {user} = useAuth()
     const { register: registerUser } = auth || { register: async () => { } };
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

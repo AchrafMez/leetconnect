@@ -7,7 +7,7 @@ import passport from 'passport';
 import './lib/passport';
 
 // shared resources
-import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal} from '@leetconnect/shared';
+import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal, subscribeToEvents, EVENTS} from '@leetconnect/shared';
 
 import cookieParser from 'cookie-parser'; // to store tokens in cookies
 import prisma from './lib/prisma';
@@ -98,6 +98,38 @@ async function start() {
     await prisma.$connect(); // connect with postgres database
     console.log('auth db connected');
     initEventBus(process.env.REDIS_URL); // conntect Auth service to Redis ??
+    
+    // Subscribe to marketplace review events
+    subscribeToEvents(EVENTS.REVIEW_SUBMITTED, async (channel, message: any) => {
+      try {
+        const { userId, rating: newRating } = message.data;
+        if (!userId || newRating === undefined) return;
+
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { rating: true, reviewCount: true }
+        });
+
+        if (user) {
+          const currentCount = user.reviewCount || 0;
+          const currentRating = user.rating || 0;
+          const updatedCount = currentCount + 1;
+          const updatedRating = ((currentRating * currentCount) + newRating) / updatedCount;
+
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              rating: updatedRating,
+              reviewCount: updatedCount
+            }
+          });
+          console.log(`Updated rating for user ${userId}: ${updatedRating.toFixed(2)} (${updatedCount} reviews)`);
+        }
+      } catch (err) {
+        console.error('Failed to update aggregated rating:', err);
+      }
+    });
+
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`auth service running on port ${PORT}`);
     });

@@ -284,6 +284,105 @@ export const logout = async (req: Request, res: Response) => {
 };
 
 
+export const getAllFreelancers = async (_req: Request, res: Response) => {
+  try {
+    const freelancers = await prisma.user.findMany({
+      where: {
+        type: "FREELANCER",
+      },
+      orderBy: [
+        { rating: "desc" },
+        { reviewCount: "desc" },
+        { createdAt: "desc" }
+      ],
+    });
+
+    return res.json({success: true,freelancers,});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+    });
+  }
+};
+
+
+export const getAllClients = async (_req: Request, res: Response) => {
+  try {
+    const clients = await prisma.user.findMany({
+      where: {
+        type: "CLIENT",
+      },orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.json({success: true,clients,});
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur serveur",
+    });
+  }
+};
+
+
+
+export const getUserById = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+
+  
+    if (typeof id !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid user id",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        firstname: true,
+        lastname: true,
+        email: true,
+        avatar: true,
+        role: true,
+        type: true,
+        rating: true,
+        reviewCount: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+
+  } catch (error: any) {
+    console.error("GET USER BY ID ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+
+
 // user settings profile method
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -443,4 +542,48 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
     } catch (error) {
         next(error);
     }
+};
+
+export const SetupProfile = async (req: Request, res: Response) => {
+  try {
+    const { category, skills, rate, expLevel, title, bio } = req.body;
+
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const authUser = req.user as JwtPayload;
+    const userId = authUser.userId;
+    const dataToUpdate: any = {
+      category,
+      skills,
+      expLevel,
+      title,
+      bio,
+    };
+    if (rate !== undefined) {
+      dataToUpdate.rate = rate ? Number(rate) : null;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: dataToUpdate,
+    });
+
+    return res.json({
+      success: true,
+      user: updatedUser,
+    });
+
+  } catch (error) {
+    console.log("SETUP ERROR =>", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error,
+    });
+  }
 };
