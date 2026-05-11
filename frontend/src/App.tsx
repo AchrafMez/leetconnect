@@ -57,12 +57,15 @@ export default function App() {
 
             <Route path="/messages" element={<Messages />} />
             <Route path="/chat" element={<Navigate to="/messages" replace />} />
-            <Route path="/admin" element={<Admin />} />
             <Route path="/settings/profile" element={<ProfileSettingsPage />} />
             <Route path="/network" element={<NetworkPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/:username" element={<ProfilePage />} />
           </Route>
+
+          {/*Admin Area*/}
+         <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/*" element={<Admin />} />
         </Route>
       </Routes>
     </>
