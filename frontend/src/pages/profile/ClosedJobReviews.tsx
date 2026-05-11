@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Star, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Avatar from "@/components/ui/avatar";
 import { reviewsApi, type Review } from "@/lib/api";
 
 interface Props {
@@ -41,19 +41,20 @@ export default function ClosedJobReviews({ userId, interval = 6000 }: Props) {
 	}, [paused, index, reviews.length, interval]);
 
 	if (loading) return <ReviewsSkeleton />;
-	if (!reviews.length) return null;
+	const first = reviews[0];
+	if (!first) return null;
 
 	if (reviews.length === 1) {
 		return (
 			<section aria-label="Closed job reviews" className="space-y-3">
 				<Header count={1} />
-				<ReviewCard review={reviews[0]} />
+				<ReviewCard review={first} />
 			</section>
 		);
 	}
 
 	// append a clone of the first review
-	const extended = [...reviews, reviews[0]];
+	const extended = [...reviews, first];
 	const total = extended.length;
 
 	const handleTransitionEnd = () => {
@@ -144,19 +145,12 @@ function ReviewCard({ review }: { review: Review }) {
 		review.fromUser?.username ||
 		"Anonymous";
 
-	const initial = (author[0] || "?").toUpperCase();
-
 	return (
 		<Card className="w-full border-border/50 bg-background-elevated shadow-none">
 			<CardContent className="p-5 sm:p-6 space-y-4">
 				<div className="flex items-center justify-between gap-3">
 					<div className="flex items-center gap-3 min-w-0">
-						<Avatar className="h-10 w-10 shrink-0">
-							<AvatarImage src={review.fromUser?.avatar || undefined} alt={author} />
-							<AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-								{initial}
-							</AvatarFallback>
-						</Avatar>
+						<Avatar name={author} image={review.fromUser?.avatar} size="sm" />
 						<div className="min-w-0">
 							<p className="text-sm font-semibold truncate">{author}</p>
 							<p className="text-xs text-muted-foreground truncate">

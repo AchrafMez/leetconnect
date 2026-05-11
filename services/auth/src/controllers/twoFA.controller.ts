@@ -171,8 +171,22 @@ export const login2FA = async (req: Request, res: Response, next: NextFunction) 
                 id: true,
                 email: true,
                 username: true,
+                firstname: true,
+                lastname: true,
+                avatar: true,
                 role: true,
                 type: true,
+                isOnline: true,
+                bio: true,
+                location: true,
+                website: true,
+                title: true,
+                skills: true,
+                rate: true,
+                category: true,
+                expLevel: true,
+                createdAt: true,
+                oauthProvider: true,
                 twoFASecret: true,
                 twoFAEnabled: true,
             }
@@ -210,7 +224,28 @@ export const login2FA = async (req: Request, res: Response, next: NextFunction) 
         return res.status(200).json({
             message: `Welcome Back ${user.username}!`,
             accessToken,
-            user: { id: user.id, email: user.email, username: user.username, role: user.role, type: user.type }
+            user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                avatar: user.avatar,
+                role: user.role,
+                type: user.type,
+                isOnline: user.isOnline,
+                bio: user.bio,
+                location: user.location,
+                website: user.website,
+                title: user.title,
+                skills: user.skills,
+                rate: user.rate,
+                category: user.category,
+                expLevel: user.expLevel,
+                createdAt: user.createdAt,
+                twoFAEnabled: user.twoFAEnabled,
+                oauthProvider: user.oauthProvider,
+            }
         });
 
     } catch (error) {

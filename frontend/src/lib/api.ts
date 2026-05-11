@@ -572,7 +572,7 @@ export const adminApi = {
 export interface Review {
   id:         string;
   rating:     number;
-  coment:     string;
+  comment:    string;
   fromUserId: string;
   toUserId:   string;
   jobId:      string;

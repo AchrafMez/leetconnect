@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Avatar from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ArrowLeft, Star, Loader2, Inbox } from "lucide-react";
@@ -271,9 +271,6 @@ const JobDetails: React.FC = () => {
                       ? `${p.freelancerInfo.firstname || ""} ${p.freelancerInfo.lastname || ""}`.trim() ||
                         p.freelancerInfo.username
                       : `Freelancer #${p.freelancerId?.substring(0, 5)}`;
-                    const initial = p.freelancerInfo
-                      ? (p.freelancerInfo.firstname?.[0] || p.freelancerInfo.username?.[0] || "F").toUpperCase()
-                      : p.freelancerId?.substring(0, 2).toUpperCase();
                     const goToProfile = (e: React.MouseEvent) => {
                       e.stopPropagation();
                       if (p.freelancerInfo?.username) navigate(`/profile/${p.freelancerInfo.username}`);
@@ -288,15 +285,13 @@ const JobDetails: React.FC = () => {
                           {/* Header */}
                           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                             <div className="flex items-start gap-3 min-w-0">
-                              <Avatar
-                                className="h-10 w-10 cursor-pointer shrink-0"
+                              <button
+                                type="button"
                                 onClick={goToProfile}
+                                className="shrink-0 cursor-pointer"
                               >
-                                <AvatarImage src={p.freelancerInfo?.avatar || undefined} alt={p.freelancerInfo?.username} />
-                                <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-                                  {initial}
-                                </AvatarFallback>
-                              </Avatar>
+                                <Avatar name={fullName} image={p.freelancerInfo?.avatar} size="sm" />
+                              </button>
                               <div className="min-w-0">
                                 <h4
                                   className="text-sm font-semibold cursor-pointer hover:underline truncate"
@@ -448,17 +443,22 @@ const JobDetails: React.FC = () => {
             <CardContent className="p-5 space-y-3">
               <p className="text-xs font-medium text-muted-foreground">Client</p>
               <div className="flex items-center gap-3">
-                <Avatar
-                  className="h-10 w-10 cursor-pointer shrink-0"
+                <button
+                  type="button"
                   onClick={() => job.clientInfo?.username && navigate(`/profile/${job.clientInfo.username}`)}
+                  className="shrink-0 cursor-pointer"
                 >
-                  <AvatarImage src={job.clientInfo?.avatar || undefined} alt={job.clientInfo?.username} />
-                  <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-                    {job.clientInfo
-                      ? (job.clientInfo.firstname?.[0] || job.clientInfo.username?.[0] || "C").toUpperCase()
-                      : job.clientId?.substring(0, 1).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                  <Avatar
+                    name={
+                      job.clientInfo
+                        ? `${job.clientInfo.firstname || ""} ${job.clientInfo.lastname || ""}`.trim() ||
+                          job.clientInfo.username
+                        : `Client ${job.clientId?.substring(0, 1) || "C"}`
+                    }
+                    image={job.clientInfo?.avatar}
+                    size="sm"
+                  />
+                </button>
                 <div className="min-w-0">
                   <p
                     className="text-xs font-semibold cursor-pointer hover:underline truncate"

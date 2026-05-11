@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Avatar from "@/components/ui/avatar";
 
 const clientMenuItems = [
   { name: "Overview", path: "/market/dashboard", icon: LayoutDashboard, desc: "View your account activity and stats" },
@@ -141,10 +141,7 @@ export default function Navbar() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="p-2 rounded-lg hover:bg-accent transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={user?.avatar || "/avatars/default.png"} alt={user?.username} />
-                        <AvatarFallback className="text-xs font-bold">{user?.username?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
-                      </Avatar>
+                      <Avatar name={user?.username || "U"} image={user?.avatar} size="xs" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
