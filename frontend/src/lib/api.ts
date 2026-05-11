@@ -565,3 +565,22 @@ export const adminApi = {
 
   health: () => api<HealthResponse>('/admin/health'),
 };
+
+export interface Review {
+  id:         string;
+  rating:     number;
+  coment:     string;
+  fromUserId: string;
+  toUserId:   string;
+  jobId:      string;
+  job:        { title: string; category: string; status: string };
+  fromUser?:  { username: string; avatar?: string | null; firstname?: string | null; lastname?: string | null };
+  createdAt:  string;
+}
+
+export const reviewsApi = {
+  getForUser: (userId: string, opts?: { closedOnly?: boolean }) =>
+      api<{ success: boolean; reviews: Review[] }>(
+        `/market/jobs/reviews/user/${userId}${opts?.closedOnly ? "?closedOnly=true" : ""}`
+      ),
+};
