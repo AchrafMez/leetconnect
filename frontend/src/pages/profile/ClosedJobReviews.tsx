@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Star, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Avatar from "@/components/ui/avatar";
+import Avatar from "@/components/ui/Avatar";
 import { reviewsApi, type Review } from "@/lib/api";
 
 interface Props {

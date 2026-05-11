@@ -2,7 +2,7 @@ import { useState } from "react";
 import { chatApi } from "../../lib/api";
 import type { Friend } from "../../lib/api";
 import type { Conversation } from "./ConverLayer";
-import Avatar from "@/components/ui/avatar";
+import Avatar from "@/components/ui/Avatar";
 
 interface CreateGroupChatProps {
 	friends: Friend[];

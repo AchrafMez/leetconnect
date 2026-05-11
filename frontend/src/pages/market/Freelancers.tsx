@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import Avatar from "@/components/ui/avatar";
+import Avatar from "@/components/ui/Avatar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Search, Star, Loader2, UserSearch } from "lucide-react";
 import { categoriesData } from "@/assets/assets";
