@@ -1,15 +1,16 @@
 import express, { Router } from "express"
 import { deleteUser, editUserRole, editUserStatus, getAllUsers, getUser } from "../controllers/users.controller";
 import { validateReqeust } from "../middleware/validateRequest";
-import { updateRoleSchema, updateStatusSchema } from "../validators/users";
+import { getUsersQuerySchema, updateRoleSchema, updateStatusSchema, uuidSchema } from "../validators/users";
+import { requireRole } from "@leetconnect/shared";
 
 const router: Router = express.Router();
 
-router.get('/', getAllUsers);
-router.get('/:id', getUser);
-router.patch('/:id/role', validateReqeust(updateRoleSchema), editUserRole);
-router.patch('/:id/status', validateReqeust(updateStatusSchema), editUserStatus);
-router.delete('/:id', deleteUser);
+router.get('/', requireRole('ADMIN', 'MODERATOR'), validateReqeust({ query: getUsersQuerySchema}), getAllUsers);
+router.get('/:id', requireRole('ADMIN'), validateReqeust({ params: uuidSchema}), getUser);
+router.patch('/:id/role', requireRole('ADMIN') ,validateReqeust({ params: uuidSchema, body: updateRoleSchema}), editUserRole);
+router.patch('/:id/status', requireRole('ADMIN'), validateReqeust({ params: uuidSchema, body: updateStatusSchema}), editUserStatus);
+router.delete('/:id', requireRole('ADMIN'), validateReqeust({ params: uuidSchema}), deleteUser);
 
 export default router;
 

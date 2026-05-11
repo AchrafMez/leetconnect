@@ -1,24 +1,31 @@
 import express from "express"
 import cors from "cors"
-import dotenv from "dotenv"
+import helmet from 'helmet'
 import usersRoutes from "./routes/users.route"
 import jobsRoutes from "./routes/jobs.route"
 import rolesRoutes from "./routes/roles.route"
 import healthRoutes from "./routes/health"
-import { connectDb, disconnectDb, prisma } from './config/prisma'
+import { connectDb, disconnectDb } from './config/prisma'
 import { Server } from "http"
-import { authMiddleware, subscribeToEvents, AUTH_EVENTS, initEventBus } from '@leetconnect/shared';
+import { authMiddleware, initEventBus } from '@leetconnect/shared';
 import { errorHandler } from "./errorHandler"
+import { RegisterEventHandlers } from "./events"
 
-// dotenv.config();
 connectDb();
 initEventBus();
+RegisterEventHandlers();
 
 const app = express();
 const PORT = 3005;
 
-// app.use(cors());
+const corsOpts = {
+  origin: process.env.FRONTEND_URL || 'https://localhost:5173', // Only allows requests from  React frontend
+  credentials: true // Required to accept cookies from the frontend
+}
+
+app.use(cors(corsOpts));
 app.use(express.json());
+app.use(helmet());
 
 // Register health route before auth middleware so healthchecks don't need a token
 app.use('/api/admin', healthRoutes);
@@ -35,49 +42,6 @@ const server: Server = app.listen(PORT, () => {
 	console.log(`Admin listening on PORT ${PORT}...`);
 })
 
-async function startEventListener() {
-	subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, async(channel, message: any) => {
-		try {
-			const { id, username, avatar, role, email, firstname, lastname, status, createdAt } = message.data;
-
-			await prisma.user.upsert({
-				where: { id: id },
-				update: {
-					username: username, avatar: avatar, firstname: firstname,
-					lastname: lastname, status: status, role: role
-				},
-				create: {
-          id: id, username: username, avatar: avatar, role: role,
-					email: email, firstname: firstname, lastname: lastname,
-					status: status, createdAt: createdAt
-        }
-			});
-
-			console.log(`Synced user ${username} to Admin DB`);
-		} catch (error) {
-			console.error(`Sync failed for user:`, error);
-		}
-	})
-	subscribeToEvents(AUTH_EVENTS.USER_UPDATED, async(channel, message: any) => {
-		try {
-			const { id, username, avatar, email, firstname, lastname } = message.data;
-	
-			await prisma.user.update({
-				where: { id: id },
-				data: { username, avatar, firstname, lastname, email},
-				select: {
-					id: true, email: true, firstname: true, lastname: true, avatar: true, username: true
-				}
-			});
-			
-			console.log(`Synced user ${username} to Admin DB`);
-		} catch (error) {
-			console.error(`Sync failed for user:`, error);
-		}
-	})
-}
-
-startEventListener();
 
 process.on('unhandledRejection', (err) => {
 	console.error('Unhadled Rejection', err);

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma";
-import { ReasonPhrases, StatusCodes } from "http-status-codes";
+import { StatusCodes } from "http-status-codes";
 
 const ROLE_CONFIG = {
   ADMIN: {
@@ -30,11 +30,6 @@ const ROLE_CONFIG = {
 };
 
 export const getRoles = async (req: Request, res: Response, next: NextFunction) => {
-	const user = req.user;
-
-	if(user?.role !== 'ADMIN')
-		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
-
 	try {
 		const roleCounts = await prisma.user.groupBy({
 			by: ['role'],
@@ -56,8 +51,7 @@ export const getRoles = async (req: Request, res: Response, next: NextFunction) 
 
 		return res.status(StatusCodes.OK).json(roles);
 	} catch (error) {
-		console.error('[getPermissionConfig]: ', error);
+		console.error('[getRoles]: ', error);
 		next(error);
-		// return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch roles'});
 	}
 }
