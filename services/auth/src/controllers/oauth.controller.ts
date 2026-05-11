@@ -27,12 +27,13 @@ export const handleOAuthSuccess = async (req: Request, res: Response, next: Next
 
         //  Redirect back to Frontend
         // res.redirect(`https://localhost/dashboard`);
-        const currentHost = req.get('host'); // e.g. "10.12.2.1"
-        const protocol = req.protocol;       // e.g. "https"
+
+        // const currentHost = req.get('host'); // e.g. "10.12.2.1"
+        // const protocol = req.protocol;       // e.g. "https"
         
-        const frontendUrl = `${protocol}://${currentHost}`;
+        // const frontendUrl = `${protocol}://${currentHost}`;
     
-        res.redirect(`${frontendUrl}/dashboard`); // change to /freedashboard later
+        res.redirect(`${process.env.FRONTEND_URL || 'https://localhost'}/dashboard`); // change to /freedashboard later
     } catch (error) {
         next(error);
     }

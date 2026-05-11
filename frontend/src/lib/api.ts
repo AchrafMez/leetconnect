@@ -127,6 +127,7 @@ export interface RegisterRequest {
 
 export interface AuthResponse {
     accessToken: string;
+    accessToken: string;
     user: User;
     requires2FA?: boolean; // If true, frontend must show the 6-digit code input
     userId?: string;       // Needed to identify which user is finishing 2FA login
@@ -163,7 +164,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     path.includes('/auth/2fa/disable') ||
     path.includes('/auth/refresh') ||
     path.includes('/auth/change-password');
-
+    
     // If token expired (401) refresh to get a new one
     if (res.status === 401 && !skipRefresh) {
         try {
@@ -171,7 +172,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
                 method: 'POST',
                 credentials: 'include'
             });
-
+            
             if (refreshRes.ok) {
                 const data = await refreshRes.json();
                 setAccessToken(data.accessToken);
@@ -185,6 +186,11 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+        if (res.status == 403 && err.error == 'Account suspended'){
+            setAccessToken(null);
+            throw new Error('Account suspended');
+        }
+
         // Try getting message properly from express response { success: false, message: '...' }
         let message = err?.message || (typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`);
         if (!err?.message && Array.isArray(err?.errors)) {
