@@ -49,8 +49,8 @@ export default function App() {
             <Route path="/network" element={<NetworkPage />} />
           </Route>
           {/*Admin Area*/}
-          <Route path="/admin/*" element={<Admin />} />
         </Route>
+        <Route path="/admin/*" element={<Admin />} />
       </Routes>
     </>
   );
