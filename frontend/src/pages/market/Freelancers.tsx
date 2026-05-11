@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import Avatar from "@/components/ui/avatar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Search, Star, Loader2 } from "lucide-react";
+import { Search, Star, Loader2, UserSearch } from "lucide-react";
 import { categoriesData } from "@/assets/assets";
 
 const categories = ["All", ...Object.keys(categoriesData)];
@@ -103,9 +103,22 @@ const Freelancers: React.FC = () => {
             <Loader2 className="w-5 h-5 text-primary animate-spin" />
           </div>
         ) : freelancers.length === 0 ? (
-          <div className="col-span-full py-16 text-center border border-dashed border-border rounded-lg">
-            <p className="text-sm text-muted-foreground">No experts found matching your criteria</p>
-          </div>
+          <Card className="col-span-full overflow-hidden border-border/60 shadow-sm">
+            <div className="h-16 bg-linear-to-r from-primary/20 via-primary/5 to-transparent" />
+            <CardContent className="p-5 pt-0 relative">
+              <div className="-mt-6 relative z-10 mb-3">
+                <div className="rounded-xl ring-4 ring-card bg-card w-12 h-12 flex items-center justify-center">
+                  <UserSearch size={20} className="text-primary" />
+                </div>
+              </div>
+              <h3 className="text-base font-bold text-foreground">
+                No experts found
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                No experts match your criteria. Try adjusting your search or selecting a different category.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
           freelancers.map((f: any) => (
             <Card
@@ -139,7 +152,7 @@ const Freelancers: React.FC = () => {
 
                 <div className="mt-3">
                   <h3 className="text-base font-bold text-foreground line-clamp-1">
-                    {f.username}
+                    {[f.firstname, f.lastname].filter(Boolean).join(" ") || f.username}
                   </h3>
                   <p className="text-xs text-muted-foreground font-medium mt-0.5 line-clamp-1">
                     {f.title || "Professional"}

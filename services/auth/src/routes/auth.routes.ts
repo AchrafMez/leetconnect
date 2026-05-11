@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, refresh, logout, getUserById, getAllFreelancers, getAllClients, SetupProfile, changePassword} from '../controllers/auth.controller';
+import { register, login, refresh, logout, getUserById, getAllFreelancers, getAllClients, SetupProfile, changePassword, updateProfile} from '../controllers/auth.controller';
 import { registerValidator, loginValidator } from '../validators/auth.validator';
 import { validate } from '../middlewares/validate';
 import { authMiddleware } from '@leetconnect/shared';
@@ -27,6 +27,7 @@ router.get("/users/:id",  getUserById);
 router.get("/freelancers", getAllFreelancers);
 router.get("/clients", getAllClients);
 router.post('/setup', authMiddleware, SetupProfile)
+router.patch('/settings', authMiddleware, updateProfileValidator, validate, updateProfile);
 // rate limit for changing password
 const changePasswordLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
