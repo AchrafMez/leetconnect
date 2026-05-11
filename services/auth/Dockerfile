@@ -12,6 +12,7 @@ COPY services/auth/package.json ./
 RUN npm pkg set dependencies.@leetconnect/shared=file:../shared
 RUN npm install
 COPY services/auth/ ./
+RUN DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres" npx prisma generate --schema prisma/schema.prisma
 RUN npm run build
 
 EXPOSE 3001

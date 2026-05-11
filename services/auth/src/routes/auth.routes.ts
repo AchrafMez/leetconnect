@@ -111,6 +111,7 @@ router.get('/me', authMiddleware, async (req, res) => {
         createdAt: true,
         twoFAEnabled: true,
         oauthProvider: true,
+        status: true, // for admin
       }
     });
 
