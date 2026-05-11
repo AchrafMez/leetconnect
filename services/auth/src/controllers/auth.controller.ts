@@ -176,6 +176,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             return res.status(401).json({ error: "Invalid email or password" }); // prevents hackers from fishing for emails to see who has an account on the website
         }
 
+        if (user.status === 'suspended') {
+            return res.status(403).json({ error: 'Account suspended' });
+        }
+
         // check correct password
         if (!user.password) { // user might not have password if he using Aouth
             return res.status(401).json({ message: "Invalid credentials" });
@@ -241,6 +245,15 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
             where: { token: tokenFromCookie },
             include: { user: true } // get user info
         });
+
+        if (storedToken && storedToken.user.status === 'suspended') {
+            await prisma.refreshToken.update({
+              where: { token: tokenFromCookie },
+              data: { revoked: true }  // revoke session and make it invalid
+            });
+
+            return res.status(403).json({ error: 'Account suspended' });
+        }
 
         // Security Checks => does token exist in db? | is the user session canceled? | did the refresh token expire?
         if (!storedToken || storedToken.revoked || storedToken.expiresAt < new Date()) {

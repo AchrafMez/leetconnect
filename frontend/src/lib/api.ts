@@ -180,6 +180,11 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+        if (res.status == 403 && err.error == 'Account suspended'){
+            setAccessToken(null);
+            throw new Error('Account suspended');
+        }
+
         const message = typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`;
         throw new Error(message);
     }

@@ -199,8 +199,13 @@ export const login2FA = async (req: Request, res: Response, next: NextFunction) 
                 type: true,
                 twoFASecret: true,
                 twoFAEnabled: true,
+                status: true,
             }
         });
+
+        if (user && user.status === 'suspended') {
+            return res.status(403).json({ error: 'Account suspended' });
+        }
 
         if (!user || !user.twoFAEnabled || !user.twoFASecret) {
             return res.status(400).json({ error: '2FA not set up for this account' });

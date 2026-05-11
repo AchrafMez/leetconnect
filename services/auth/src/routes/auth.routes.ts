@@ -119,6 +119,10 @@ router.get('/me', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    if (user.status === 'suspended') {
+        return res.status(403).json({ error: 'Account suspended' });
+    }
+    
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user data' });
