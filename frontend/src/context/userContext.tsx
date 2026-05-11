@@ -19,7 +19,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // This populates the _accessToken in api.ts RAM
         const refreshData = await authApi.refresh(); 
         setAccessToken(refreshData.accessToken);
+
         const response = await api<any>('/auth/me');
         setUser(response.data || response);
       } catch (e) {
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (data: LoginRequest): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
      const res = await api<{ 
-      token?: string;
+      accessToken?: string;
       user?: User;
       requires2FA?: boolean;
       tempToken?: string;
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     // normal login
-    setAccessToken(res.token!);
+    setAccessToken(res.accessToken!);
     setUser(res.user!);
    
     return { requires2FA: false, user: res.user!};
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login2FA = async (tempToken: string, code: string): Promise<{user: User;}> => {
     const res = await authApi.login2FA(tempToken, code);
-    setAccessToken(res.token);
+    setAccessToken(res.accessToken);
     setUser(res.user!);
     return {user: res.user! }
   };

@@ -121,7 +121,7 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
-    token: string;
+    accessToken: string;
     user: User;
     requires2FA?: boolean; // If true, frontend must show the 6-digit code input
     userId?: string;       // Needed to identify which user is finishing 2FA login
@@ -158,7 +158,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     path.includes('/auth/2fa/disable') ||
     path.includes('/auth/refresh') ||
     path.includes('/auth/change-password');
-
+    
     // If token expired (401) refresh to get a new one
     if (res.status === 401 && !skipRefresh) {
         try {
@@ -166,7 +166,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
                 method: 'POST',
                 credentials: 'include'
             });
-
+            
             if (refreshRes.ok) {
                 const data = await refreshRes.json();
                 setAccessToken(data.accessToken);
