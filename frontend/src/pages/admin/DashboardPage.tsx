@@ -1,6 +1,6 @@
 import { useAuth } from '../../context/userContext';
 import { CanAccess } from '../../components/CanAccess';
-import { RoleBadge, StatusBadge } from '../../components/ui/RoleBadge';
+import { JobStatusBadge, RoleBadge, StatusBadge } from '../../components/ui/RoleBadge';
 import type { Role, Job } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { HiOutlineBookmarkSlash,
@@ -14,12 +14,6 @@ import { Spin } from '@/components/ui/Spin';
 import { StatCard } from '@/components/ui/StatCard';
 
 const ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
-
-const JOB_STATUS_STYLES = {
-  active: { badge: 'text-primary border-primary/20', dot: 'bg-primary' },
-  closed: { badge: 'text-muted-foreground border-border', dot: 'bg-muted-foreground' },
-  flagged: { badge: 'text-destructive border-destructive/20', dot: 'bg-destructive' },
-} as const;
 
 export const DashboardPage = () => {
   const { user } = useAuth();
@@ -201,7 +195,6 @@ export const DashboardPage = () => {
             </thead>
             <tbody className="divide-y divide-border">
               {recentJobs.map(job => {
-                const s = JOB_STATUS_STYLES[job.status];
                 const budget = job.budgetType === 'hourly' ? `$${job.budget}/hr` : `$${job.budget.toLocaleString()}`;
                 return (
                   <tr key={job.id}
@@ -249,10 +242,7 @@ export const DashboardPage = () => {
                     </td>
  
                     <td className="px-6 py-3.5">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${s.badge}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                        {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
-                      </span>
+											<JobStatusBadge jobStatus={job.status}/>
                     </td>
  
                     <td className="px-6 py-3.5 text-right">
@@ -278,7 +268,7 @@ export const DashboardPage = () => {
           <div className="space-y-3">
             {ROLES.map(role => {
               const count = users.filter(u => u.role === role).length;
-              const pct   = Math.round((count / users.length) * 100);
+              const pct = count > 0 ? Math.round((count / users.length) * 100) : 0;
               return (
                 <div key={role} className="flex items-center gap-4">
                   <div className="w-24 shrink-0"><RoleBadge role={role} size="sm" /></div>
