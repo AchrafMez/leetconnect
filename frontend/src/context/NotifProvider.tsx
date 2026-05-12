@@ -17,7 +17,7 @@ export function NotifProvider({ children }: { children: ReactNode }) {
 
 	// initial load from REST
 	useEffect(() => {
-		notifApi.list().then(setNotifs).catch(console.error);
+		notifApi.list().then(setNotifs).catch((_err) => { /* handle silently */});
 	}, []);
 
 	// live updates from the existing chat socket
@@ -43,12 +43,12 @@ export function NotifProvider({ children }: { children: ReactNode }) {
 
 	const markRead = useCallback(async (id: number) => {
 		setNotifs(p => p.map(n => n.id === id ? { ...n, is_read: true } : n));
-		await notifApi.markRead(id).catch(console.error);
+		await notifApi.markRead(id).catch((_err) => { /* handle silently */});
 	}, []);
 
 	const markAllRead = useCallback(async () => {
 		setNotifs(p => p.map(n => ({ ...n, is_read: true })));
-		await notifApi.markAllRead().catch(console.error);
+		await notifApi.markAllRead().catch((_err) => { /* handle silently */});
 	}, []);
 
 	const unread = notifs.filter(n => !n.is_read).length;

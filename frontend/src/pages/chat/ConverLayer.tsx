@@ -82,7 +82,7 @@ export default function ConversLayer({
 		<button
 			onClick={onClick}
 			className={`relative w-full flex items-center gap-3 px-4 py-3 text-left
-						transition-colors hover:bg-secondary/50
+						transition-colors hover:bg-secondary/50 cursor-pointer
 						${is_active ? "bg-secondary" : ""}`}
 		>
 			{is_active && <span className="absolute left-0 w-1 h-full bg-primary"/>}

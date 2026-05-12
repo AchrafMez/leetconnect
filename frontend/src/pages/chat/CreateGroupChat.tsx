@@ -83,7 +83,7 @@ export default function CreateGroupChat({ friends, onClose, onCreated }: CreateG
 									key={friend.id}
 									onClick={() => toggle(friend.id)}
 									className={`w-full flex items-center gap-3 px-3 py-2
-										rounded-md transition-colors text-left
+										rounded-md transition-colors text-left cursor-pointer
 										${selected.has(friend.id)
 											? 'bg-primary/10 border border-primary/30'
 											: 'hover:bg-secondary/50'}`}
@@ -106,7 +106,7 @@ export default function CreateGroupChat({ friends, onClose, onCreated }: CreateG
 					<button
 						onClick={onClose}
 						className="px-4 py-2 text-sm rounded-md text-muted-foreground
-								   hover:bg-secondary transition-colors"
+								   hover:bg-secondary transition-colors cursor-pointer"
 					>
 						Cancel
 					</button>
@@ -115,7 +115,7 @@ export default function CreateGroupChat({ friends, onClose, onCreated }: CreateG
 						disabled={loading}
 						className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground
 								   font-medium hover:bg-primary/90 transition-colors
-								   disabled:opacity-50"
+								   disabled:opacity-50 cursor-pointer"
 					>
 						{loading ? 'Creating...' : 'Create'}
 					</button>

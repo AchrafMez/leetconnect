@@ -4,12 +4,13 @@ import { api, userApi } from "@/lib/api";
 import { useAuth } from "@/context/userContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Avatar from "@/components/ui/Avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ArrowLeft, Star, Loader2 } from "lucide-react";
+import { ArrowLeft, Star, Loader2, Inbox } from "lucide-react";
 
 const JobDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +25,10 @@ const JobDetails: React.FC = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewData, setReviewData] = useState({ rating: 5, comment: "" });
 
+  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -31,7 +36,7 @@ const JobDetails: React.FC = () => {
         api<{ job: any }>(`/market/jobs/${id}`),
         api<{ proposals: any[] }>(`/market/proposals/${id}`),
       ]);
-      
+
       const fetchedJob = jobData.job;
       const fetchedProposals = proposalsData.proposals || [];
 
@@ -40,7 +45,7 @@ const JobDetails: React.FC = () => {
           const clientData = await userApi.getUserById(fetchedJob.clientId);
           fetchedJob.clientInfo = clientData.user;
         } catch (e) {
-          console.error("Failed to fetch client info", e);
+          // silently handle or store error state without console.error
         }
       }
 
@@ -51,7 +56,7 @@ const JobDetails: React.FC = () => {
               const freelancerData = await userApi.getUserById(p.freelancerId);
               p.freelancerInfo = freelancerData.user;
             } catch (e) {
-              console.error("Failed to fetch freelancer info", e);
+               // silently handle or store error state without console.error
             }
           }
           return p;
@@ -60,8 +65,13 @@ const JobDetails: React.FC = () => {
 
       setJob(fetchedJob);
       setProposals(enrichedProposals);
-    } catch (error) {
-      console.error("Failed to fetch data:", error);
+      setError(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to fetch data");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +84,7 @@ const JobDetails: React.FC = () => {
   const handleAccept = async (proposalId: string) => {
     try {
       setIsAccepting(true);
+      setActionError(null);
       const data = await api<{ payment?: any }>(`/market/proposals/accept/${proposalId}`, {
         method: "PATCH",
       });
@@ -82,8 +93,12 @@ const JobDetails: React.FC = () => {
       } else {
         fetchData();
       }
-    } catch (error) {
-      console.error("Failed to accept proposal:", error);
+    } catch (err) {
+      if (err instanceof Error) {
+        setActionError(err.message);
+      } else {
+        setActionError("Failed to accept proposal");
+      }
     } finally {
       setIsAccepting(false);
     }
@@ -91,16 +106,21 @@ const JobDetails: React.FC = () => {
 
   const handleReject = async (proposalId: string) => {
     try {
+      setActionError(null);
       await api(`/market/proposals/reject/${proposalId}`, { method: "PATCH" });
       fetchData();
-    } catch (error) {
-      console.error("Failed to reject proposal:", error);
+    } catch (err) {
+      if (err instanceof Error) {
+        setActionError(err.message);
+      } else {
+        setActionError("Failed to reject proposal");
+      }
     }
   };
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <Loader2 className="w-5 h-5 text-primary animate-spin" />
       </div>
     );
@@ -125,10 +145,20 @@ const JobDetails: React.FC = () => {
     const targetUserId = isClient ? acceptedProposal?.freelancerId : job.clientId;
     if (!targetUserId) return;
 
+    if (!Number.isInteger(reviewData.rating) || reviewData.rating < 1 || reviewData.rating > 5) {
+      setReviewError("Rating must be an integer between 1 and 5.");
+      return;
+    }
+
+    if (!reviewData.comment || reviewData.comment.length < 1 || reviewData.comment.length > 2000) {
+      setReviewError("Comment must be between 1 and 2000 characters.");
+      return;
+    }
+
     try {
       setIsSubmittingReview(true);
+      setReviewError(null);
 
-      // Complete the project first if it is still IN_PROGRESS
       if (isClient && job.status === "IN_PROGRESS") {
         await api(`/market/jobs/${job.id}/complete`, { method: "POST" });
       }
@@ -143,285 +173,387 @@ const JobDetails: React.FC = () => {
         },
       });
       setShowReviewModal(false);
+      setReviewData({ rating: 5, comment: "" });
       fetchData();
-    } catch (error) {
-      console.error("Failed to submit review:", error);
+    } catch (err) {
+      if (err instanceof Error) {
+        setReviewError(err.message);
+      } else {
+        setReviewError("Failed to submit review");
+      }
     } finally {
       setIsSubmittingReview(false);
     }
   };
 
+  if (error) {
+    return (
+      <div className="max-w-5xl mx-auto py-16 text-center">
+        <p className="text-destructive font-medium">{error}</p>
+        <button onClick={() => navigate(-1)} className="mt-4 text-sm text-primary hover:underline">Go Back</button>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+    <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 pb-16">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
       >
         <ArrowLeft size={14} />
         Back
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {actionError && (
+        <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mb-4 whitespace-pre-wrap">
+          <p className="text-sm font-medium">{actionError}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          <section className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Badge variant="secondary">{job.category}</Badge>
-              <span className="text-xs text-muted-foreground">
-                Posted {new Date(job.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight">{job.title}</h1>
-
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-              {job.description}
-            </p>
-
-            <div className="space-y-2 pt-2">
-              <h3 className="text-xs font-medium text-muted-foreground">Required Expertise</h3>
-              <div className="flex flex-wrap gap-2">
-                {job.skills?.map((skill: string) => (
-                  <Badge key={skill} variant="secondary" className="px-3 text-xs font-normal">
-                    {skill}
-                  </Badge>
-                ))}
+        <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+          {/* Job Overview Card */}
+          <Card className="border-border/50 bg-background-elevated shadow-none">
+            <CardContent className="p-4 sm:p-6 space-y-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge variant="secondary">{job.category}</Badge>
+                <span className="text-xs text-muted-foreground">
+                  Posted {new Date(job.createdAt).toLocaleDateString()}
+                </span>
               </div>
-            </div>
-          </section>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">{job.title}</h1>
+
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {job.description}
+              </p>
+
+              <div className="space-y-2 pt-2">
+                <h3 className="text-xs font-medium text-muted-foreground">Required Expertise</h3>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills?.map((skill: string) => (
+                    <Badge key={skill} variant="secondary" className="px-3 text-xs font-normal">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Proposals Section — Client Only */}
           {isClient && (
-            <>
-              <Separator />
-              <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold">Proposals</h2>
-                  <Badge variant="secondary">{proposals.length} received</Badge>
-                </div>
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Proposals</h2>
+                <Badge variant="secondary">{proposals.length} received</Badge>
+              </div>
 
-                <div className="space-y-3">
-                  {proposals.length === 0 ? (
-                    <div className="p-10 text-center border border-dashed border-border rounded-lg">
-                      <p className="text-sm text-muted-foreground">No bids yet</p>
+              {proposals.length === 0 ? (
+                <Card className="border-border/50 bg-background-elevated shadow-none">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+                        <Inbox size={20} className="text-muted-foreground" />
+                      </div>
+                      <p className="text-foreground font-medium">No bids yet</p>
+                      <p className="text-sm text-muted-foreground mt-1 max-w-xs">
+                        Proposals from freelancers will appear here.
+                      </p>
                     </div>
-                  ) : (
-                    proposals.map((p: any) => (
-                      <div key={p.id} className="border border-border rounded-lg p-5 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-3">
-                            <Avatar 
-                              className="h-9 w-9 cursor-pointer" 
-                              onClick={(e) => { e.stopPropagation(); p.freelancerInfo?.username && navigate(`/profile/${p.freelancerInfo.username}`); }}
-                            >
-                              <AvatarImage src={p.freelancerInfo?.avatar || undefined} alt={p.freelancerInfo?.username} />
-                              <AvatarFallback className="text-xs font-semibold">
-                                {p.freelancerInfo ? (p.freelancerInfo.firstname?.[0] || p.freelancerInfo.username?.[0] || 'F').toUpperCase() : p.freelancerId?.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <h4 
-                                className="text-sm font-semibold cursor-pointer hover:underline"
-                                onClick={(e) => { e.stopPropagation(); p.freelancerInfo?.username && navigate(`/profile/${p.freelancerInfo.username}`); }}
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {proposals.map((p: any) => {
+                    const fullName = p.freelancerInfo
+                      ? `${p.freelancerInfo.firstname || ""} ${p.freelancerInfo.lastname || ""}`.trim() ||
+                        p.freelancerInfo.username
+                      : `Freelancer #${p.freelancerId?.substring(0, 5)}`;
+                    const goToProfile = (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      if (p.freelancerInfo?.username) navigate(`/profile/${p.freelancerInfo.username}`);
+                    };
+
+                    return (
+                      <Card
+                        key={p.id}
+                        className="border-border/50 bg-background-elevated shadow-none"
+                      >
+                        <CardContent className="p-4 sm:p-5 space-y-3">
+                          {/* Header */}
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <button
+                                type="button"
+                                onClick={goToProfile}
+                                className="shrink-0 cursor-pointer"
                               >
-                                {p.freelancerInfo ? `${p.freelancerInfo.firstname || ''} ${p.freelancerInfo.lastname || ''}`.trim() || p.freelancerInfo.username : `Freelancer #${p.freelancerId?.substring(0, 5)}`}
-                              </h4>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <p className="text-[10px] text-muted-foreground">
-                                  Applied {new Date(p.createdAt).toLocaleDateString()}
-                                </p>
-                                {p.freelancerInfo && (
-                                  <>
-                                    <span className="text-muted-foreground text-[10px]">•</span>
-                                    <div className="flex items-center gap-1 text-yellow-500 text-[10px]">
-                                      <Star size={10} fill="currentColor" />
-                                      <span className="font-semibold">{p.freelancerInfo.rating ? p.freelancerInfo.rating.toFixed(1) : "0.0"}</span>
-                                      <span className="text-muted-foreground">({p.freelancerInfo.reviewCount || 0})</span>
-                                    </div>
-                                    <span className="text-muted-foreground text-[10px]">•</span>
-                                    <Button 
-                                      variant="link" 
-                                      className="h-auto p-0 text-[10px]" 
-                                      onClick={(e) => { e.stopPropagation(); navigate(`/profile/${p.freelancerInfo.username}`); }}
-                                    >
-                                      View Profile
-                                    </Button>
-                                  </>
-                                )}
+                                <Avatar name={fullName} image={p.freelancerInfo?.avatar} size="sm" />
+                              </button>
+                              <div className="min-w-0">
+                                <h4
+                                  className="text-sm font-semibold cursor-pointer hover:underline truncate"
+                                  onClick={goToProfile}
+                                >
+                                  {fullName}
+                                </h4>
+                                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Applied {new Date(p.createdAt).toLocaleDateString()}
+                                  </p>
+                                  {p.freelancerInfo && (
+                                    <>
+                                      <span className="text-muted-foreground text-[10px]">•</span>
+                                      <div className="flex items-center gap-1 text-yellow-500 text-[10px]">
+                                        <Star size={10} fill="currentColor" />
+                                        <span className="font-semibold">
+                                          {p.freelancerInfo.rating ? p.freelancerInfo.rating.toFixed(1) : "0.0"}
+                                        </span>
+                                        <span className="text-muted-foreground">
+                                          ({p.freelancerInfo.reviewCount || 0})
+                                        </span>
+                                      </div>
+                                      <span className="text-muted-foreground text-[10px]">•</span>
+                                      <Button
+                                        variant="link"
+                                        className="h-auto p-0 text-[10px]"
+                                        onClick={goToProfile}
+                                      >
+                                        View Profile
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            <div className="text-right shrink-0 sm:pl-4">
+                              <div className="flex items-baseline text-sm font-bold sm:justify-end">
+                                <span className="text-primary">$</span>
+                                <span className="text-foreground">{p.proposedBudget}</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground sm:text-right">
+                                {p.deliveryDays} days
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <div className="flex items-baseline text-sm font-bold"><span className="text-primary">$</span><span className="text-foreground">{p.proposedBudget}</span></div>
-                            <p className="text-xs text-muted-foreground">{p.deliveryDays} days</p>
-                          </div>
-                        </div>
 
-                        <p className="text-xs text-muted-foreground leading-relaxed bg-muted/30 p-3 rounded-lg">
-                          {p.coverLetter}
-                        </p>
+                          {/* Cover letter */}
+                          <p className="text-xs text-muted-foreground leading-relaxed bg-secondary/40 p-3 rounded-lg">
+                            {p.coverLetter}
+                          </p>
 
-                        <div className="flex justify-end gap-2 pt-1">
-                          {p.status === "PENDING" ? (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs"
-                                onClick={() => handleReject(p.id)}
-                              >
-                                Decline
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="text-xs"
-                                disabled={isAccepting}
-                                onClick={() => handleAccept(p.id)}
-                              >
-                                {isAccepting ? <Loader2 size={12} className="animate-spin" /> : "Accept Bid"}
-                              </Button>
-                            </>
-                          ) : (
-                            <StatusBadge status={p.status} />
-                          )}
-
-                          {p.status === "ACCEPTED" && (
-                            <>
-                              <Button
-                                variant="secondary"
-                                size="sm"
-                                className="text-xs"
-                                onClick={() => navigate("/messages")}
-                              >
-                                Message
-                              </Button>
-                              {isClient && p.payment && p.payment.status === "PENDING" && (
+                          {/* Actions */}
+                          <div className="flex flex-col sm:flex-row sm:justify-end items-stretch sm:items-center gap-2 pt-1">
+                            {p.status === "PENDING" ? (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs"
+                                  onClick={() => handleReject(p.id)}
+                                >
+                                  Decline
+                                </Button>
                                 <Button
                                   size="sm"
-                                  className="text-xs bg-yellow-500 hover:bg-yellow-600 text-black hover:text-black font-semibold"
-                                  onClick={() => navigate(`/market/payment/${p.payment.id}`)}
+                                  className="text-xs"
+                                  disabled={isAccepting}
+                                  onClick={() => handleAccept(p.id)}
                                 >
-                                  Fund Project
+                                  {isAccepting ? <Loader2 size={12} className="animate-spin" /> : "Accept Bid"}
                                 </Button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
+                              </>
+                            ) : (
+                              <div className="self-start sm:self-auto">
+                                <StatusBadge status={p.status} />
+                              </div>
+                            )}
+
+                            {p.status === "ACCEPTED" && (
+                              <>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="text-xs"
+                                  onClick={() => navigate("/messages")}
+                                >
+                                  Message
+                                </Button>
+                                {isClient && p.payment && p.payment.status === "PENDING" && (
+                                  <Button
+                                    size="sm"
+                                    className="text-xs bg-yellow-500 hover:bg-yellow-600 text-black hover:text-black font-semibold"
+                                    onClick={() => navigate(`/market/payment/${p.payment.id}`)}
+                                  >
+                                    Fund Project
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
-              </section>
-            </>
+              )}
+            </section>
           )}
         </div>
 
         {/* Sidebar */}
         <div className="space-y-4">
-          <div className="border border-border rounded-lg p-5 space-y-4">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1">Budget</p>
-              <div className="flex items-baseline text-2xl font-bold">
-                <span className="text-primary">$</span>
-                <span className="text-foreground">{job.budget}</span>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3 text-xs text-muted-foreground pt-1">
-              <p>Verified Payment</p>
-              <div className="flex items-center gap-2">
-                 <p>Project Status</p>
-                 <StatusBadge status={job.status} />
-              </div>
-            </div>
-
-            {((isClient && job.status === "IN_PROGRESS") ||
-              (canReview && !hasAlreadyReviewed)) && (
-              <Button
-                className="w-full"
-                onClick={() => setShowReviewModal(true)}
-              >
-                {job.status === "COMPLETED" ? "Leave Review" : "Complete Project"}
-              </Button>
-            )}
-          </div>
-
-          <div className="border border-border rounded-lg p-5 space-y-3">
-            <p className="text-xs font-medium text-muted-foreground">Client</p>
-            <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8 cursor-pointer" onClick={() => job.clientInfo?.username && navigate(`/profile/${job.clientInfo.username}`)}>
-                <AvatarImage src={job.clientInfo?.avatar || undefined} alt={job.clientInfo?.username} />
-                <AvatarFallback className="text-xs font-semibold">
-                  {job.clientInfo ? (job.clientInfo.firstname?.[0] || job.clientInfo.username?.[0] || 'C').toUpperCase() : job.clientId?.substring(0, 1).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+          {/* Budget Card */}
+          <Card className="border-border/50 bg-background-elevated shadow-none">
+            <CardContent className="p-5 space-y-4">
               <div>
-                <p className="text-xs font-semibold cursor-pointer hover:underline" onClick={() => job.clientInfo?.username && navigate(`/profile/${job.clientInfo.username}`)}>
-                  {job.clientInfo ? `${job.clientInfo.firstname || ''} ${job.clientInfo.lastname || ''}`.trim() || job.clientInfo.username : `ID #${job.clientId?.substring(0, 5)}`}
-                </p>
-                <div className="flex items-center gap-2 text-xs mt-0.5">
-                  <div className="flex items-center gap-1 text-yellow-500">
-                    <Star size={10} fill="currentColor" />
-                    <span className="font-semibold">{job.clientInfo?.rating ? job.clientInfo.rating.toFixed(1) : "0.0"}</span>
-                    <span className="text-muted-foreground">({job.clientInfo?.reviewCount || 0})</span>
-                  </div>
-                  {job.clientInfo?.username && (
-                    <>
-                      <span className="text-muted-foreground">•</span>
-                      <Button variant="link" className="h-auto p-0 text-[10px]" onClick={() => navigate(`/profile/${job.clientInfo.username}`)}>
-                        View Profile
-                      </Button>
-                    </>
-                  )}
+                <p className="text-xs font-medium text-muted-foreground mb-1">Budget</p>
+                <div className="flex items-baseline text-2xl font-bold">
+                  <span className="text-primary">$</span>
+                  <span className="text-foreground">{job.budget}</span>
                 </div>
               </div>
-            </div>
-          </div>
+
+              <Separator />
+
+              <div className="space-y-3 text-xs text-muted-foreground pt-1">
+                <p>Verified Payment</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p>Project Status</p>
+                  <StatusBadge status={job.status} />
+                </div>
+              </div>
+
+              {((isClient && job.status === "IN_PROGRESS") ||
+                (canReview && !hasAlreadyReviewed)) && (
+                <Button
+                  className="w-full"
+                  onClick={() => setShowReviewModal(true)}
+                >
+                  {job.status === "COMPLETED" ? "Leave Review" : "Complete Project"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Client Card */}
+          <Card className="border-border/50 bg-background-elevated shadow-none">
+            <CardContent className="p-5 space-y-3">
+              <p className="text-xs font-medium text-muted-foreground">Client</p>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => job.clientInfo?.username && navigate(`/profile/${job.clientInfo.username}`)}
+                  className="shrink-0 cursor-pointer"
+                >
+                  <Avatar
+                    name={
+                      job.clientInfo
+                        ? `${job.clientInfo.firstname || ""} ${job.clientInfo.lastname || ""}`.trim() ||
+                          job.clientInfo.username
+                        : `Client ${job.clientId?.substring(0, 1) || "C"}`
+                    }
+                    image={job.clientInfo?.avatar}
+                    size="sm"
+                  />
+                </button>
+                <div className="min-w-0">
+                  <p
+                    className="text-xs font-semibold cursor-pointer hover:underline truncate"
+                    onClick={() => job.clientInfo?.username && navigate(`/profile/${job.clientInfo.username}`)}
+                  >
+                    {job.clientInfo
+                      ? `${job.clientInfo.firstname || ""} ${job.clientInfo.lastname || ""}`.trim() ||
+                        job.clientInfo.username
+                      : `ID #${job.clientId?.substring(0, 5)}`}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs mt-0.5 flex-wrap">
+                    <div className="flex items-center gap-1 text-yellow-500">
+                      <Star size={10} fill="currentColor" />
+                      <span className="font-semibold">
+                        {job.clientInfo?.rating ? job.clientInfo.rating.toFixed(1) : "0.0"}
+                      </span>
+                      <span className="text-muted-foreground">
+                        ({job.clientInfo?.reviewCount || 0})
+                      </span>
+                    </div>
+                    {job.clientInfo?.username && (
+                      <>
+                        <span className="text-muted-foreground">•</span>
+                        <Button
+                          variant="link"
+                          className="h-auto p-0 text-[10px]"
+                          onClick={() => navigate(`/profile/${job.clientInfo.username}`)}
+                        >
+                          View Profile
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Review Dialog */}
-      <Dialog open={showReviewModal} onOpenChange={setShowReviewModal}>
+      <Dialog open={showReviewModal} onOpenChange={(open) => {
+        setShowReviewModal(open);
+        if (!open) setReviewError(null);
+      }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Feedback</DialogTitle>
             <DialogDescription>Rate your experience on this project</DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleReviewSubmit} className="space-y-4">
-            <div className="flex justify-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setReviewData({ ...reviewData, rating: star })}
-                  className={`p-1 transition-colors ${
-                    reviewData.rating >= star ? "text-yellow-500" : "text-muted-foreground"
-                  }`}
-                >
-                  <Star size={22} fill={reviewData.rating >= star ? "currentColor" : "none"} />
-                </button>
-              ))}
+          {reviewError && (
+            <div className="p-3 rounded-md bg-destructive/15 text-destructive border border-destructive/20 text-sm font-medium">
+              {reviewError}
+            </div>
+          )}
+
+          <form onSubmit={handleReviewSubmit} className="space-y-4 pt-2">
+            <div className="flex flex-col items-center gap-3 py-2">
+              <div className="flex justify-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewData({ ...reviewData, rating: star })}
+                    className={`p-1 transition-colors cursor-pointer ${
+                      reviewData.rating >= star ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500/60"
+                    }`}
+                  >
+                    <Star size={26} fill={reviewData.rating >= star ? "currentColor" : "none"} />
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {reviewData.rating} {reviewData.rating === 1 ? "star" : "stars"}
+              </p>
             </div>
 
             <Textarea
-              rows={3}
+              rows={4}
               placeholder="Share your thoughts..."
               value={reviewData.comment}
               onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
             />
 
-            <div className="flex gap-2">
+            <div className="flex flex-col-reverse sm:flex-row gap-2">
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1"
+                className="w-full sm:flex-1"
                 onClick={() => setShowReviewModal(false)}
               >
                 Later
               </Button>
-              <Button type="submit" className="flex-1" disabled={isSubmittingReview}>
+              <Button type="submit" className="w-full sm:flex-1" disabled={isSubmittingReview}>
                 {isSubmittingReview ? <Loader2 size={14} className="animate-spin" /> : "Submit"}
               </Button>
             </div>

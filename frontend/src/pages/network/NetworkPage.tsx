@@ -206,14 +206,14 @@ export default function NetworkPage() {
 														<button
 															onClick={() => handleAccept(req.id)}
 															title="Accept"
-															className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+															className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
 														>
 															<Check size={16} />
 														</button>
 														<button
 															onClick={() => handleReject(req.id)}
 															title="Reject"
-															className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+															className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
 														>
 															<X size={16} />
 														</button>
@@ -294,14 +294,14 @@ function ConnectionRow({ friend, actionId, onMessage, onRemove, onSelect }: Conn
 					<button
 						onClick={() => onMessage(friend.id)}
 						title="Send message"
-						className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-lg transition-colors"
+						className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-lg transition-colors cursor-pointer"
 					>
 						<MessageCircle size={16} />
 					</button>
 					<button
 						onClick={() => onRemove(friend.id)}
 						title="Remove connection"
-						className="p-2 text-muted-foreground hover:text-destructive hover:bg-background rounded-lg transition-colors"
+						className="p-2 text-muted-foreground hover:text-destructive hover:bg-background rounded-lg transition-colors cursor-pointer"
 					>
 						<UserMinus size={16} />
 					</button>

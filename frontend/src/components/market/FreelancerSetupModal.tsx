@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Sparkles } from "lucide-react";
 import { categoriesData } from "@/assets/assets";
 
 const categories = Object.keys(categoriesData);
@@ -87,14 +87,22 @@ export default function FreelancerSetupModal() {
 
   return (
     <Dialog open={isOpen}>
-      <DialogContent 
+      <DialogContent
         className="max-w-md max-h-[85vh] overflow-y-auto custom-scrollbar [&>button:last-child]:hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>Expert Profile</DialogTitle>
-          <DialogDescription>Complete your freelancer profile to get started</DialogDescription>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 relative overflow-hidden">
+              <span className="absolute inset-0 bg-primary/10" />
+              <Sparkles size={18} className="text-primary relative" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle>Expert Profile</DialogTitle>
+              <DialogDescription>Complete your freelancer profile to get started</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 pt-2">
@@ -132,10 +140,10 @@ export default function FreelancerSetupModal() {
                   key={cat}
                   type="button"
                   onClick={() => toggleCategory(cat)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                     formData.category.includes(cat)
                       ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-transparent text-muted-foreground border-border hover:border-primary/40"
+                      : "bg-transparent text-muted-foreground border-border hover:border-primary/40 hover:text-primary hover:bg-primary/5"
                   }`}
                 >
                   {cat}
@@ -147,19 +155,19 @@ export default function FreelancerSetupModal() {
           {/* Skills */}
           <div className="space-y-2">
             <Label>Core Skills</Label>
-            <div className="flex flex-wrap gap-2 p-3 border border-input rounded-lg focus-within:ring-1 focus-within:ring-ring transition-all min-h-[42px]">
+            <div className="flex flex-wrap gap-2 p-3 border border-input rounded-lg focus-within:ring-1 focus-within:ring-ring transition-all min-h-10.5 bg-background">
               {formData.skills.map((skill) => (
                 <Badge key={skill} variant="default" className="flex items-center gap-1">
                   {skill}
-                  <button type="button" onClick={() => removeSkill(skill)}>
+                  <button type="button" onClick={() => removeSkill(skill)} className="cursor-pointer">
                     <X size={10} className="hover:text-destructive transition-colors" />
                   </button>
                 </Badge>
               ))}
               <input
                 type="text"
-                className="flex-1 bg-transparent border-none outline-none text-sm min-w-[100px] placeholder:text-muted-foreground"
-                placeholder="Add skill..."
+                className="flex-1 bg-transparent border-none outline-none text-sm min-w-25 placeholder:text-muted-foreground"
+                placeholder="Press Enter to add a skill..."
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={handleAddSkill}
@@ -180,9 +188,9 @@ export default function FreelancerSetupModal() {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? <Loader2 size={14} className="animate-spin" /> : "Complete"}
+          <div className="pt-2">
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? <Loader2 size={14} className="animate-spin" /> : "Complete Setup"}
             </Button>
           </div>
         </form>

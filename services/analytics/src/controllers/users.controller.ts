@@ -1,18 +1,15 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma";
-import { StatusCodes, ReasonPhrases } from "http-status-codes";
+import { StatusCodes } from "http-status-codes";
 import { getDateRange } from './utils';
 
 
 //Registration trends over time, breakdown by role, and breakdown by status
-export const getUsersAnalytics = async (req: Request, res: Response) => {
-	const user = req.user;
-
-	if(user?.role !== 'ADMIN')
-		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
-
+export const getUsersAnalytics = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const { startDate, endDate } = getDateRange(req.query);
+		// console.log("STARTDATE: ", startDate);
+		// console.log("ENDDATE: ", endDate);
 
 		const [
 			registrationsOverTime,
@@ -31,15 +28,17 @@ export const getUsersAnalytics = async (req: Request, res: Response) => {
 				ORDER BY date ASC
 			`,
 
-			// user count by role
+			// user count by role within date range
 			prisma.user.groupBy({
 				by: ['role'],
+				where: { createdAt: { gte: startDate, lte: endDate } },
 				_count: { role: true},
 			}),
 
-			// user count by status
+			// user count by status within date range
 			prisma.user.groupBy({
 				by: ['status'],
+				where: { createdAt: { gte: startDate, lte: endDate } },
 				_count: { status: true},
 			})
 		]);
@@ -70,7 +69,6 @@ export const getUsersAnalytics = async (req: Request, res: Response) => {
 		});
 
 	} catch (error) {
-		console.error('[getUsersAnalytics]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch users Analytics'});
+		next(error);
 	}
 }

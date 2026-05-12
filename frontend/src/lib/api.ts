@@ -180,7 +180,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
                 return api<T>(path, options);
             }
         } catch (error) {
-            console.error('Token refresh failed:', error);
+            // shhhhh 
         }
     }
 
@@ -192,7 +192,10 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
         }
 
         // Try getting message properly from express response { success: false, message: '...' }
-        const message = err?.message || (typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`);
+        let message = err?.message || (typeof err?.error === 'string' ? err.error : `Request failed: ${res.status}`);
+        if (!err?.message && Array.isArray(err?.errors)) {
+            message = err.errors.join(', ');
+        }
         throw new Error(message);
     }
 
@@ -570,4 +573,23 @@ export const adminApi = {
 	getRoles: () => api<RoleConfig[]>('/admin/roles'),
 
   health: () => api<HealthResponse>('/admin/health'),
+};
+
+export interface Review {
+  id:         string;
+  rating:     number;
+  comment:    string;
+  fromUserId: string;
+  toUserId:   string;
+  jobId:      string;
+  job:        { title: string; category: string; status: string };
+  fromUser?:  { username: string; avatar?: string | null; firstname?: string | null; lastname?: string | null };
+  createdAt:  string;
+}
+
+export const reviewsApi = {
+  getForUser: (userId: string, opts?: { closedOnly?: boolean }) =>
+      api<{ success: boolean; reviews: Review[] }>(
+        `/market/jobs/reviews/user/${userId}${opts?.closedOnly ? "?closedOnly=true" : ""}`
+      ),
 };

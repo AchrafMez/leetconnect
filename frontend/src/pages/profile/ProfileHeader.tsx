@@ -98,7 +98,7 @@ export default function ProfileHeader({
 			return (
 				<button
 					onClick={() => navigate('/settings/profile')}
-					className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground
+					className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground cursor-pointer
 						rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
 				>
 					<Settings size={14} />
@@ -113,7 +113,7 @@ export default function ProfileHeader({
 					<button
 						onClick={handleSendRequest}
 						className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground
-							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
 					>
 						<UserPlus size={14} />
 						Connect
@@ -135,7 +135,7 @@ export default function ProfileHeader({
 						<button
 							onClick={handleAccept}
 							className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground
-								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
 						>
 							<UserCheck size={14} />
 							Accept
@@ -143,7 +143,7 @@ export default function ProfileHeader({
 						<button
 							onClick={handleReject}
 							className="px-4 py-2 bg-secondary hover:bg-destructive/90 text-foreground hover:text-destructive-foreground
-								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
 						>
 							<X size={14} />
 							Reject
@@ -156,7 +156,7 @@ export default function ProfileHeader({
 					<button
 						onClick={handleUnfriend}
 						className="group px-4 py-2 bg-primary/10 hover:bg-destructive/10 text-primary hover:text-destructive
-							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
 					>
 						<UserCheck size={14} className="group-hover:hidden" />
 						<UserMinus size={14} className="hidden group-hover:inline" />
@@ -176,8 +176,8 @@ export default function ProfileHeader({
 				<div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
 					{/* avatar */}
 					<div className="shrink-0 mx-auto sm:mx-0">
-						<div className="rounded-full ring-4 ring-background-elevated">
-							<Avatar name={fullName} image={avatar} size="lg" />
+						<div className="rounded-xl ring-4 ring-background-elevated">
+							<Avatar name={fullName} image={avatar} size="lg" shape="rounded" />
 						</div>
 					</div>
 
@@ -203,7 +203,7 @@ export default function ProfileHeader({
 									<button
 										onClick={handleMessage}
 										disabled={messageLoading}
-										className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground
+										className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground cursor-pointer
 											rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60"
 									>
 										{messageLoading

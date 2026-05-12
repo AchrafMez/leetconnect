@@ -1,18 +1,12 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { z } from 'zod';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
 import {
-	convers_params,
-	convers_create_body,
-	convers_update_body,
-	convers_add_member_body,
+	type ConversParams ,
+	type ConversCreateBody, 
+	type ConversUpdateBody,
+	type ConversAddMemberBody
 } from '../schemas/schema.convers';
-
-type ConversParams        = z.infer<typeof convers_params>;
-type ConversCreateBody    = z.infer<typeof convers_create_body>;
-type ConversUpdateBody    = z.infer<typeof convers_update_body>;
-type ConversAddMemberBody = z.infer<typeof convers_add_member_body>;
 
 function ensure_unique_ids(ids: string[]): string[] {
 	const unique = [...new Set(ids)];

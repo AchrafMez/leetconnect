@@ -14,6 +14,7 @@ import { adminApi } from "@/lib/api";
 import { Spin } from "@/components/ui/Spin";
 import { useDebounce } from "@/hooks/useDebounce";
 import { StatCard } from "@/components/ui/StatCard";
+import { JobStatusBadge } from "@/components/ui/RoleBadge";
 
 const STATUS_STYLES: Record<JobStatus, { badge: string; dot: string; label: string }> = {
   active:  { badge: 'text-primary border-primary/20', dot: 'bg-primary', label: 'Active' },
@@ -45,7 +46,6 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
 	onStatusChange: (id: string, status: JobStatus) => void;
 }) {
 	const [ confirmDelete, setConfirmDelete ] = useState(false);
-	const s = STATUS_STYLES[job.status];
 
 	return(
 		<div
@@ -58,10 +58,7 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
         <div className="px-6 py-5 border-b border-border flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1.5">
-              <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${s.badge}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                {s.label}
-              </span>
+							<JobStatusBadge jobStatus={job.status}/>
               <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full border border-border">
                 {job.category}
               </span>
@@ -194,7 +191,6 @@ export const JobsPage = () => {
 
 	useEffect(() => {
 		async function fetchJobs() {
-			// setLoading(true);
 			try {
 				const params: any = {};
 				if(debouncedSearch) params.search = debouncedSearch;
@@ -345,7 +341,6 @@ export const JobsPage = () => {
           </thead>
           <tbody className="divide-y divide-border">
             {jobs.map(job => {
-              const s = STATUS_STYLES[job.status];
               return (
                 <tr
                   key={job.id}
@@ -401,10 +396,7 @@ export const JobsPage = () => {
                   </td>
                   
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${s.badge}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-                      {s.label}
-                    </span>
+										<JobStatusBadge jobStatus={job.status}/>
                   </td>
                   
                   <td className="px-6 py-4 text-xs text-muted-foreground">

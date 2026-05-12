@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { publishEvent } from "../config/events";
 import { EVENTS } from "@leetconnect/shared";
+import { fetchUserFromAuth } from "../clients/auth";
 
 export const addJob = async (req: Request, res: Response) => {
   try {
@@ -284,6 +285,16 @@ export const submitReview = async (req: Request, res: Response) => {
       rating: Number(rating),
     });
 
+    // review notif
+    await publishEvent(EVENTS.NOTIF_CREATE, {
+      user_id: toUserId,
+      type: "SYSTEM",
+      title: "New Review Received",
+      body: isClient 
+        ? `The client left a ${rating}-star review on your project "${job.title}".`
+        : `The freelancer left a ${rating}-star review on your project "${job.title}".`
+    });
+
     return res.json({ success: true, review });
   } catch (error: any) {
     // Unique constraint violation — user already reviewed this job
@@ -298,15 +309,35 @@ export const submitReview = async (req: Request, res: Response) => {
 export const getUserReviews = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId as string;
+    const closedOnly = req.query.closedOnly === "true";
+    const authHeader = req.headers.authorization;
 
     const reviews = await prisma.review.findMany({
-      where: { toUserId: userId },
-      include: { job: { select: { title: true, category: true } } },
+      where: {
+        toUserId: userId,
+        ...(closedOnly
+          ? { job: { status: { in: ["COMPLETED", "CLOSED"] } } }
+          : {}),
+      },
+      include: { job: { select: { title: true, category: true, status: true } } },
       orderBy: { createdAt: "desc" },
-      take: 50, // limit results
+      take: 50,
     });
 
-    return res.json({ success: true, reviews });
+    const uniqueAuthorIds = Array.from(
+      new Set(reviews.map((r: any) => r.fromUserId as string))
+    );
+    const authorEntries = await Promise.all(
+      uniqueAuthorIds.map(async (id) => [id, await fetchUserFromAuth(id, authHeader)] as const)
+    );
+    const authors = new Map(authorEntries);
+
+    const enriched = reviews.map((r: any) => ({
+      ...r,
+      fromUser: authors.get(r.fromUserId) ?? null,
+    }));
+
+    return res.json({ success: true, reviews: enriched });
   } catch (error: any) {
     console.error("getUserReviews error:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch reviews" });

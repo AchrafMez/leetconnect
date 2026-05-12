@@ -15,3 +15,7 @@ export const message_query = z.object({
 export const message_body = z.object({
 	content: z.string().trim().min(1, 'content is missing').max(3000, 'content too long')
 });
+
+export type MessageParams = z.infer<typeof message_params>;
+export type MessageQuery = z.infer<typeof message_query>;
+export type MessageBody = z.infer<typeof message_body>;

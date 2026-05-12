@@ -1,17 +1,5 @@
 import { Router } from "express";
-import {
-  addJob,
-  getAllJobs,
-  getMyJobs,
-  getSingleJob,
-  updateJob,
-  deleteJob,
-  pay,
-  getPaymentById,
-  submitReview,
-  getUserReviews,
-  completeJob
-} from "../controllers/jobs";
+import { addJob, getAllJobs, getMyJobs, getSingleJob, updateJob, deleteJob, pay, getPaymentById, submitReview, getUserReviews, completeJob } from "../controllers/jobs";
 import { authMiddleware, requireType } from "@leetconnect/shared";
 import { validateJob, validateJobUpdate, validateReview, validateIdParam } from "../middlewares/validate";
 

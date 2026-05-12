@@ -1,15 +1,10 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma";
-import { ReasonPhrases, StatusCodes } from 'http-status-codes'
+import { StatusCodes } from 'http-status-codes'
 import { getStartDate } from './utils';
 
 
-export const getOverview = async (req: Request, res: Response) => {
-	const user = req.user;
-
-	if(user?.role !== 'ADMIN')
-		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
-
+export const getOverview = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const [
 			totalUsers, totalJobs, activeJobs, flaggedJobs,
@@ -29,7 +24,7 @@ export const getOverview = async (req: Request, res: Response) => {
 			}),
 			prisma.job.count({
 				where: {
-					createdAt: {gte: getStartDate('7d')},
+					createdAt: { gte: getStartDate('7d')},
 				},
 			})
 		]);
@@ -39,7 +34,6 @@ export const getOverview = async (req: Request, res: Response) => {
 			suspendedUsers, pendingUsers, newUsersThisWeek, newJobsThisWeek
 		});
 	} catch (error) {
-		console.error('[getOverview]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch overview'});
+		next(error);
 	}
 }
