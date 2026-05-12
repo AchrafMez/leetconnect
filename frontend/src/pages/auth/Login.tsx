@@ -205,7 +205,10 @@ export default function Login() {
                                     >
                                         {loading ? 'Verifying...' : 'Verify'}
                                     </Button>
-
+                                    {/* <form onSubmit={(e) => { e.preventDefault(); handle2FASubmit(); }}>
+                                        <input ... />
+                                        <Button type="submit">Verify</Button>
+                                    </form> */}
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -328,8 +331,8 @@ export default function Login() {
                             className="w-full h-10 border-border hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-60 flex items-center justify-center gap-2 font-bold"
                         >
                             {/* 42 Logo / Placeholder */}
-                            <span className="bg-foreground text-background px-1.5 py-0.5 rounded text-[10px]">42</span>
-                            Continue with 42 Intra
+                            Sign in with <svg stroke="currentColor" fill="currentColor" strokeWidth="0" role="img" viewBox="0 0 24 24" className="w-5 h-5 ml-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M19.581 16.851H24v-4.439ZM24 3.574h-4.419v4.42l-4.419 4.418v4.44h4.419v-4.44L24 7.993Zm-4.419 0h-4.419v4.42zm-6.324 8.838H4.419l8.838-8.838H8.838L0 12.412v3.595h8.838v4.419h4.419z"></path></svg>
+                            {/* <span className="bg-foreground text-background px-1.5 py-0.5 rounded text-[10px]">42 intra</span> */}
                         </Button>
 
                         {/* Sign Up Link */}

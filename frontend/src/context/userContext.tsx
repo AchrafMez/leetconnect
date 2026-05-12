@@ -98,7 +98,6 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -117,11 +116,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const data = await api<{ jobs: Job[] }>("/market/jobs/getalljobs");
-        console.log(data)
+        const data = await api<{ jobs: Job[] }>("/market/jobs");
         setJobs(data.jobs);
       } catch (error) {
-        console.error("Erreur fetch jobs:", error);
         setJobs([]);
       }
     };
@@ -138,14 +135,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
     
-      const users = await userApi.getAllClients();
+      const clientsData = await userApi.getAllClients();
+      const freelancersData = await userApi.getAllFreelancers();
 
       const clientsMap = Object.fromEntries(
-        users.freelancers.map((u: any) => [u.id, u])
+        (clientsData.clients || []).map((u: any) => [u.id, u])
       );
 
       const freelancersMap = Object.fromEntries(
-        users.freelancers.map((u: any) => [u.id, u])
+        (freelancersData.freelancers || []).map((u: any) => [u.id, u])
       );
 
       const enrichedData = jobs.map(job => ({
@@ -161,7 +159,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setEnriched(enrichedData);
 
     } catch (error) {
-      console.error("Erreur enrich jobs:", error);
+      // silently handle enrich jobs error
     }
   };
 
@@ -177,7 +175,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const refreshData = await authApi.refresh(); 
         setAccessToken(refreshData.accessToken);
         const userData = await api<User>('/auth/me');
-        console.log(userData)
         setUser(userData);
       } catch {
         setUser(null);
@@ -190,9 +187,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (data: LoginRequest): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
-     const res = await api<{
+     const res = await api<{ 
       accessToken?: string;
-      token?: string;
       user?: User;
       requires2FA?: boolean;
       tempToken?: string;

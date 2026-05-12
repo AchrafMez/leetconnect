@@ -12,7 +12,7 @@ export default function TabButton({ icon: Icon, label, count, isActive, onClick 
 	return (
 		<button
 			onClick={onClick}
-			className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 -mb-px border-b-2 text-sm font-medium whitespace-nowrap transition-colors ${
+			className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 -mb-px border-b-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${
 				isActive
 					? 'border-primary text-foreground'
 					: 'border-transparent text-muted-foreground hover:text-foreground'

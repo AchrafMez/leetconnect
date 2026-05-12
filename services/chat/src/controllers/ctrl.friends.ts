@@ -2,20 +2,25 @@ import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
 import { notify } from '../lib/notify';
+import type {
+	FriendSendBody,
+	FriendParams,
+	FriendRemoveBody,
+} from '../schemas/schema.friends';
 
-function parse_user_id(value: unknown, label: string): string {
-	const val = typeof value === 'string' ? value.trim() : '';
-	if (!val)
-		throw new err.BadRequestError(`Invalid ${label}`);
-	return val;
-}
+// function parse_user_id(value: unknown, label: string): string {
+// 	const val = typeof value === 'string' ? value.trim() : '';
+// 	if (!val)
+// 		throw new err.BadRequestError(`Invalid ${label}`);
+// 	return val;
+// }
 
-function parse_int_id(value: unknown, label: string): number {
-	const parsed = Number(value);
-	if (!Number.isInteger(parsed) || parsed <= 0)
-		throw new err.BadRequestError(`Invalid ${label}`);
-	return parsed;
-}
+// function parse_int_id(value: unknown, label: string): number {
+// 	const parsed = Number(value);
+// 	if (!Number.isInteger(parsed) || parsed <= 0)
+// 		throw new err.BadRequestError(`Invalid ${label}`);
+// 	return parsed;
+// }
 
 function check_pending(status: string): void {
 	if (status !== 'PENDING')
@@ -23,7 +28,7 @@ function check_pending(status: string): void {
 }
 
 async function ensure_direct_conversation(user_a: string, user_b: string) {
-	const existing = await prisma.convers.findFirst({
+	const existing: {id: number; members: {user_id: string}[]} | null = await prisma.convers.findFirst({
 		where: {
 			type: 'Direct',
 			AND: [
@@ -36,7 +41,7 @@ async function ensure_direct_conversation(user_a: string, user_b: string) {
 	if (existing && existing.members.length === 2)
 		return existing;
 
-	return prisma.$transaction(async (trans) => {
+	return prisma.$transaction(async (trans: any) => {
 		const convers = await trans.convers.create({data: {type: 'Direct'}});
 		await trans.conversMember.createMany({
 			data: [
@@ -50,11 +55,12 @@ async function ensure_direct_conversation(user_a: string, user_b: string) {
 
 export async function send(req: Request, res: Response, next: NextFunction) {
 	try {
-		const sender_id   = parse_user_id(req.user?.userId, 'sender_id');
-		const receiver_id = parse_user_id(req.body.receiver_id, 'receiver_id');
+		const sender_id   = req.user!.userId;
+		const {receiver_id} = req.body as FriendSendBody;
 
 		if (sender_id === receiver_id)
 			throw new err.BadRequestError('self request error');
+
 		const [sender, receiver] = await Promise.all([
 			prisma.user.findUnique({where: {id: sender_id}, select: {id: true}}),
 			prisma.user.findUnique({where: {id: receiver_id}, select: {id: true}})
@@ -109,8 +115,8 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 
 export async function accept(req: Request, res: Response, next: NextFunction) {
 	try {
-		const request_id = parse_int_id(req.params.id, 'request_id');
-		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
+		const user_id = req.user!.userId;
+		const {id: request_id} = req.params as unknown as FriendParams;
 
 		const request = await prisma.friendRequest.findUnique({
 			where: {id: request_id}
@@ -148,8 +154,8 @@ export async function accept(req: Request, res: Response, next: NextFunction) {
 
 export async function reject(req: Request, res: Response, next: NextFunction) {
 	try {
-		const request_id = parse_int_id(req.params.id, 'request_id');
-		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
+		const user_id	 = req.user!.userId;
+		const {id: request_id} = req.params as unknown as FriendParams;
 
 		const request = await prisma.friendRequest.findUnique({
 			where: {id: request_id}
@@ -184,8 +190,8 @@ export async function reject(req: Request, res: Response, next: NextFunction) {
 
 export async function list_incoming(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id = parse_user_id(req.user?.userId, 'user_id');
-		const reguest = await prisma.friendRequest.findMany({
+		const user_id = req.user!.userId;
+		const requests = await prisma.friendRequest.findMany({
 			where: {
 				receiver_id: user_id,
 				status: 'PENDING'
@@ -201,7 +207,7 @@ export async function list_incoming(req: Request, res: Response, next: NextFunct
 			},
 			orderBy: {created_at: 'desc'}
 		});
-		res.status(200).json(reguest);
+		res.status(200).json(requests);
 	} catch (err) {
 		next(err);
 	}
@@ -209,8 +215,8 @@ export async function list_incoming(req: Request, res: Response, next: NextFunct
 
 export async function list_outgoing(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id = parse_user_id(req.user?.userId, 'user_id');
-		const reguest = await prisma.friendRequest.findMany({
+		const user_id = req.user!.userId;
+		const requests = await prisma.friendRequest.findMany({
 			where: {
 				sender_id: user_id,
 				status: 'PENDING'
@@ -227,15 +233,7 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 			orderBy: {created_at: 'desc'}
 		});
 
-		const mapped = reguest.map(({receiver, ...rest}: 
-			{ receiver: {
-				id: string;
-				username: string;
-				avatar: string
-			}; [key: string]: unknown
-		}) => ({...rest, receiver: receiver}));
-
-		res.status(200).json(mapped);
+		res.status(200).json(requests);
 
 	} catch (err) {
 		next(err);
@@ -244,34 +242,36 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 
 export async function list(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id = parse_user_id(req.user?.userId, 'user_id');
-		const requests = await prisma.friendRequest.findMany({
-			where: {
-				status: 'ACCEPTED',
-				OR: [
-					{sender_id: user_id},
-					{receiver_id: user_id}
-				],
-			},
-			orderBy: {created_at: 'desc'}
-		});
+		const user_id = req.user!.userId;
+		const requests: {sender_id: string; receiver_id: string}[] =
+			await prisma.friendRequest.findMany({
+				where: {
+					status: 'ACCEPTED',
+					OR: [
+						{sender_id: user_id},
+						{receiver_id: user_id}
+					],
+				},
+				orderBy: {created_at: 'desc'},
+				select: {sender_id: true, receiver_id: true}
+			});
 
-		const friend_ids = requests.map((r: { sender_id: string; receiver_id: string }) =>
+		const friend_ids = requests.map((r) =>
 			r.sender_id === user_id ? r.receiver_id : r.sender_id
 		);
 
-		const users = await prisma.user.findMany({
-			where: {id: {in: friend_ids}},
-			select: {
-				id: true,
-				username: true,
-				avatar: true,
-				isOnline: true
-			}
-		});
+		const users: {id: string; username: string; avatar: string; isOnline: boolean}[] =
+			await prisma.user.findMany({
+				where: {id: {in: friend_ids}},
+				select: {
+					id: true,
+					username: true,
+					avatar: true,
+					isOnline: true
+				}
+			});
 
-		const friends = users.map((u:
-			{ id: string; username: string; avatar: string; isOnline: boolean }) => ({
+		const friends = users.map((u) => ({
 				id:			u.id,
 				username:	u.username,
 				avatar:		u.avatar,
@@ -286,8 +286,8 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 export async function remove(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id	= parse_user_id(req.user?.userId, 'user_id');
-		const friend_id = parse_user_id(req.body.friend_id, 'friend_id');
+		const user_id	= req.user!.userId;
+		const {friend_id} = req.body as FriendRemoveBody;
 
 		if (user_id === friend_id)
 			throw new err.BadRequestError('same accoutn error');

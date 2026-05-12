@@ -83,7 +83,7 @@ export default function ChatInfoPanel({
 					<button
 						onClick={onClose}
 						className="p-1 text-muted-foreground hover:text-foreground
-							hover:bg-secondary rounded-md transition-colors"
+							hover:bg-secondary rounded-md transition-colors cursor-pointer"
 					>
 						<X size={18} />
 					</button>
@@ -120,7 +120,7 @@ export default function ChatInfoPanel({
 									onClick={() => setShowInvite(true)}
 									className="w-full flex items-center justify-center gap-2 px-4 py-2.5
 										rounded-md bg-secondary hover:bg-secondary/80 text-foreground
-										text-sm font-medium transition-colors"
+										text-sm font-medium transition-colors cursor-pointer"
 								>
 									<UserPlus size={16} />
 									Invite friends
@@ -132,7 +132,7 @@ export default function ChatInfoPanel({
 								disabled={leaving}
 								className="w-full flex items-center justify-center gap-2 px-4 py-2.5
 									rounded-md bg-destructive/10 hover:bg-destructive/20 text-destructive
-									text-sm font-medium transition-colors disabled:opacity-60"
+									text-sm font-medium transition-colors disabled:opacity-60 cursor-pointer"
 							>
 								{leaving ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
 								Leave group
@@ -229,7 +229,7 @@ function MemberRow({ member, is_self, onClick }: {
 		<button
 			onClick={onClick}
 			className="w-full flex items-center gap-3 px-3 py-2 rounded-md
-				hover:bg-secondary/50 transition-colors text-left"
+				hover:bg-secondary/50 transition-colors text-left cursor-pointer"
 		>
 			<Avatar name={member.user.username} image={member.user.avatar} size="sm" />
 			<span className="text-sm text-foreground flex-1 truncate">
@@ -254,7 +254,7 @@ function InviteSection({inviteable, adding, onAdd, onClose }: {
 				</h4>
 				<button
 					onClick={onClose}
-					className="text-xs text-muted-foreground hover:text-foreground"
+					className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
 				>
 					Cancel
 				</button>
@@ -271,7 +271,7 @@ function InviteSection({inviteable, adding, onAdd, onClose }: {
 							onClick={() => onAdd(f)}
 							disabled={adding === f.id}
 							className="w-full flex items-center gap-3 px-2 py-2 rounded-md
-								hover:bg-secondary/50 transition-colors text-left disabled:opacity-60"
+								hover:bg-secondary/50 transition-colors text-left disabled:opacity-60 cursor-pointer"
 						>
 							<Avatar name={f.username} image={f.avatar} size="sm" />
 							<span className="text-sm text-foreground flex-1 truncate">{f.username}</span>

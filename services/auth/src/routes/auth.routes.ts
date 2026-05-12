@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, refresh, logout, getUserById, getAllFreelancers, getAllClients, SetupProfile, changePassword} from '../controllers/auth.controller';
+import { register, login, refresh, logout, getUserById, getAllFreelancers, getAllClients, SetupProfile, changePassword, updateProfile} from '../controllers/auth.controller';
 import { registerValidator, loginValidator } from '../validators/auth.validator';
 import { validate } from '../middlewares/validate';
 import { authMiddleware } from '@leetconnect/shared';
@@ -27,6 +27,7 @@ router.get("/users/:id",  getUserById);
 router.get("/freelancers", getAllFreelancers);
 router.get("/clients", getAllClients);
 router.post('/setup', authMiddleware, SetupProfile)
+router.patch('/settings', authMiddleware, updateProfileValidator, validate, updateProfile);
 // rate limit for changing password
 const changePasswordLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -46,7 +47,7 @@ router.post('/change-password', authMiddleware, changePasswordLimit ,changePassw
 const avatarUploadLimit = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
-    message: { error: 'Too many password change attempts, please try again later' }
+    message: { error: 'Too many avatar upload attempts, please try again later' }
 });
 
 // Avatar change
@@ -56,20 +57,32 @@ router.post('/avatar', authMiddleware, avatarUploadLimit, upload.single('avatar'
 const twoFALimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 min
     max: 5,
-    message: { error: 'Too many avatar upload attempts, please try again later.' }
+    message: { error: 'Too many 2FA attempts, please try again later.' },
+    keyGenerator: (req): string => {
+      const authUser = req.user as JwtPayload | undefined;
+      return authUser?.userId
+        ? String(authUser.userId)
+        : ipKeyGenerator(req.ip ?? '');
+    },
 });
 
 // 2FA routes
 router.post('/2fa/setup', authMiddleware, twoFALimiter, twoFA.setup2FA);
 router.post('/2fa/verify', authMiddleware, twoFALimiter, twoFA.verifyAndEnable2FA);
 router.post('/2fa/disable', authMiddleware, twoFALimiter, twoFA.disable2FA);
-router.post('/2fa/login',  twoFALimiter, twoFA.login2FA); // NO authMiddleware (user is mid-login, not authenticated yet)
 
+const twoFALoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many 2FA login attempts, please try again later.' }
+});
+
+router.post('/2fa/login', twoFALoginLimiter, twoFA.login2FA); // NO authMiddleware (user is mid-login, not authenticated yet)
 
 // 42 oauth
 router.get('/42', passport.authenticate('42', { session: false }));
 router.get('/42/callback', 
-    passport.authenticate('42', { session: false, failureRedirect: '/login' }),
+    passport.authenticate('42', { session: false, failureRedirect: '/auth/sign-in' }),
     handleOAuthSuccess 
 );
 
@@ -107,6 +120,7 @@ router.get('/me', authMiddleware, async (req, res) => {
         createdAt: true,
         twoFAEnabled: true,
         oauthProvider: true,
+        status: true, // for admin
       }
     });
 
@@ -114,6 +128,10 @@ router.get('/me', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    if (user.status === 'suspended') {
+        return res.status(403).json({ error: 'Account suspended' });
+    }
+    
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user data' });

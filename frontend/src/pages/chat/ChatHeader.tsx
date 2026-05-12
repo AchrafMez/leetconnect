@@ -28,7 +28,7 @@ export default function ChatHeader({
 				<button
 					onClick={onBack}
 					className="sm:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground
-							   hover:bg-secondary rounded-lg transition-colors"
+							   hover:bg-secondary rounded-lg transition-colors cursor-pointer"
 				>
 					<ArrowLeft size={18} />
 				</button>
@@ -36,7 +36,7 @@ export default function ChatHeader({
 					className={username ? "cursor-pointer" : ""}
 					onClick={() => username && navigate(`/profile/${username}`)}
 				>
-					<Avatar name={name} image={avatar}/>
+					<Avatar name={name} image={avatar} />
 				</div>
 				<div>
 					<h2 className="text-foreground font-semibold text-sm">{name}</h2>
@@ -57,7 +57,7 @@ export default function ChatHeader({
 				<button
 					onClick={onInfoClick}
 					className="p-2 text-muted-foreground hover:text-foreground
-						hover:bg-secondary rounded-lg transition-colors"
+						hover:bg-secondary rounded-lg transition-colors cursor-pointer"
 				>
 					<Info size={18} />
 				</button>

@@ -6,6 +6,7 @@ import { chatApi, friendApi } from '../../lib/api';
 import ProfileHeader from './ProfileHeader';
 import ProfileBio from './ProfileBio';
 import { usePresenceSeed } from '@/context/PresenceProvider';
+import ClosedJobReviews from "./ClosedJobReviews";
 
 export default function ProfilePage() {
 	const { username } = useParams<{ username: string }>();
@@ -114,6 +115,7 @@ export default function ProfilePage() {
 				profileUser={profileUser}
 				isOwnProfile={isOwnProfile}
 			/>
+			{profileUser?.id &&<ClosedJobReviews userId={profileUser.id} />}
 		</div>
 	);
 }

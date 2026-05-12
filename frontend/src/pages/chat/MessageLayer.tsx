@@ -44,14 +44,14 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 							<div className="flex items-center gap-1">
 								<button
 									onClick={() => { onDelete(message.id); setConfirming(false); }}
-									className="p-1 rounded-md text-destructive hover:bg-red-500/10 transition-colors"
+									className="p-1 rounded-md text-destructive hover:bg-red-500/10 transition-colors cursor-pointer"
 									title="confirm delete"
 								>
 									<Check size={16} />
 								</button>
 								<button
 									onClick={() => setConfirming(false)}
-									className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+									className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
 									title="cancel"
 								>
 									<X size={16} />
@@ -60,7 +60,7 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 						) : (
 							<button
 								onClick={() => setConfirming(true)}
-								className="p-1 rounded-md opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-secondary transition-all"
+								className="p-1 rounded-md opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive hover:bg-secondary transition-all cursor-pointer"
 								title="delete message"
 							>
 								<Trash2 size={16} />
