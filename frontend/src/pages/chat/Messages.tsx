@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import ChatBox from "./ChatBox";
 import ConversPanel from "./ConversPannel";
 import { chatApi, friendApi } from "../../lib/api";
@@ -223,8 +224,8 @@ export default function Messages() {
 		: false;
 
 	return (
-		<div className="flex fixed inset-0 top-16">
-			<div className={`${active_id ? 'hidden sm:flex' : 'flex'} w-full sm:w-auto flex-col`}>
+		<div className="fixed inset-0 top-16 p-4 flex gap-4">
+			<div className={`${active_id ? 'hidden sm:flex' : 'flex'} w-full sm:w-80 shrink-0`}>
 				<ConversPanel
 					conversations={conversations}
 					active_id={active_id}
@@ -257,12 +258,17 @@ export default function Messages() {
 					onMemberAdded={handleMemberAdded}
 				/>
 			) : (
-				<div className="hidden sm:flex flex-1 items-center justify-center text-muted-foreground">
-					<div className="text-center">
-						<MessageCircle size={48} className="mx-auto mb-3 opacity-30" />
-						<p className="text-lg font-medium">select a conversation</p>
-					</div>
-				</div>
+				<Card className="hidden sm:flex flex-1 items-center justify-center border-border/50 bg-background-elevated">
+					<CardContent className="p-6 pt-6 text-center">
+						<div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+							<MessageCircle size={22} className="text-primary" />
+						</div>
+						<p className="text-base font-semibold text-foreground">Select a conversation</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							Pick a chat from the left to start messaging.
+						</p>
+					</CardContent>
+				</Card>
 			)}
 		</div>
 	);
