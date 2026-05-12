@@ -94,6 +94,7 @@ export default function ChatBox({
 				receiver_id={receiver_id}
 				recv_rest_online={recv_rest_online}
 				username={convers_username}
+				member_count={is_direct ? undefined : convers.members.length}
 				onBack={onBack}
 				onInfoClick={() => setShowInfo(true)}
 			/>

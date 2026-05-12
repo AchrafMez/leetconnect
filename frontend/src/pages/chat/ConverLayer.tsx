@@ -1,4 +1,5 @@
 import Avatar from "@/components/ui/Avatar";
+import { Users } from "lucide-react";
 import { usePresence } from "@/context/PresenceProvider";
 
 export interface ConvMember {
@@ -87,14 +88,22 @@ export default function ConversLayer({
 		>
 			{is_active && <span className="absolute left-0 top-0 w-1 h-full bg-primary"/>}
 
-			<div
-				className={`shrink-0 rounded-full ${
-					convers.type === 'Direct' && onlineNow
-						? 'ring-2 ring-primary ring-offset-2 ring-offset-background-elevated'
-						: ''
-				}`}
-			>
-				<Avatar name={display_name} image={display_avatar}/>
+			<div className="relative shrink-0">
+				<div
+					className={`rounded-full ${
+						convers.type === 'Direct' && onlineNow
+							? 'ring-2 ring-primary ring-offset-2 ring-offset-background-elevated'
+							: ''
+					}`}
+				>
+					<Avatar name={display_name} image={display_avatar}/>
+				</div>
+				{convers.type === 'Group' && (
+					<span className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground
+						flex items-center justify-center ring-2 ring-background-elevated">
+						<Users size={10} />
+					</span>
+				)}
 			</div>
 
 			<div className="flex-1 min-w-0">
