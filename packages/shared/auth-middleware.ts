@@ -16,6 +16,9 @@ try {
 
 export interface JwtPayload { // put the least user info data => Least Privilege
   userId: string; // used userId for better clarity in the code when other services use it so its not confict with other ids
+  username: string;
+  firstname: string;
+  lastname: string;
   role: Role; // admin , user ..
   type:UserType; // freelancer or client
 }

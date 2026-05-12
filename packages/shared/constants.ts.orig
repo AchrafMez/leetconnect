@@ -28,12 +28,6 @@ export const ADMIN_EVENTS = {
 	CONTENT_DELETED: 'content.deleted'
 }
 
-export const MARKET_EVENTS = {
-  JOB_CREATED: 'job.created',
-  JOB_UPDATED: 'job.updated',
-  JOB_DELETED: 'job.deleted',
-} as const;
-
 // The data sent to other services
 export interface UserRegisteredPayload {
   id: string;

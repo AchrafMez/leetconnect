@@ -146,6 +146,8 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 			if(id === user?.userId) {
 				return res.status(StatusCodes.FORBIDDEN).json({ message: 'You cannot delete your own account'});
 			}
+    		// if the admin delete user also delete all his jobs
+			await prisma.job.deleteMany({ where: { clientId: id } });
 
 			await prisma.user.delete({
 				where: {

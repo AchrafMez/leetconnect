@@ -120,7 +120,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         });
         
         // generate access token
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
+        const accessToken = generateAccessToken({ 
+            userId: user.id, 
+            role: user.role, 
+            type: user.type,
+            username: user.username,
+            firstname: user.firstname || "",
+            lastname: user.lastname || ""
+        });
         
         // set HttpOnly cookie for Refresh Token
         res.cookie('refreshToken', refreshToken.token, {
@@ -209,7 +216,14 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             }
         });
 
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
+        const accessToken = generateAccessToken({ 
+            userId: user.id, 
+            role: user.role, 
+            type: user.type,
+            username: user.username,
+            firstname: user.firstname || "",
+            lastname: user.lastname || ""
+        });
 
          res.cookie('refreshToken', refreshToken.token, {
             httpOnly: true,
@@ -282,7 +296,14 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
         }
 
         // Generate a fresh Access Token
-        const newAccessToken = generateAccessToken({  userId: storedToken.user.id, role: storedToken.user.role , type: storedToken.user.type });
+        const newAccessToken = generateAccessToken({  
+            userId: storedToken.user.id, 
+            role: storedToken.user.role , 
+            type: storedToken.user.type,
+            username: storedToken.user.username,
+            firstname: storedToken.user.firstname || "",
+            lastname: storedToken.user.lastname || ""
+        });
 
         return res.json({ accessToken: newAccessToken });
 
