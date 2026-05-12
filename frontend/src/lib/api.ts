@@ -470,13 +470,15 @@ export interface FriendRequest {
     created_at:     string;
     updated_at:     string;
 
-    sender?:   {id: string, username: string, avatar: string};
-    receiver?: {id: string, username: string, avatar: string};
+    sender?:   {id: string, username: string, firstname?: string, lastname?: string, avatar: string};
+    receiver?: {id: string, username: string, firstname?: string, lastname?: string, avatar: string};
 }
 
 export interface Friend {
     id:         string;
     username:   string;
+    firstname?: string;
+    lastname?:  string;
     avatar:     string;
     is_online:  boolean;
 }

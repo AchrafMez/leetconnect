@@ -4,6 +4,7 @@ import ChatInput from "./ChatInput";
 import ChatInfoPanel from "./ChatInfoPanel";
 import { useRef, useEffect, useCallback, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import type { Conversation, ConvMember } from "./ConverLayer";
 import type { Friend } from "../../lib/api";
 
@@ -68,7 +69,6 @@ export default function ChatBox({
 
 	const handleScroll = useCallback(() => {
 		const ref = scroll_ref.current;
-		// console.log("ref:", ref?.scrollTop);
 		if (!ref || !has_more || loading_more) return;
 		if (ref.scrollTop < 20) {
 			const prev_height = ref.scrollHeight;
@@ -86,7 +86,7 @@ export default function ChatBox({
 	}, [has_more, loading_more, onLoadMore]);
 
 	return (
-		<div className="flex-1 flex flex-col min-w-0">
+		<Card className="flex-1 flex flex-col min-w-0 overflow-hidden border-border/50 bg-background-elevated">
 			<ChatHeader
 				name={convers_name}
 				avatar={convers_avatar}
@@ -94,6 +94,7 @@ export default function ChatBox({
 				receiver_id={receiver_id}
 				recv_rest_online={recv_rest_online}
 				username={convers_username}
+				member_count={is_direct ? undefined : convers.members.length}
 				onBack={onBack}
 				onInfoClick={() => setShowInfo(true)}
 			/>
@@ -125,6 +126,6 @@ export default function ChatBox({
 					onMemberAdded={onMemberAdded}
 				/>
 			)}
-		</div>
+		</Card>
 	);
 }

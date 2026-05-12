@@ -14,6 +14,12 @@ import { usePresence, usePresenceSeed } from '@/context/PresenceProvider';
 
 type TabKey = 'connections' | 'incoming' | 'outgoing';
 
+function fullName(u: { username?: string; firstname?: string; lastname?: string } | undefined): string {
+	if (!u) return 'Unknown';
+	const full = [u.firstname, u.lastname].filter(Boolean).join(' ');
+	return full || u.username || 'Unknown';
+}
+
 
 export default function NetworkPage() {
 	const seed = usePresenceSeed();
@@ -187,7 +193,7 @@ export default function NetworkPage() {
 										{incoming.map((req) => (
 											<UserRow
 												key={req.id}
-												name={req.sender?.username || 'Unknown'}
+												name={fullName(req.sender)}
 												avatar={req.sender?.avatar}
 												onSelect={() => {
 													if (req.sender?.username)
@@ -238,7 +244,7 @@ export default function NetworkPage() {
 										{outgoing.map((req) => (
 											<UserRow
 												key={req.id}
-												name={req.receiver?.username || 'Unknown'}
+												name={fullName(req.receiver)}
 												avatar={req.receiver?.avatar}
 												onSelect={() => {
 													if (req.receiver?.username)
@@ -277,7 +283,7 @@ function ConnectionRow({ friend, actionId, onMessage, onRemove, onSelect }: Conn
 
 	return (
 		<UserRow
-			name={friend.username}
+			name={fullName(friend)}
 			avatar={friend.avatar}
 			online={online}
 			onSelect={onSelect}
