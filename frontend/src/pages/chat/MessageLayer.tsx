@@ -44,7 +44,7 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 							<div className="flex items-center gap-1">
 								<button
 									onClick={() => { onDelete(message.id); setConfirming(false); }}
-									className="p-1 rounded-md text-destructive hover:bg-red-500/10 transition-colors cursor-pointer"
+									className="p-1 rounded-md text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
 									title="confirm delete"
 								>
 									<Check size={16} />
@@ -68,11 +68,11 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 						)}
 					</div>
 
-					<div className={`min-w-0 max-w-full bg-primary/90 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 ${confirming ? 'ring-2 ring-destructive/50' : ''}`}>
+					<div className={`min-w-0 max-w-full bg-primary text-primary-foreground rounded-2xl rounded-br-sm px-4 py-2.5 shadow-sm ${confirming ? 'ring-2 ring-destructive/50' : ''}`}>
 						<p className="text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">{message.content}</p>
 					</div>
 				</div>
-				<p className="text-xs text-muted-foreground mt-1">{time}</p>
+				<p className="text-[10px] text-muted-foreground mt-1 mr-1">{time}</p>
 			</div>
 		);
 	}
@@ -81,12 +81,12 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 		<div className="flex gap-3 mb-4">
 			<Avatar name={message.sender?.username} image={message.sender?.avatar} size="sm" />
 			<div className="max-w-[85%] sm:max-w-md min-w-0">
-				<div className="min-w-0 max-w-full bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5">
-					<p className="text-sm text-foreground leading-relaxed wrap-break-word whitespace-pre-wrap">
+				<div className="min-w-0 max-w-full bg-secondary text-foreground rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm">
+					<p className="text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">
 						{message.content}
 					</p>
 				</div>
-				<p className="text-xs text-muted-foreground mt-1">{time}</p>
+				<p className="text-[10px] text-muted-foreground mt-1 ml-1">{time}</p>
 			</div>
 		</div>
 	);

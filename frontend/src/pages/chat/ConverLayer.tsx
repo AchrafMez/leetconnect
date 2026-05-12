@@ -83,27 +83,26 @@ export default function ConversLayer({
 			onClick={onClick}
 			className={`relative w-full flex items-center gap-3 px-4 py-3 text-left
 						transition-colors hover:bg-secondary/50 cursor-pointer
-						${is_active ? "bg-secondary" : ""}`}
+						${is_active ? "bg-secondary/70" : ""}`}
 		>
-			{is_active && <span className="absolute left-0 w-1 h-full bg-primary"/>}
+			{is_active && <span className="absolute left-0 top-0 w-1 h-full bg-primary"/>}
 
-			<div className="relative">
+			<div
+				className={`shrink-0 rounded-full ${
+					convers.type === 'Direct' && onlineNow
+						? 'ring-2 ring-primary ring-offset-2 ring-offset-background-elevated'
+						: ''
+				}`}
+			>
 				<Avatar name={display_name} image={display_avatar}/>
-				{convers.type === 'Direct' && (
-					<span
-						className={`absolute bottom-0 right-0 w-4 h-4 rounded-full
-							border-2 border-background
-							${onlineNow ? 'bg-primary' : 'bg-muted-foreground/90'}`}
-					/>
-				)}
 			</div>
 
 			<div className="flex-1 min-w-0">
-				<div className="flex items-center justify-between">
-					<span className="text-sm font-medium text-foreground">
+				<div className="flex items-center justify-between gap-2">
+					<span className="text-sm font-medium text-foreground truncate">
 						{display_name}
 					</span>
-					<span className="text-xs text-muted-foreground ml-2 shrink-0">
+					<span className="text-[10px] text-muted-foreground shrink-0">
 						{timestamp}
 					</span>
 				</div>

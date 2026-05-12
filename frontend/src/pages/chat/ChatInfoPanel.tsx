@@ -1,7 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, LogOut, UserPlus, Users, ExternalLink, Loader2 } from 'lucide-react';
+import { LogOut, UserPlus, Users, ExternalLink, Loader2, Check } from 'lucide-react';
 import Avatar from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/button';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 import type { Conversation, ConvMember } from './ConverLayer';
 import { displayName } from './ConverLayer';
 import type { Friend } from '../../lib/api';
@@ -67,31 +75,25 @@ export default function ChatInfoPanel({
 	};
 
 	return (
-		<div
-			className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-			onClick={onClose}
-		>
-			<div
-				className="bg-background border border-border rounded-lg w-full max-w-md
-					max-h-[85vh] flex flex-col shadow-lg mx-4"
-				onClick={(e) => e.stopPropagation()}
-			>
-				<div className="px-4 py-3 border-b border-border flex items-center justify-between">
-					<h3 className="text-foreground font-semibold">
-						{isDirect ? 'Profile' : 'Network Info'}
-					</h3>
-					<button
-						onClick={onClose}
-						className="p-1 text-muted-foreground hover:text-foreground
-							hover:bg-secondary rounded-md transition-colors cursor-pointer"
-					>
-						<X size={18} />
-					</button>
-				</div>
+		<Dialog open onOpenChange={(open) => !open && onClose()}>
+			<DialogContent className="max-w-md max-h-[85vh] overflow-y-auto duration-0! data-[state=open]:animate-none! data-[state=closed]:animate-none!">
+				<DialogHeader>
+					<div className="flex items-center gap-3">
+						<div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+							<Users size={18} className="text-primary" />
+						</div>
+						<div className="min-w-0">
+							<DialogTitle>{isDirect ? 'Profile' : 'Network Info'}</DialogTitle>
+							<DialogDescription>
+								{isDirect ? 'View this contact' : `${convers.members.length} member${convers.members.length === 1 ? '' : 's'}`}
+							</DialogDescription>
+						</div>
+					</div>
+				</DialogHeader>
 
-				<div className="flex-1 overflow-y-auto p-4 space-y-5">
+				<div className="space-y-5 pt-2">
 					{error && (
-						<p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+						<p className="text-xs text-destructive bg-destructive/10 px-3 py-2 rounded-md">
 							{error}
 						</p>
 					)}
@@ -116,32 +118,30 @@ export default function ChatInfoPanel({
 									onClose={() => setShowInvite(false)}
 								/>
 							) : (
-								<button
+								<Button
+									variant="secondary"
+									className="w-full"
 									onClick={() => setShowInvite(true)}
-									className="w-full flex items-center justify-center gap-2 px-4 py-2.5
-										rounded-md bg-secondary hover:bg-secondary/80 text-foreground
-										text-sm font-medium transition-colors cursor-pointer"
 								>
-									<UserPlus size={16} />
+									<UserPlus size={16} className="mr-2" />
 									Invite friends
-								</button>
+								</Button>
 							)}
 
-							<button
+							<Button
+								variant="destructive"
+								className="w-full"
 								onClick={handleLeave}
 								disabled={leaving}
-								className="w-full flex items-center justify-center gap-2 px-4 py-2.5
-									rounded-md bg-destructive/10 hover:bg-destructive/20 text-destructive
-									text-sm font-medium transition-colors disabled:opacity-60 cursor-pointer"
 							>
-								{leaving ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} />}
+								{leaving ? <Loader2 size={16} className="animate-spin mr-2" /> : <LogOut size={16} className="mr-2" />}
 								Leave group
-							</button>
+							</Button>
 						</>
 					)}
 				</div>
-			</div>
-		</div>
+			</DialogContent>
+		</Dialog>
 	);
 }
 
@@ -158,21 +158,16 @@ function DirectPanel({
 	const fullName = displayName(user);
 
 	return (
-		<div className="flex flex-col items-center text-center space-y-3 py-4">
-			<Avatar name={fullName} image={user.avatar} size="lg" />
+		<div className="flex flex-col items-center text-center space-y-3 py-2">
+			<Avatar name={fullName} image={user.avatar} size="lg" shape="rounded" />
 			<div>
 				<p className="text-foreground font-semibold text-lg">{fullName}</p>
 				<p className="text-sm text-muted-foreground">@{user.username}</p>
 			</div>
-			<button
-				onClick={() => onViewProfile(user.username)}
-				className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-md
-					bg-primary hover:bg-primary/90 text-primary-foreground
-					text-sm font-medium transition-colors cursor-pointer"
-			>
-				<ExternalLink size={14} />
+			<Button onClick={() => onViewProfile(user.username)}>
+				<ExternalLink size={14} className="mr-2" />
 				View full profile
-			</button>
+			</Button>
 		</div>
 	);
 }
@@ -180,16 +175,10 @@ function DirectPanel({
 function GroupHeader({ convers }: { convers: Conversation }) {
 	return (
 		<div className="flex flex-col items-center text-center space-y-2 py-2">
-			<div className="w-20 h-20 rounded-full bg-primary/15 text-primary
-				flex items-center justify-center">
-				<Users size={32} />
+			<div className="w-16 h-16 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+				<Users size={28} />
 			</div>
-			<div>
-				<p className="text-foreground font-semibold text-lg">{convers.name ?? 'Unnamed Group'}</p>
-				<p className="text-xs text-muted-foreground">
-					{convers.members.length} member{convers.members.length === 1 ? '' : 's'}
-				</p>
-			</div>
+			<p className="text-foreground font-semibold text-lg">{convers.name ?? 'Unnamed Group'}</p>
 		</div>
 	);
 }
@@ -206,7 +195,7 @@ function MembersSection({
 			<h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
 				Members ({members.length})
 			</h4>
-			<div className="space-y-1 max-h-48 overflow-y-auto">
+			<div className="space-y-1 max-h-48 overflow-y-auto rounded-lg border border-border/50 p-1">
 				{members.map((m) => (
 					<MemberRow
 						key={m.user_id}
@@ -233,21 +222,21 @@ function MemberRow({ member, is_self, onClick }: {
 		>
 			<Avatar name={member.user.username} image={member.user.avatar} size="sm" />
 			<span className="text-sm text-foreground flex-1 truncate">
-				{member.user.username}
+				{displayName(member.user)}
 				{is_self && <span className="text-muted-foreground ml-1">(you)</span>}
 			</span>
 		</button>
 	);
 }
 
-function InviteSection({inviteable, adding, onAdd, onClose }: {
+function InviteSection({ inviteable, adding, onAdd, onClose }: {
 	inviteable: Friend[];
 	adding:		string | null;
 	onAdd:		(f: Friend) => void;
 	onClose:	() => void;
 }) {
 	return (
-		<div className="border border-border rounded-md p-3 space-y-2">
+		<div className="rounded-lg border border-border/50 p-3 space-y-2">
 			<div className="flex items-center justify-between">
 				<h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 					Add friends
@@ -277,7 +266,7 @@ function InviteSection({inviteable, adding, onAdd, onClose }: {
 							<span className="text-sm text-foreground flex-1 truncate">{f.username}</span>
 							{adding === f.id
 								? <Loader2 size={14} className="animate-spin text-muted-foreground" />
-								: <UserPlus size={14} className="text-primary" />}
+								: <Check size={14} className="text-primary opacity-0" />}
 						</button>
 					))}
 				</div>

@@ -56,7 +56,7 @@ export default function App() {
             <Route path="/market/payment/:id" element={<PaymentPage />} />
 
             <Route path="/messages" element={<Messages />} />
-            <Route path="/chat" element={<Navigate to="/messages" replace />} />
+            <Route path="/chat" element={<Messages/>} />
             <Route path="/settings/profile" element={<ProfileSettingsPage />} />
             <Route path="/network" element={<NetworkPage />} />
             <Route path="/profile" element={<ProfilePage />} />
