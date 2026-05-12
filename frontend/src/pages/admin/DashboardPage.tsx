@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { adminApi, User } from '@/lib/api';
 import { Spin } from '@/components/ui/Spin';
 import { StatCard } from '@/components/ui/StatCard';
+import Avatar from '@/components/ui/Avatar';
 
 const ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
 
@@ -126,7 +127,12 @@ export const DashboardPage = () => {
                 <tr key={u.id} className="hover:bg-secondary/40 transition-colors">
                   <td className="px-6 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
+											<Avatar
+												name={[u.firstname, u.lastname].filter(Boolean).join(' ')}
+												image={u.avatar}
+												size='xs'>
+											</Avatar>
+                      {/* <div className="w-8 h-8 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
 											{u.avatar ? (
 												<img 
 													src={u.avatar} 
@@ -137,7 +143,7 @@ export const DashboardPage = () => {
 											) : (
 												<span>{`${u.firstname[0]}${u.lastname[0]}`}</span>
 											)}
-										</div>
+											</div> */}
                       <div>
                         <p className="text-sm font-medium text-foreground">{`${u.firstname} ${u.lastname}`}</p>
                         <p className="text-xs text-muted-foreground">{u.email}</p>
@@ -213,7 +219,12 @@ export const DashboardPage = () => {
  
                     <td className="px-6 py-3.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
+												<Avatar
+													name={[job.createdBy.firstname, job.createdBy.lastname].filter(Boolean).join(' ')}
+													image={job.createdBy.avatar}
+													size='xs'>
+												</Avatar>
+                        {/* <div className="w-7 h-7 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
 											{job.createdBy.avatar ? (
 												<img 
 													src={job.createdBy.avatar} 
@@ -224,7 +235,7 @@ export const DashboardPage = () => {
 											) : (
 												<span>{`${job.createdBy.firstname[0]}${job.createdBy.lastname[0]}`}</span>
 											)}
-										</div>
+										</div> */}
                         <span className="text-sm text-foreground">{job.postedByName}</span>
                       </div>
                     </td>

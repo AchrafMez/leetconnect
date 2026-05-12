@@ -1,12 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/userContext';
-import { LogOut,
-				 Briefcase,
-				 PieChart,
-				 Shield,
-				 LayoutGrid,
-				 Users } from "lucide-react";
 import { Link } from 'react-router-dom';
+import { HiOutlineArrowRightStartOnRectangle, HiOutlineBriefcase,
+				 HiOutlineChartPie,
+				 HiOutlineShieldCheck,
+				 HiOutlineSquares2X2,
+				 HiOutlineUsers } from 'react-icons/hi2';
 
 
 const NAV_MAIN = [
@@ -15,7 +14,7 @@ const NAV_MAIN = [
     href: '/admin',
     minRole: 'MODERATOR' as const,
     icon: (
-      <LayoutGrid className='w-4 h-4'/>
+      <HiOutlineSquares2X2 className='w-4 h-4'/>
     ),
   },
   {
@@ -23,7 +22,7 @@ const NAV_MAIN = [
     href: '/admin/users',
     minRole: 'MODERATOR' as const,
     icon: (
-			<Users className="h-4 w-4" />
+			<HiOutlineUsers className="h-4 w-4" />
 
     ),
   },
@@ -32,7 +31,7 @@ const NAV_MAIN = [
 		href: '/admin/jobs',
 		minRole: 'MODERATOR' as const,
 		icon: (
-			<Briefcase className='h-4 w-4' />
+			<HiOutlineBriefcase className='h-4 w-4' />
 		),
 	},
   {
@@ -40,7 +39,7 @@ const NAV_MAIN = [
     href: '/admin/roles',
     minRole: 'ADMIN' as const,
     icon: (
-      <Shield className='h-4 w-4' />
+      <HiOutlineShieldCheck className='h-4 w-4' />
     ),
   },
   {
@@ -48,7 +47,7 @@ const NAV_MAIN = [
     href: '/admin/analytics',
     minRole: 'ADMIN' as const,
     icon: (
-      <PieChart className='h-5 w-5' />
+      <HiOutlineChartPie className='h-4 w-4' />
     ),
   },
 ];
@@ -120,7 +119,7 @@ export const Sidebar = () => {
           onClick={handleLogout}
           className="w-full flex pl-6 items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary transition-colors"
         >
-          <LogOut className='w-5 h-5' />
+          <HiOutlineArrowRightStartOnRectangle className='w-5 h-5' />
 					<span className='text-destructive'>Logout</span>
         </button>
     </aside>

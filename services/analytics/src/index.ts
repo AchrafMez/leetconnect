@@ -15,6 +15,7 @@ import { initEventBus,
 import analyticsRoutes from "./routes/analytics.route"
 import { connectDb } from './config/prisma';
 import { RegisterEventHandlers } from './events';
+import { limiter } from './middleware/limiters';
 
 connectDb();
 initEventBus();
@@ -48,6 +49,7 @@ const corsOpts = {
 }
 
 // middleware
+app.use(limiter);
 app.use(helmet());
 app.use(cors(corsOpts));
 app.use(morgan('dev'));

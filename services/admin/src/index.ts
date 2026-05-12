@@ -10,6 +10,7 @@ import { Server } from "http"
 import { authMiddleware, initEventBus } from '@leetconnect/shared';
 import { errorHandler } from "./errorHandler"
 import { RegisterEventHandlers } from "./events"
+import { limiter } from './middleware/limiters'
 
 connectDb();
 initEventBus();
@@ -23,6 +24,7 @@ const corsOpts = {
   credentials: true // Required to accept cookies from the frontend
 }
 
+app.use(limiter);
 app.use(cors(corsOpts));
 app.use(express.json());
 app.use(helmet());
