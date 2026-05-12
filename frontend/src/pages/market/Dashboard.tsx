@@ -126,7 +126,7 @@ const Dashboard: React.FC = () => {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Overview</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Welcome back, {user?.username}. Here's what's happening.
+            Welcome, {user?.username}. Here's what's happening.
           </p>
         </div>
         {user?.type === "CLIENT" && (
