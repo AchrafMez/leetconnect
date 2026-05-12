@@ -62,9 +62,8 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/:username" element={<ProfilePage />} />
           </Route>
-          {/*Admin Area*/}
-          <Route path="/admin/*" element={<Admin />} />
         </Route>
+        {/*Admin Area*/}
         <Route path="/admin/*" element={<Admin />} />
       </Routes>
     </>
