@@ -7,7 +7,7 @@ import passport from 'passport';
 import './lib/passport';
 
 // shared resources
-import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal, subscribeToEvents, EVENTS} from '@leetconnect/shared';
+import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal, subscribeToEvents, EVENTS, ADMIN_EVENTS} from '@leetconnect/shared';
 
 import cookieParser from 'cookie-parser'; // to store tokens in cookies
 import prisma from './lib/prisma';
@@ -127,6 +127,50 @@ async function start() {
         }
       } catch (err) {
         console.error('Failed to update aggregated rating:', err);
+      }
+    });
+
+    // subscribe to Admin user deletion
+    subscribeToEvents(ADMIN_EVENTS.USER_DELETED, async (channel, message: any) => {
+      try {
+        const { id } = message.data;
+        if (!id) return;
+
+        // Transaction ensures we delete tokens AND user
+        await prisma.$transaction([
+          prisma.refreshToken.deleteMany({ where: { userId: id } }),
+          prisma.user.delete({ where: { id } })
+        ]);
+        
+        console.log(`[EVENT] Admin deleted user: ${id}. Auth records wiped.`);
+      } catch (err) {
+        console.error('Admin User Deletion Sync Failed:', err);
+      }
+    });
+
+    // subscribe to admin user update (changing role ...)
+    subscribeToEvents(ADMIN_EVENTS.USER_UPDATED, async (channel, message: any) => {
+      try {
+        const { id, role, status, email, username } = message.data;
+        if (!id) return;
+
+        // If the admin suspended the user, we immediately revoke their sessions
+        if (status === 'suspended') {
+          await prisma.refreshToken.deleteMany({ where: { userId: id } });
+          console.log(`[EVENT] User ${id} suspended by admin. Sessions revoked.`);
+        }
+
+        await prisma.user.update({
+          where: { id },
+          data: {
+            role,      // Sync role changes
+            status,    // Sync suspension status
+          }
+        });
+
+        console.log(`[EVENT] Admin updated user: ${id}. Auth DB synchronized.`);
+      } catch (err) {
+        console.error('Admin User Update Sync Failed:', err);
       }
     });
 
