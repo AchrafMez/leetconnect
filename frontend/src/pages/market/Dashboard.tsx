@@ -71,8 +71,8 @@ const Dashboard: React.FC = () => {
               }, 0)
           });
         }
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+      } catch (err) {
+        // Handle error silently here since it's a dashboard view
       } finally {
         setIsLoading(false);
       }

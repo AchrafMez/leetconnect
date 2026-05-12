@@ -11,25 +11,17 @@ import { initEventBus,
 				 errorHandler,
 				 getMetrics,
 				 httpRequestDuration,
-				 httpRequestsTotal,
-				 AUTH_EVENTS,
-				 subscribeToEvents,  
-				 ADMIN_EVENTS } from '@leetconnect/shared';
+				 httpRequestsTotal } from '@leetconnect/shared';
 import analyticsRoutes from "./routes/analytics.route"
-import { connectDb, prisma } from './config/prisma';
+import { connectDb } from './config/prisma';
+import { RegisterEventHandlers } from './events';
 
-
-// import fs from 'fs';
-// import https from 'https';
 connectDb();
 initEventBus();
+RegisterEventHandlers()
 
 const app = express();
 const PORT = 3004;
-// const sslOptions = {
-//     key: fs.readFileSync(process.env.SSL_KEY_PATH as string),
-//     cert: fs.readFileSync(process.env.SSL_CERT_PATH as string)
-// };
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -50,9 +42,14 @@ app.use((req, res, next) => {
   next();
 });
 
+const corsOpts = {
+  origin: process.env.FRONTEND_URL || 'https://localhost:5173', // Only allows requests from  React frontend
+  credentials: true // Required to accept cookies from the frontend
+}
+
 // middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOpts));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -89,64 +86,6 @@ async function start() {
   }
 }
 start();
-
-	subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, async(channel, message: any) => {
-		try {
-			const { id, username, avatar, role, email, firstname, lastname, status, createdAt } = message.data;
-
-			await prisma.user.upsert({
-				where: { id: id },
-				update: {
-					username: username, avatar: avatar, firstname: firstname,
-					lastname: lastname, status: status, role: role
-				},
-				create: {
-          id: id, username: username, avatar: avatar, role: role,
-					email: email, firstname: firstname, lastname: lastname,
-					status: status, createdAt: createdAt
-        }
-			});
-
-			console.log(`Synced user ${username} to Analytics DB`);
-		} catch (error) {
-			console.error(`Sync failed for user:`, error);
-		}
-	})
-	subscribeToEvents(AUTH_EVENTS.USER_UPDATED, async(channel, message: any) => {
-		try {
-			const { id, username, avatar, email, firstname, lastname } = message.data;
-	
-			await prisma.user.update({
-				where: { id: id },
-				data: { username, avatar, firstname, lastname, email},
-				select: {
-					id: true, email: true, firstname: true, lastname: true, avatar: true, username: true
-				}
-			});
-			
-			console.log(`Synced user ${username} to Analytics DB`);
-		} catch (error) {
-			console.error(`Sync failed for user:`, error);
-		}
-	})
-	subscribeToEvents(ADMIN_EVENTS.USER_UPDATED, async(channel, message: any) => {
-		try {
-			const { id , username, role, status } = message.data;
-
-			await prisma.user.update({
-				where: { id: id },
-				data: { role },
-				select: {
-					id: true,
-					role: true
-				}
-			});
-
-			console.log(`Synced user ${username} to Analytics DB`);
-		} catch (error) {
-			console.error(`Sync failed for user:`, error);
-		}
-	})
 
 
 // shutdown

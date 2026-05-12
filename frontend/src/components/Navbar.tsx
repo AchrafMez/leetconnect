@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import Avatar from "@/components/ui/avatar";
+import Avatar from "@/components/ui/Avatar";
 
 const clientMenuItems = [
   { name: "Overview", path: "/market/dashboard", icon: LayoutDashboard, desc: "View your account activity and stats" },

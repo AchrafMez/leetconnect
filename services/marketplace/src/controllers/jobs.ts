@@ -285,6 +285,16 @@ export const submitReview = async (req: Request, res: Response) => {
       rating: Number(rating),
     });
 
+    // review notif
+    await publishEvent(EVENTS.NOTIF_CREATE, {
+      user_id: toUserId,
+      type: "SYSTEM",
+      title: "New Review Received",
+      body: isClient 
+        ? `The client left a ${rating}-star review on your project "${job.title}".`
+        : `The freelancer left a ${rating}-star review on your project "${job.title}".`
+    });
+
     return res.json({ success: true, review });
   } catch (error: any) {
     // Unique constraint violation — user already reviewed this job

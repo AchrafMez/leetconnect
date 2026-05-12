@@ -15,15 +15,21 @@ const PaymentPage = () => {
   const [payment, setPayment] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPayment = async () => {
       try {
         setIsLoading(true);
+        setFetchError(null);
         const data = await api<{ payment: any }>(`/market/jobs/payments/${id}`);
         setPayment(data.payment);
       } catch (err) {
-        console.error("Failed to fetch payment:", err);
+        if (err instanceof Error) {
+          setFetchError(err.message);
+        } else {
+          setFetchError("Failed to fetch payment");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -37,8 +43,11 @@ const PaymentPage = () => {
       await api(`/market/jobs/payments/${id}/pay`, { method: "POST" });
       navigate("/market/dashboard");
     } catch (err) {
-      console.error("Payment failed:", err);
-      alert("Transaction could not be completed. Please try again.");
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Transaction could not be completed. Please try again.");
+      }
     } finally {
       setIsPaying(false);
     }
@@ -48,6 +57,13 @@ const PaymentPage = () => {
     return (
       <div className="flex items-center justify-center min-h-100">
         <Loader2 className="w-5 h-5 text-primary animate-spin" />
+      </div>
+    );
+
+  if (fetchError)
+    return (
+      <div className="text-center py-20 text-sm text-destructive">
+        {fetchError}
       </div>
     );
 

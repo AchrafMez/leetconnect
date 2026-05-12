@@ -1,14 +1,10 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { JobStatus } from "../../prisma/generated/client";
-import { ReasonPhrases, StatusCodes } from 'http-status-codes'
+import { StatusCodes } from 'http-status-codes'
 import { ADMIN_EVENTS, publishEvent } from "@leetconnect/shared";
 
-export const getAllJobs = async (req: Request, res: Response) => {
-	const user = req.user;
-
-	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
-		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
+export const getAllJobs = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const { search, status, category } = req.query;
 		const jobs = await prisma.job.findMany({
@@ -35,16 +31,11 @@ export const getAllJobs = async (req: Request, res: Response) => {
 		return res.status(StatusCodes.OK).json(jobs);
 	} catch (error) {
 		console.error('[getAllJobs]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch jobs'});
+		next(error);
 	}
 }
 
-export const getJob = async (req: Request, res: Response) => {
-	const user = req.user;
-
-	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
-		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
-
+export const getJob = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const id = req.params.id as string;
 		if(!id)
@@ -66,16 +57,11 @@ export const getJob = async (req: Request, res: Response) => {
 		return res.status(StatusCodes.OK).json(job);
 	} catch (error) {
 		console.error('[getJob]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch job'});
+		next(error);
 	}
 }
 
-export const editJobStatus = async (req: Request, res: Response) => {
-	const user = req.user;
-
-	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
-		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
-
+export const editJobStatus = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const id = req.params.id as string;
 		if(!id)
@@ -97,20 +83,12 @@ export const editJobStatus = async (req: Request, res: Response) => {
 		await publishEvent(ADMIN_EVENTS.CONTENT_UPDATED, updatedJob);
 		return res.status(StatusCodes.OK).json(updatedJob);
 	} catch (error: any) {
-		if(error?.code === 'P2025') {
-			return res.status(StatusCodes.NOT_FOUND).json({ message: 'Job not found'});
-		}
 		console.error('[editJob]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to update job status'});
+		next(error);
 	}
 }
 
-export const deleteJob = async (req: Request, res: Response) => {
-	const user = req.user;
-
-	if(user?.role !== 'ADMIN' && user?.role !== 'MODERATOR')
-		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
-
+export const deleteJob = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const id = req.params.id as string;
 		if(!id)
@@ -122,9 +100,7 @@ export const deleteJob = async (req: Request, res: Response) => {
 		await publishEvent(ADMIN_EVENTS.CONTENT_DELETED, { id });
 		return res.status(StatusCodes.OK).json({ message: 'Job deleted successfully'});
 	} catch (error: any) {
-		if(error?.code === 'P2025')
-			return res.status(StatusCodes.NOT_FOUND).json({ message: 'Job not foudn'});
 		console.error('[deleteJob]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to delete job'});
+		next(error);
 	}
 }

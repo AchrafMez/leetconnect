@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, UserPlus, Users, ExternalLink, Loader2, Check } from 'lucide-react';
-import Avatar from '@/components/ui/avatar';
+import Avatar from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,

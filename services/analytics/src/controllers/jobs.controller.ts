@@ -1,14 +1,9 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { prisma } from '../config/prisma';
-import { ReasonPhrases, StatusCodes } from 'http-status-codes';
+import { StatusCodes } from 'http-status-codes';
 import { getDateRange } from './utils';
 
-export const getJobsAnalytics = async (req: Request, res:Response) =>  {
-	const user = req.user;
-
-	if(user?.role !== 'ADMIN')
-		return res.status(StatusCodes.FORBIDDEN).json({ message: ReasonPhrases.FORBIDDEN});
-
+export const getJobsAnalytics = async (req: Request, res:Response, next: NextFunction) =>  {
 	try {
 		const { startDate, endDate} = getDateRange(req.query);
 
@@ -29,24 +24,28 @@ export const getJobsAnalytics = async (req: Request, res:Response) =>  {
 			// status breakdown
 			prisma.job.groupBy({
 				by: ['status'],
+				where: { createdAt: { gte: startDate, lte: endDate } },
 				_count: { status: true},
 			}),
 
 			// category breakdown
 			prisma.job.groupBy({
 				by: ['category'],
+				where: { createdAt: { gte: startDate, lte: endDate } },
 				_count: { category: true}, 
 				orderBy: { _count: { category: 'desc'}},
 			}),
 
 			prisma.job.groupBy({
 				by: ['budgetType'],
+				where: { createdAt: { gte: startDate, lte: endDate } },
 				_count: { budgetType: true},
 			}),
 
-			// average proposals across all jobs
+			// average proposals across all jobs in date range
 			prisma.job.aggregate({
 				_avg: { proposals: true},
+				where: { createdAt: { gte: startDate, lte: endDate } },
 			}),
 		]);
 
@@ -57,16 +56,16 @@ export const getJobsAnalytics = async (req: Request, res:Response) =>  {
 
 		const statusSafe = byStatus.map(s => ({
       status: s.status,
-      count:  s._count.status,
+      count: s._count.status,
     }));
 
     const categorySafe = byCategory.map(c => ({
       category: c.category,
-      count:    c._count.category,
+      count: c._count.category,
     }));
 
     const budgetTypeSafe = byBudgetType.map(b => ({
-      type:  b.budgetType,
+      type: b.budgetType,
       count: b._count.budgetType,
     }));
 
@@ -78,7 +77,6 @@ export const getJobsAnalytics = async (req: Request, res:Response) =>  {
 			avgProposals: Math.round(avgProposals._avg.proposals ?? 0),
 		});
 	} catch (error) {
-		console.error('[getJobsAnalytics]: ', error);
-		res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Failed to fetch jobs analytics'});
+		next(error);
 	}	
 }

@@ -10,18 +10,24 @@ const Proposals: React.FC = () => {
   const navigate = useNavigate();
   const [proposals, setProposals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchProposals = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const data = await proposalsApi.getMyProposals();
         if (data.success && data.proposals) {
           setProposals(data.proposals);
         }
-      } catch (error) {
-        console.error("Failed to fetch proposals:", error);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Failed to fetch proposals");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -56,6 +62,12 @@ const Proposals: React.FC = () => {
           className="pl-9 h-9 text-sm"
         />
       </div>
+
+      {error && (
+        <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mb-4 whitespace-pre-wrap">
+          <p className="text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       {/* Proposals List */}
       <Card className="border-border/50 bg-background-elevated shadow-none">

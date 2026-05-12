@@ -3,7 +3,7 @@ import { Users, Check, Loader2 } from "lucide-react";
 import { chatApi } from "../../lib/api";
 import type { Friend } from "../../lib/api";
 import type { Conversation } from "./ConverLayer";
-import Avatar from "@/components/ui/avatar";
+import Avatar from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

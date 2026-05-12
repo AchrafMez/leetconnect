@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import Avatar from "@/components/ui/avatar";
+import Avatar from "@/components/ui/Avatar";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Search, Star, Loader2, UserSearch } from "lucide-react";
 import { categoriesData } from "@/assets/assets";
@@ -16,14 +16,20 @@ const Freelancers: React.FC = () => {
   const [allFreelancers, setAllFreelancers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [error, setError] = useState<string | null>(null);
 
   const fetchFreelancers = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const data = await api<{ freelancers: any[] }>(`/auth/freelancers`);
       setAllFreelancers(data.freelancers || []);
-    } catch (error) {
-      console.error("Failed to fetch freelancers:", error);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to fetch freelancers");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +82,12 @@ const Freelancers: React.FC = () => {
           className="pl-10"
         />
       </div>
+
+      {error && (
+        <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mb-4 whitespace-pre-wrap">
+          <p className="text-sm font-medium">{error}</p>
+        </div>
+      )}
 
       {/* Category Filters — scrollable for many categories */}
       <div className="relative">

@@ -55,13 +55,17 @@ export default function App() {
             <Route path="/market/jobs/:id" element={<JobDetails />} />
             <Route path="/market/payment/:id" element={<PaymentPage />} />
 
-            <Route path="/chat" element={<Messages />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/chat" element={<Messages/>} />
             <Route path="/settings/profile" element={<ProfileSettingsPage />} />
             <Route path="/network" element={<NetworkPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/:username" element={<ProfilePage />} />
           </Route>
+
+          {/*Admin Area*/}
+         <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/*" element={<Admin />} />
         </Route>
       </Routes>
     </>
