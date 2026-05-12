@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { CanAccess } from "@/components/CanAccess";
+import { categoriesData } from "@/assets/assets";
 import { Job, JobStatus, JobCategory } from "../../types"
 import { HiOutlineBookmark,
 				 HiOutlineBookmarkSlash,
@@ -22,11 +23,7 @@ const STATUS_STYLES: Record<JobStatus, { badge: string; dot: string; label: stri
 };
 const ALL_STATUSES: JobStatus[] = ['active', 'closed', 'flagged'];
 
-const ALL_CATEGORIES: JobCategory[] = [
-	'Frontend Dev', 'Backend Dev', 'Full Stack', 'Mobile Dev',
-  'UI/UX Design', 'DevOps', 'Data Science', 'QA & Testing',
-  'Content Writing', 'Marketing',
-]
+const ALL_CATEGORIES: JobCategory[] = Object.keys(categoriesData);
 
 function formatBudget(job: Job) {
 	return job.budgetType === 'hourly' ? `$${job.budget}/hr` : `$${job.budget.toLocaleString()}`;

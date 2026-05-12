@@ -1,21 +1,17 @@
 import type { Request, Response, NextFunction } from 'express';
+import type { z } from 'zod';
 import prisma from '../config/config.database';
 import * as err from '../middleware/error.handler';
 import { notify } from '../lib/notify';
+import {
+	message_params,
+	message_query,
+	message_body,
+} from '../schemas/schema.message';
 
-function parse_user_id(value: unknown, label: string): string {
-	const val = typeof value === 'string' ? value.trim() : '';
-	if (!val)
-		throw new err.BadRequestError(`Invalid ${label}`);
-	return val;
-}
-
-function parse_int_id(value: unknown, label: string): number {
-	const parsed = Number(value);
-	if (!Number.isInteger(parsed) || parsed <= 0)
-		throw new err.BadRequestError(`Invalid ${label}`);
-	return parsed;
-}
+type MessageParams = z.infer<typeof message_params>;
+type MessageQuery  = z.infer<typeof message_query>;
+type MessageBody   = z.infer<typeof message_body>;
 
 async function assert_membership(convers_id: number, user_id: string) {
 	const member = await prisma.conversMember.findFirst({
@@ -28,13 +24,11 @@ async function assert_membership(convers_id: number, user_id: string) {
 
 export async function list(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
-		const convers_id = parse_int_id(req.params.id, 'convers_id');
+		const user_id = req.user!.userId;
+		const {id: convers_id} = req.params as unknown as MessageParams;
+		const {limit, cursor}  = req.query  as unknown as MessageQuery;
 
 		await assert_membership(convers_id, user_id);
-
-		const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
-		const cursor = req.query.cursor ? parse_int_id(req.query.cursor, 'cursor') : undefined;
 
 		const messages = await prisma.message.findMany({
 			where: { convers_id: convers_id},
@@ -72,18 +66,11 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 export async function send(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
-		const convers_id = parse_int_id(req.params.id, 'convers_id');
+		const user_id = req.user!.userId;
+		const {id: convers_id} = req.params as unknown as MessageParams;
+		const {content}        = req.body   as MessageBody;
 
 		await assert_membership(convers_id, user_id);
-
-		if (typeof req.body.content !== 'string')
-			throw new err.BadRequestError('content must be a string');
-		const content = req.body.content.trim();
-		if (!content)
-			throw new err.BadRequestError('content is missing');
-		if (content.length > 3000)
-			throw new err.BadRequestError('content too long');
 
 		const message = await prisma.message.create({
 			data: {
@@ -113,7 +100,7 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 		const io = req.app.get('io');
 		io.to(`convers:${convers_id}`).emit('new_message', message);
 
-		const members = await prisma.conversMember.findMany({
+		const members: { user_id: string }[] = await prisma.conversMember.findMany({
 			where: { convers_id },
 			select: { user_id: true },
 		});
@@ -160,47 +147,13 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 	}
 }
 
-// export async function get_one(req: Request, res: Response, next: NextFunction) {
-// 	try {
-// 		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
-// 		const convers_id = parse_int_id(req.params.id, 'convers_id');
-// 		const msg_id	 = parse_int_id(req.body.msg_id, 'msg_id');
-
-// 		await assert_membership(convers_id, user_id);
-
-// 		const message = await prisma.message.findFirst({
-// 			where: {
-// 				id: msg_id,
-// 				convers_id
-// 			},
-// 			select: {
-// 				id: true,
-// 				content: true,
-// 				sender_id: true,
-// 				convers_id: true,
-// 				created_at: true,
-// 				sender: {
-// 					select: {
-// 						username: true,
-// 						avatar: true
-// 					}
-// 				}
-// 			}
-// 		});
-// 		if (!message)
-// 			throw new err.NotFoundError('message not found');
-
-// 		res.status(200).json(message);
-// 	} catch (err) {
-// 		next(err);
-// 	}
-// }
-
 export async function remove(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id	 = parse_user_id(req.user?.userId, 'user_id');
-		const convers_id = parse_int_id(req.params.id, 'convers_id');
-		const msg_id	 = parse_int_id(req.params.msg_id, 'msg_id');
+		const user_id = req.user!.userId;
+		const {id: convers_id, msg_id} = req.params as unknown as MessageParams;
+
+		if (msg_id === undefined)
+			throw new err.BadRequestError('msg_id: required');
 
 		await assert_membership(convers_id, user_id);
 

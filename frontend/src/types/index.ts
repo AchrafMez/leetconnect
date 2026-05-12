@@ -15,17 +15,7 @@ export type Role = 'ADMIN' | 'MODERATOR' | 'USER';
 }
  */
 export type JobStatus = 'active' | 'closed' | 'flagged';
-export type JobCategory =
-  | 'Frontend Dev'
-  | 'Backend Dev'
-  | 'Full Stack'
-  | 'Mobile Dev'
-  | 'UI/UX Design'
-  | 'DevOps'
-  | 'Data Science'
-  | 'QA & Testing'
-  | 'Content Writing'
-  | 'Marketing';
+export type JobCategory = string;
 
 export interface Job {
   id: string;

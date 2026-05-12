@@ -1,4 +1,4 @@
-import Avatar from "./Avatar";
+import Avatar from "@/components/ui/Avatar";
 import { useState } from "react";
 import { Trash2, Check, X } from "lucide-react";
 
@@ -38,7 +38,7 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 	if (is_mine) {
 		return (
 			<div className="flex flex-col items-end mb-4 group">
-				<div className="flex items-center max-w-md">
+				<div className="flex items-center max-w-[85%] sm:max-w-md">
 					<div className="w-14 mr-2 flex items-center justify-end shrink-0">
 						{confirming ? (
 							<div className="flex items-center gap-1">
@@ -68,8 +68,8 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 						)}
 					</div>
 
-					<div className={`w-fit bg-primary/90 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 ${confirming ? 'ring-2 ring-destructive/50' : ''}`}>
-						<p className="text-sm leading-relaxed">{message.content}</p>
+					<div className={`min-w-0 max-w-full bg-primary/90 text-foreground rounded-2xl rounded-br-sm px-4 py-2.5 ${confirming ? 'ring-2 ring-destructive/50' : ''}`}>
+						<p className="text-sm leading-relaxed wrap-break-word whitespace-pre-wrap">{message.content}</p>
 					</div>
 				</div>
 				<p className="text-xs text-muted-foreground mt-1">{time}</p>
@@ -80,9 +80,9 @@ export default function MessageLayer({message, curr_user, onDelete}: MessageProp
 	return (
 		<div className="flex gap-3 mb-4">
 			<Avatar name={message.sender?.username} image={message.sender?.avatar} size="sm" />
-			<div className="max-w-md">
-				<div className="w-fit bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5">
-					<p className="text-sm text-foreground leading-relaxed">
+			<div className="max-w-[85%] sm:max-w-md min-w-0">
+				<div className="min-w-0 max-w-full bg-secondary rounded-2xl rounded-bl-sm px-4 py-2.5">
+					<p className="text-sm text-foreground leading-relaxed wrap-break-word whitespace-pre-wrap">
 						{message.content}
 					</p>
 				</div>

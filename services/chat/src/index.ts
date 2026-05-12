@@ -19,6 +19,7 @@ import { setup_sockets } from './sockets/socket.handler';
 import {
 	initEventBus, subscribeToEvents,
 	AUTH_EVENTS,
+	ADMIN_EVENTS,
 	getMetrics,
 	httpRequestDuration,
 	httpRequestsTotal,
@@ -84,40 +85,58 @@ start_chat_server();
 
 async function start_chat_server() {
 	try {
-		initEventBus();
-		subscribeToEvents('user.*', async (channel, message: any) => {
-			const data = message.data;
-			if (channel === AUTH_EVENTS.USER_REGISTERED) {
-				await prisma.user.upsert({
-					where:  {id: data.id },
-					update: {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type},
-					create: {id: data.id, email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type}
-				});
-			} else if (channel === AUTH_EVENTS.USER_UPDATED) {
-				await prisma.user.update({
-					where: {id: data.id},
-					data:  {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, avatar: data.avatar, bio: data.bio, location: data.location, website: data.website}
-				});
-			} else {
-				return;
-			}
-			console.log(`user synced to chat_db: [${data.id}](${data.username})`);
-		});
 		await prisma.$connect().then( () => {
 			console.log('connected to database.');
 		});
+
+		initEventBus();
+		subscribeToEvents('user.*', async (channel, message: any) => {
+			try {
+				const data = message?.data;
+				if (!data?.id) return;
+
+				if (channel === AUTH_EVENTS.USER_REGISTERED) {
+					await prisma.user.upsert({
+						where:  {id: data.id},
+						update: {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type},
+						create: {id: data.id, email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, role: data.role, type: data.type}
+					});
+				} else if (channel === AUTH_EVENTS.USER_UPDATED) {
+					await prisma.user.update({
+					where: {id: data.id},
+					data:  {email: data.email, username: data.username, firstname: data.firstname, lastname: data.lastname, avatar: data.avatar, bio: data.bio, location: data.location, website: data.website}
+					});
+				} else if (channel === ADMIN_EVENTS.USER_DELETED) {
+					await prisma.user.delete({where: {id: data.id}}).catch((err: any) => {
+						console.error('failed to delete user:', err);
+						throw err;
+					});
+				} else {
+					return ;
+				}
+				console.log(`user synced to chat_db: ${channel} [${data.id}]`);
+			} catch (err) {
+				console.error(`[user sync] ${channel} failed:`, (err as Error).message);
+			}
+		});
+
 		await reset_presence();
 
 		subscribeToEvents(EVENTS.NOTIF_CREATE, async (channel, message: any) => {
 			if (channel !== EVENTS.NOTIF_CREATE) return;
-			const data = message.data as NotifEventPayload;
+			try {
+				const data = message?.data as NotifEventPayload | undefined;
+				if (!data?.user_id || !data.type || !data.title) return;
 
-			await notify(io, {
-				user_id: data.user_id,
-				type:	 data.type,
-				title:	 data.title,
-				...(data.body != null && { body: data.body }),
-			});
+				await notify(io, {
+					user_id: data.user_id,
+					type:	 data.type,
+					title:	 data.title,
+					...(data.body != null && { body: data.body }),
+				});
+			} catch (err) {
+				console.error('[notif] sync failed:', (err as Error).message);
+			}
 		});
 		server.listen(PORT, () => {
 			console.log(`chat server running on port: ${PORT}`);

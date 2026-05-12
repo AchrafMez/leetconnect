@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+enum JobStatus {
+  OPEN
+  IN_PROGRESS
+  PAYMENT_PENDING
+  COMPLETED
+  CLOSED
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model Review {
+  id           String   @id @default(uuid())
+  rating       Int
+  comment      String
+  
+  // Who wrote the review
+  fromUserId   String
+  // Who is being reviewed
+  toUserId     String
+  
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+
+  @@unique([fromUserId, jobId])
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+
+  amount        Float
+  status        PaymentStatus @default(PENDING)
+
+  proposalId    String        @unique
+  proposal      Proposal      @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  jobId         String
+  clientId      String
+  freelancerId  String
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+
+model Job {
+  id          String      @id @default(uuid())
+  title       String
+  category    String
+  budget      Float
+  description String
+  skills      String[]
+  status      JobStatus   @default(OPEN)
+
+  clientId    String
+  proposals   Proposal[]
+  reviews     Review[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Proposal {
+  id             String          @id @default(uuid())
+  coverLetter    String
+  proposedBudget Float
+  deliveryDays   Int
+  status         ProposalStatus  @default(PENDING)
+
+  freelancerId   String
+  jobId          String
+  job            Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  payment        Payment?       @relation()
+  createdAt      DateTime        @default(now())
+
+  @@unique([freelancerId, jobId])
+}
