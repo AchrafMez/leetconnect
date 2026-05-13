@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { publishEvent } from "../config/events";
-import { EVENTS } from "@leetconnect/shared";
+import { EVENTS, MARKET_EVENTS } from "@leetconnect/shared";
 import { fetchUserFromAuth } from "../clients/auth";
+
 
 export const addJob = async (req: Request, res: Response) => {
   try {
@@ -22,6 +23,21 @@ export const addJob = async (req: Request, res: Response) => {
         skills,
         clientId: user.userId,
       },
+    });
+
+    const postedByName = `${user.firstname} ${user.lastname}`.trim() || user.username;
+
+    await publishEvent(MARKET_EVENTS.JOB_CREATED, {
+      jobId: job.id,
+      title: job.title,
+      description: job.description,
+      category: job.category,
+      budget: job.budget,
+      skills: job.skills,
+      status: job.status,
+      clientId: job.clientId,
+      postedByName,          
+      createdAt: job.createdAt
     });
 
     return res.json({ success: true, job });
@@ -59,9 +75,13 @@ export const getAllJobs = async (req: Request, res: Response) => {
   try {
     const { search, category, minBudget, maxBudget, skills, status } = req.query;
 
-    const where: any = {
-      status: (status as any) || "OPEN",
-    };
+    const where: any = {};
+    const requestedStatus = status as string | undefined;
+    if (requestedStatus && ['OPEN', 'IN_PROGRESS', 'COMPLETED', 'CLOSED'].includes(requestedStatus)) {
+      where.status = requestedStatus;
+    } else {
+      where.status = 'OPEN'; // default — never show FLAGGED publicly
+    }
 
     if (search) {
       const searchStr = String(search).slice(0, 200); // limit search length
@@ -150,11 +170,14 @@ export const updateJob = async (req: Request, res: Response) => {
       return res.status(403).json({ success: false, message: "Not authorized to update this job" });
     }
 
-    // Only allow updates on OPEN jobs
-    if (existing.status !== "OPEN") {
-      return res.status(400).json({ success: false, message: "Can only update jobs that are OPEN" });
-    }
-
+  if (existing.status !== "OPEN") {
+  return res.status(400).json({ 
+    success: false, 
+    message: existing.status === "FLAGGED"
+      ? "This job is under admin review and cannot be edited"
+      : "Can only update jobs that are OPEN"
+  });
+}
     const { title, category, budget, description, skills, status } = req.body;
 
     const data: Record<string, any> = {};
@@ -168,6 +191,16 @@ export const updateJob = async (req: Request, res: Response) => {
     const job = await prisma.job.update({
       where: { id },
       data,
+    });
+
+    await publishEvent(MARKET_EVENTS.JOB_UPDATED, {
+      jobId: job.id,
+      title: job.title,
+      description: job.description,
+      category: job.category,
+      budget: job.budget,
+      skills: job.skills,
+      status: job.status,
     });
 
     return res.json({ success: true, job });
@@ -189,11 +222,21 @@ export const deleteJob = async (req: Request, res: Response) => {
     }
 
     // Prevent deleting jobs that are in progress
-    if (existing.status === "IN_PROGRESS") {
-      return res.status(400).json({ success: false, message: "Cannot delete a job that is in progress" });
+    if (existing.status === "IN_PROGRESS" || existing.status === "FLAGGED") {
+      return res.status(400).json({ 
+        success: false, 
+        message: existing.status === "FLAGGED"
+          ? "Cannot delete a job that is under admin review"
+          : "Cannot delete a job that is in progress"
+      });
     }
 
     await prisma.job.delete({ where: { id } });
+
+    await publishEvent(MARKET_EVENTS.JOB_DELETED, {
+      jobId: id
+    });
+
     return res.json({ success: true, message: "Job deleted" });
   } catch (error: any) {
     console.error("deleteJob error:", error);
@@ -216,6 +259,16 @@ export const completeJob = async (req: Request, res: Response) => {
     const updated = await prisma.job.update({
       where: { id },
       data: { status: "COMPLETED" },
+    });
+
+    await publishEvent(MARKET_EVENTS.JOB_UPDATED, {
+      jobId: updated.id,
+      title: updated.title,
+      description: updated.description,
+      category: updated.category,
+      budget: updated.budget,
+      skills: updated.skills,
+      status: updated.status,
     });
 
     return res.json({ success: true, job: updated });

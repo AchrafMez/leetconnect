@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs'; // Using bcryptjs for easier Docker setup
 import prisma from '../lib/prisma';
 import { generateAccessToken, generateRefreshToken, generateTempToken, verifyTempToken } from '../lib/token';
-import { ROLES, Role , JwtPayload, publishEvent, AUTH_EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
+import { ROLES, Role , JwtPayload, publishEvent, AUTH_EVENTS, EVENTS} from '@leetconnect/shared'; // !! use shared constants hal3aar
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
@@ -120,7 +120,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
         });
         
         // generate access token
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
+        const accessToken = generateAccessToken({ 
+            userId: user.id, 
+            role: user.role, 
+            type: user.type,
+            username: user.username,
+            firstname: user.firstname || "",
+            lastname: user.lastname || ""
+        });
         
         // set HttpOnly cookie for Refresh Token
         res.cookie('refreshToken', refreshToken.token, {
@@ -140,6 +147,14 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
             lastname: user.lastname,
             role: user.role,
             type: user.type
+        });
+
+        // display notification to users wehn they register
+        await publishEvent(EVENTS.NOTIF_CREATE, {
+            user_id: user.id,
+            type: 'SYSTEM',
+            title: 'Welcome to LeetConnect!',
+            body: 'Start by browsing jobs, hiring talent, and building something great.'
         });
 
         res.status(201).json({
@@ -209,7 +224,14 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             }
         });
 
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
+        const accessToken = generateAccessToken({ 
+            userId: user.id, 
+            role: user.role, 
+            type: user.type,
+            username: user.username,
+            firstname: user.firstname || "",
+            lastname: user.lastname || ""
+        });
 
          res.cookie('refreshToken', refreshToken.token, {
             httpOnly: true,
@@ -282,7 +304,14 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
         }
 
         // Generate a fresh Access Token
-        const newAccessToken = generateAccessToken({  userId: storedToken.user.id, role: storedToken.user.role , type: storedToken.user.type });
+        const newAccessToken = generateAccessToken({  
+            userId: storedToken.user.id, 
+            role: storedToken.user.role , 
+            type: storedToken.user.type,
+            username: storedToken.user.username,
+            firstname: storedToken.user.firstname || "",
+            lastname: storedToken.user.lastname || ""
+        });
 
         return res.json({ accessToken: newAccessToken });
 
@@ -316,6 +345,10 @@ export const getAllFreelancers = async (_req: Request, res: Response) => {
         { reviewCount: "desc" },
         { createdAt: "desc" }
       ],
+      omit: {
+        password: true,
+        twoFASecret: true,
+      }
     });
 
     return res.json({success: true,freelancers,});
@@ -337,6 +370,10 @@ export const getAllClients = async (_req: Request, res: Response) => {
       },orderBy: {
         createdAt: "desc",
       },
+      omit: {
+        password: true,
+        twoFASecret: true,
+      }
     });
 
     return res.json({success: true,clients,});
@@ -617,6 +654,7 @@ export const SetupProfile = async (req: Request, res: Response) => {
     await publishEvent(AUTH_EVENTS.USER_UPDATED, {
       id: updatedUser.id,
       bio: updatedUser.bio,
+      title: updatedUser.title,
     });
 
     return res.json({

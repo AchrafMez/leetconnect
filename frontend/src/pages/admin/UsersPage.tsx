@@ -9,6 +9,14 @@ import { Spin } from '@/components/ui/Spin';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/userContext';
+import Avatar from '@/components/ui/Avatar';
+import { 
+  Select, 
+  SelectTrigger, 
+  SelectValue, 
+  SelectContent, 
+  SelectItem
+} from '@/components/ui/select';
 
 const ALL_ROLES: Role[] = ['ADMIN', 'MODERATOR', 'USER'];
 
@@ -152,14 +160,27 @@ export const UsersPage = () => {
             className="w-full bg-input border border-border rounded-lg pl-9 pr-4 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
           />
         </div>
-        <select
+				<Select value={roleFilter} onValueChange={(value: string) => setRoleFilter(value as Role | 'all')}>
+					<SelectTrigger className="w-[180px] bg-input border-border text-muted-foreground">
+						<SelectValue placeholder="Select a role" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All roles</SelectItem>
+						{ALL_ROLES.map(r => (
+							<SelectItem key={r} value={r}>
+								{ROLE_META[r].label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+        {/* <select
           value={roleFilter}
           onChange={e => setRoleFilter(e.target.value as Role | 'all')}
           className="bg-input border border-border rounded-lg px-3 py-2.5 text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
         >
           <option value="all">All roles</option>
           {ALL_ROLES.map(r => <option key={r} value={r}>{ROLE_META[r].label}</option>)}
-        </select>
+        </select> */}
         <span className="ml-auto text-sm font-semibold text-muted-foreground">{users.length} users</span>
       </div>
 
@@ -180,18 +201,11 @@ export const UsersPage = () => {
               <tr key={u.id} className="hover:bg-secondary/30 transition-colos group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
-											{u.avatar ? (
-												<img 
-													src={u.avatar} 
-													alt={`${u.firstname}'s avatar`} 
-													className="w-full h-full object-cover"
-													onError={(e) => { e.currentTarget.style.display = 'none'; }}
-												/>
-											) : (
-												<span>{`${u.firstname[0]}${u.lastname[0]}`}</span>
-											)}
-										</div>
+										<Avatar
+											name={[u.firstname, u.lastname].filter(Boolean).join(' ')}
+											image={u.avatar}
+											size='xs'>
+										</Avatar>
                     <div>
                       <p className="text-sm font-medium text-foreground">{`${u.firstname} ${u.lastname}`}</p>
                       <p className="text-xs text-muted-foreground">{u.email}</p>
@@ -203,7 +217,19 @@ export const UsersPage = () => {
                     <RoleBadge role={u.role} />
                   ) : (
                     <CanAccess permission="users:edit" fallback={<RoleBadge role={u.role} />}>
-                      <select
+                      <Select value={u.role} onValueChange={(value: string) => handleRoleChange(u.id, value as Role)}>
+                        <SelectTrigger className="h-6 text-xs font-medium border rounded-full px-1.5 py-0 bg-foreground/10 text-foreground border-foreground/30 focus:outline-none cursor-pointer w-fit">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ALL_ROLES.map(r => (
+                            <SelectItem key={r} value={r}>
+                              {ROLE_META[r].label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {/* <select
                         value={u.role}
                         onChange={e => handleRoleChange(u.id, e.target.value as Role)}
                         className="text-xs font-medium border rounded-full px-2.5 py-1 bg-foreground/10 text-foreground border-foreground/30 focus:outline-none cursor-pointer"
@@ -211,7 +237,7 @@ export const UsersPage = () => {
                         {ALL_ROLES.map(r => (
                           <option key={r} value={r} className="bg-card text-foreground">{ROLE_META[r].label}</option>
                         ))}
-                      </select>
+                      </select> */}
                     </CanAccess>
                   )}
                 </td>

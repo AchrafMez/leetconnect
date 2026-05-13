@@ -240,7 +240,14 @@ export const login2FA = async (req: Request, res: Response, next: NextFunction) 
             }
         });
 
-        const accessToken = generateAccessToken({ userId: user.id, role: user.role, type: user.type });
+        const accessToken = generateAccessToken({ 
+            userId: user.id, 
+            role: user.role, 
+            type: user.type,
+            username: user.username,
+            firstname: user.firstname || "",
+            lastname: user.lastname || ""
+        });
 
         res.cookie('refreshToken', refreshToken.token, {
             httpOnly: true,

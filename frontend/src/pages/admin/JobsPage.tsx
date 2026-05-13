@@ -15,6 +15,8 @@ import { Spin } from "@/components/ui/Spin";
 import { useDebounce } from "@/hooks/useDebounce";
 import { StatCard } from "@/components/ui/StatCard";
 import { JobStatusBadge } from "@/components/ui/RoleBadge";
+import Avatar from "@/components/ui/Avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const STATUS_STYLES: Record<JobStatus, { badge: string; dot: string; label: string }> = {
   active:  { badge: 'text-primary border-primary/20', dot: 'bg-primary', label: 'Active' },
@@ -89,18 +91,11 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
         <div className="px-6 py-4 border-b border-border">
           <p className="text-xs text-muted-foreground mb-3">Posted by</p>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
-											{job.createdBy.avatar ? (
-												<img 
-													src={job.createdBy.avatar} 
-													alt={`${job.createdBy.firstname}'s avatar`} 
-													className="w-full h-full object-cover"
-													onError={(e) => { e.currentTarget.style.display = 'none'; }}
-												/>
-											) : (
-												<span>{`${job.createdBy.firstname[0]}${job.createdBy.lastname[0]}`}</span>
-											)}
-										</div>
+						<Avatar
+							name={[job.createdBy.firstname, job.createdBy.lastname].filter(Boolean).join(' ')}
+							image={job.createdBy.avatar}
+							size='sm'>
+						</Avatar>
             <div>
               <p className="text-sm font-medium text-foreground">{job.postedByName}</p>
               <p className="text-xs text-muted-foreground">Client</p>
@@ -315,14 +310,27 @@ export const JobsPage = () => {
             className="w-full bg-input border border-border rounded-lg pl-9 pr-4 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
           />
         </div>
-        <select
+				<Select value={categoryFilter} onValueChange={(value: string) => setCategoryFilter(value as JobCategory | 'all')}>
+					<SelectTrigger className="w-[180px] bg-input border-border text-muted-foreground">
+						<SelectValue placeholder="Select a category" />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value="all">All categories</SelectItem>
+						{ALL_CATEGORIES.map(c => (
+							<SelectItem key={c} value={c}>
+								{c}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+        {/* <select
           value={categoryFilter}
           onChange={e => setCategoryFilter(e.target.value as JobCategory | 'all')}
           className="bg-input border border-border rounded-lg px-3 py-2.5 text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
         >
           <option value="all">All categories</option>
           {ALL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        </select> */}
         <span className="ml-auto text-sm font-semibold text-muted-foreground">{jobs.length} jobs</span>
       </div>
       
@@ -364,18 +372,11 @@ export const JobsPage = () => {
 
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0 overflow-hidden">
-											{job.createdBy.avatar ? (
-												<img 
-													src={job.createdBy.avatar} 
-													alt={`${job.createdBy.firstname}'s avatar`} 
-													className="w-full h-full object-cover"
-													onError={(e) => { e.currentTarget.style.display = 'none'; }}
-												/>
-											) : (
-												<span>{`${job.createdBy.firstname[0]}${job.createdBy.lastname[0]}`}</span>
-											)}
-										</div>
+											<Avatar
+												name={[job.createdBy.firstname, job.createdBy.lastname].filter(Boolean).join(' ')}
+												image={job.createdBy.avatar}
+												size='xs'>
+											</Avatar>
                       <span className="text-sm text-foreground">{job.postedByName}</span>
                     </div>
                   </td>
