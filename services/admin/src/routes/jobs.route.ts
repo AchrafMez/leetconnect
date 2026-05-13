@@ -3,13 +3,14 @@ import { deleteJob, editJobStatus, getAllJobs, getJob } from "../controllers/job
 import { validateReqeust } from "../middleware/validateRequest";
 import { getJobsQuerySchema, updateJobStatusSchema, uuidSchema } from "../validators/jobs";
 import { requireRole } from "@leetconnect/shared";
+import { mutationLimiter } from "../middleware/limiters";
 
 const router: Router = express.Router();
 
 router.get('/', requireRole('ADMIN', 'MODERATOR'), validateReqeust({ query: getJobsQuerySchema}), getAllJobs);
 router.get('/:id', requireRole('ADMIN', 'MODERATOR'), validateReqeust({ params: uuidSchema}), getJob);
-router.patch('/:id/status', requireRole('ADMIN', 'MODERATOR'), validateReqeust({ params: uuidSchema, body: updateJobStatusSchema}), editJobStatus);
-router.delete('/:id', requireRole('ADMIN', 'MODERATOR'), validateReqeust({ params: uuidSchema}), deleteJob);
+router.patch('/:id/status', requireRole('ADMIN', 'MODERATOR'), mutationLimiter, validateReqeust({ params: uuidSchema, body: updateJobStatusSchema}), editJobStatus);
+router.delete('/:id', requireRole('ADMIN', 'MODERATOR'), mutationLimiter, validateReqeust({ params: uuidSchema}), deleteJob);
 
 export default router
 /*

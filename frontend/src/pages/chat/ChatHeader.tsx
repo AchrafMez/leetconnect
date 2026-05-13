@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Avatar from "@/components/ui/Avatar";
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Info, Users } from "lucide-react";
 import { usePresence } from "@/context/PresenceProvider";
 
 interface ChatHeaderProp {
@@ -10,13 +10,14 @@ interface ChatHeaderProp {
 	receiver_id?:		string | undefined;
 	recv_rest_online:	boolean;
 	username?:			string | undefined;
+	member_count?:		number | undefined;
 	onBack:				() => void;
 	onInfoClick:		() => void;
 }
 
 export default function ChatHeader({
 	name, avatar, is_direct, receiver_id, recv_rest_online,
-	username, onBack, onInfoClick,
+	username, member_count, onBack, onInfoClick,
 }: ChatHeaderProp) {
 	const navigate = useNavigate();
 
@@ -41,7 +42,7 @@ export default function ChatHeader({
 				</div>
 				<div className="min-w-0">
 					<h2 className="text-foreground font-semibold text-sm truncate">{name}</h2>
-					{is_direct && (isOnline ? (
+					{is_direct ? (isOnline ? (
 						<p className="flex items-center text-xs text-primary gap-1.5">
 							<span className="w-3 h-2 bg-primary rounded-full shadow-[0_0_10px_rgba(34,197,94,0.85)] animate-pulse" />
 							Online
@@ -51,7 +52,14 @@ export default function ChatHeader({
 							<span className="w-3 h-2 bg-muted-foreground/80 rounded-full" />
 							Offline
 						</p>
-					))}
+					)) : (
+						member_count !== undefined && (
+							<p className="text-xs text-muted-foreground flex items-center gap-1.5">
+								<Users size={11} />
+								{member_count} member{member_count === 1 ? '' : 's'}
+							</p>
+						)
+					)}
 				</div>
 			</div>
 			<button

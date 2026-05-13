@@ -9,6 +9,7 @@ datasource db {
 
 enum JobStatus {
   OPEN
+  FLAGGED 
   IN_PROGRESS
   PAYMENT_PENDING
   COMPLETED

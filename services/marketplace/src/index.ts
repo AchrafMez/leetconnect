@@ -9,6 +9,8 @@ import { initEventBus, closeEventBus, errorHandler,  getMetrics,  } from '@leetc
 import jobsRoutes from "./routes/jobs";
 import proposalsRoutes from "./routes/proposals";
 
+import { initConsumers } from './config/consumer';
+
 const app = express();
 
 const PORT = 3002;
@@ -41,6 +43,7 @@ async function start() {
     console.log('marketplace db connected with Prisma');
 
     initEventBus(process.env.REDIS_URL as string);
+    initConsumers();
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Marketplace service running on port ${PORT}`);

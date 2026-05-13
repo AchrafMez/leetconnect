@@ -5,12 +5,14 @@ import { getJobsAnalytics } from '../controllers/jobs.controller';
 import { requireRole } from '@leetconnect/shared';
 import { validateRequest } from '../middleware/validateRequest';
 import { analyticsQueryParams } from '../validators/analyticsValidator';
+import { heavyQueryLimiter } from '../middleware/limiters';
 
 const router: Router = express.Router();
 
 router.get('/overview', requireRole('ADMIN'), getOverview);
-router.get('/users', requireRole('ADMIN'), validateRequest(analyticsQueryParams), getUsersAnalytics);
-router.get('/jobs', requireRole('ADMIN'), validateRequest(analyticsQueryParams), getJobsAnalytics);
+router.get('/users', requireRole('ADMIN'), heavyQueryLimiter, validateRequest(analyticsQueryParams), getUsersAnalytics);
+router.get('/jobs', requireRole('ADMIN'), heavyQueryLimiter, validateRequest(analyticsQueryParams), getJobsAnalytics);
+router.get('/export');
 
 export default router
 
