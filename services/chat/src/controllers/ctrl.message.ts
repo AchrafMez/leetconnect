@@ -96,9 +96,9 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 		const io = req.app.get('io');
 		io.to(`convers:${convers_id}`).emit('new_message', message);
 
-		const members: { user_id: string }[] = await prisma.conversMember.findMany({
-			where: { convers_id },
-			select: { user_id: true },
+		const members: {user_id: string}[] = await prisma.conversMember.findMany({
+			where: {convers_id},
+			select: {user_id: true}
 		});
 
 		const bump_payload = {
@@ -124,17 +124,37 @@ export async function send(req: Request, res: Response, next: NextFunction) {
 			}
 			return false;
 		};
+		const title = `New message from ${message.sender.username}`;
 		await Promise.all(
 			recipients
 				.filter((r) => !isOnChat(r.user_id))
-				.map((r) =>
-					notify(io, {
-						user_id: r.user_id,
-						type: 'MESSAGE',
-						title: `New message from ${message.sender.username}`,
-						body: preview,
-					})
-				)
+				.map(async (r) => {
+					const existing = await prisma.notification.findFirst({
+						where: {
+							user_id: r.user_id,
+							type:	 'MESSAGE',
+							is_read: false,
+							title:	 title
+						},
+					});
+					if (existing) {
+						const updated = await prisma.notification.update({
+							where: {id: existing.id},
+							data:  {body: preview, created_at: new Date()}
+						});
+						io.to(`user:${r.user_id}`).emit('new_notification', {
+							...updated,
+							created_at: updated.created_at.toISOString(),
+						});
+					} else {
+						await notify(io, {
+							user_id: r.user_id,
+							type:	'MESSAGE',
+							title:	title,
+							body:	preview
+						});
+					}
+				})
 		);
 
 		res.status(201).json(message);
