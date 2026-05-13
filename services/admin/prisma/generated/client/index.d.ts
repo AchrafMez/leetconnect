@@ -52,8 +52,7 @@ export type UserType = (typeof UserType)[keyof typeof UserType]
 
 export const Status: {
   active: 'active',
-  suspended: 'suspended',
-  pending: 'pending'
+  suspended: 'suspended'
 };
 
 export type Status = (typeof Status)[keyof typeof Status]

@@ -181,8 +181,7 @@ exports.Prisma.NullsOrder = {
 };
 exports.Status = exports.$Enums.Status = {
   active: 'active',
-  suspended: 'suspended',
-  pending: 'pending'
+  suspended: 'suspended'
 };
 
 exports.Role = exports.$Enums.Role = {

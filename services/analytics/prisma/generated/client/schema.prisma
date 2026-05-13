@@ -72,7 +72,6 @@ enum UserType {
 enum Status {
   active
   suspended
-  pending
 }
 
 enum JobStatus {
