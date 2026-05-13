@@ -27,6 +27,7 @@ const clientMenuItems = [
 
 const freelancerMenuItems = [
   { name: "Overview", path: "/market/dashboard", icon: LayoutDashboard, desc: "View your earnings and profile stats" },
+  { name: "Talent", path: "/market/freelancers", icon: Users, desc: "Browse and hire top freelancers" },
   { name: "Marketplace", path: "/market/find-work", icon: Search, desc: "Find new jobs and projects" },
   { name: "Proposals", path: "/market/proposals", icon: Briefcase, desc: "Track your active proposals" },
 ];
