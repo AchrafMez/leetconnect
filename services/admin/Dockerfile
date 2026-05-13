@@ -27,4 +27,4 @@ RUN chmod +x /entrypoint.sh
 
 EXPOSE 3005
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]

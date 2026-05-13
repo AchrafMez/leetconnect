@@ -8,54 +8,41 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  username      String         @unique
-  firstname     String         @default("")
-  lastname      String         @default("")
-  status        Status         @default(active)
-  password      String?
-  role          Role           @default(ADMIN)
-  type          UserType       @default(CLIENT)
-  avatar        String         @default("/avatars/default.png")
-  isOnline      Boolean        @default(false)
+  id            String   @id @default(uuid())
+  email         String   @unique
+  username      String   @unique
+  firstname     String   @default("")
+  lastname      String   @default("")
+  status        Status   @default(active)
+  role          Role     @default(ADMIN)
+  type          UserType @default(CLIENT)
+  avatar        String   @default("")
+  isOnline      Boolean  @default(false)
   twoFASecret   String?
-  twoFAEnabled  Boolean        @default(false)
+  twoFAEnabled  Boolean  @default(false)
   oauthProvider String?
   oauthId       String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   jobs          Job[]
-  refreshTokens RefreshToken[]
 
   @@unique([oauthProvider, oauthId])
 }
 
 model Job {
-  id           String     @id @default(uuid())
+  id           String    @id @default(uuid())
   title        String
   description  String
-  budget       Int        @default(0)
-  budgetType   BudgetType @default(fixed)
+  budget       Int       @default(0)
   category     String
   clientId     String
-  status       JobStatus  @default(active)
-  createdAt    DateTime   @default(now())
-  proposals    Int        @default(0)
+  status       JobStatus @default(active)
+  createdAt    DateTime  @default(now())
+  proposals    Int       @default(0)
   skills       String[]
   deadline     DateTime?
   postedByName String
-  createdBy    User       @relation(fields: [clientId], references: [id])
-}
-
-model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    String
-  revoked   Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdBy    User      @relation(fields: [clientId], references: [id])
 }
 
 enum Role {
@@ -78,9 +65,4 @@ enum JobStatus {
   active
   flagged
   closed
-}
-
-enum BudgetType {
-  hourly
-  fixed
 }

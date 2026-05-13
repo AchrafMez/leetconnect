@@ -27,10 +27,6 @@ const ALL_STATUSES: JobStatus[] = ['active', 'closed', 'flagged'];
 
 const ALL_CATEGORIES: JobCategory[] = Object.keys(categoriesData);
 
-function formatBudget(job: Job) {
-	return job.budgetType === 'hourly' ? `$${job.budget}/hr` : `$${job.budget.toLocaleString()}`;
-}
-
 function timeAgo(date: string) {
 	const diff = Date.now() - new Date(date).getTime();
 	const days = Math.floor(diff / 86400000);
@@ -76,10 +72,9 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
 
 				<div className="px-6 py-5 grid grid-cols-2 gap-4 border-b border-border">
           {[
-            { label: 'Budget', value: formatBudget(job) },
+            { label: 'Budget', value: job.budget },
             { label: 'Proposals', value: `${job.proposals} received` },
             { label: 'Posted', value: timeAgo(job.createdAt) },
-            { label: 'Deadline', value: job.deadline ? new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline' },
           ].map(item => (
             <div key={item.label}>
               <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
@@ -375,9 +370,6 @@ export const JobsPage = () => {
                   
                   <td className="px-6 py-4">
                     <span className="text-sm font-medium text-foreground">{`$${job.budget}`}</span>
-                    <span className="text-xs text-muted-foreground ml-1">
-                      {job.budgetType === 'hourly' ? '/ hr' : 'fixed'}
-                    </span>
                   </td>
                 
                   <td className="px-6 py-4">

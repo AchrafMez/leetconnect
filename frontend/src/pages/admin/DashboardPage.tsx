@@ -189,7 +189,6 @@ export const DashboardPage = () => {
             </thead>
             <tbody className="divide-y divide-border">
               {recentJobs.map(job => {
-                const budget = job.budgetType === 'hourly' ? `$${job.budget}/hr` : `$${job.budget.toLocaleString()}`;
                 return (
                   <tr key={job.id}
                     	className={`hover:bg-secondary/40 transition-colors ${job.status === 'flagged' ? 'bg-destructive/5' : ''}`}>
@@ -217,7 +216,7 @@ export const DashboardPage = () => {
                     </td>
  
                     <td className="px-6 py-3.5">
-                      <span className="text-sm font-medium text-foreground">{budget}</span>
+                      <span className="text-sm font-medium text-foreground">{`$${job.budget}`}</span>
                     </td>
  
                     <td className="px-6 py-3.5">

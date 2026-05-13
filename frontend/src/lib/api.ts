@@ -80,7 +80,6 @@ export interface JobsAnalytics {
   jobsOverTime: { date: string; count: number }[];
   byStatus: { status: string; count: number }[];
   byCategory: { category: string; count: number }[];
-  byBudgetType: { type: string; count: number }[];
   avgProposals: number;
 }
 

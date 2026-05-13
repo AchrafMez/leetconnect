@@ -10,15 +10,12 @@ export interface Job {
   title: string;
   description: string;
   budget: number;
-  budgetType: 'fixed' | 'hourly';
   category: JobCategory;
   status: JobStatus;
   createdAt: string;
   proposals: number;
   skills: string[];
-  deadline?: string;
   postedByName: string;
-  // postedByAvatar: string;
 	createdBy: User;
 }
 
