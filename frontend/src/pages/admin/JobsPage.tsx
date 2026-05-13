@@ -323,14 +323,6 @@ export const JobsPage = () => {
 						))}
 					</SelectContent>
 				</Select>
-        {/* <select
-          value={categoryFilter}
-          onChange={e => setCategoryFilter(e.target.value as JobCategory | 'all')}
-          className="bg-input border border-border rounded-lg px-3 py-2.5 text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
-        >
-          <option value="all">All categories</option>
-          {ALL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select> */}
         <span className="ml-auto text-sm font-semibold text-muted-foreground">{jobs.length} jobs</span>
       </div>
       
@@ -382,7 +374,7 @@ export const JobsPage = () => {
                   </td>
                   
                   <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-foreground">{formatBudget(job)}</span>
+                    <span className="text-sm font-medium text-foreground">{`$${job.budget}`}</span>
                     <span className="text-xs text-muted-foreground ml-1">
                       {job.budgetType === 'hourly' ? '/ hr' : 'fixed'}
                     </span>

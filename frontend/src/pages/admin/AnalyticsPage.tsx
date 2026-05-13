@@ -146,7 +146,7 @@ export const AnalyticsPage = () => {
 					<StatCard 
 					label="Suspended Users"
 					value={overview.suspendedUsers}
-					sub={`↑ ${overview.pendingUsers} pending approval`}
+					// sub={`↑ ${overview.pendingUsers} pending approval`}
 					subColor="text-muted-foreground"
           iconBg="bg-amber-500/10"
 					attention={overview.suspendedUsers > 0}
@@ -250,14 +250,6 @@ export const AnalyticsPage = () => {
 									label: 'Active jobs',
 									value: overview?.activeJobs ?? 0,
 									sub: 'currently open for proposals',
-								},
-								{
-									label: 'User activation rate',
-									value: overview ? `${Math.round(
-										((overview.totalUsers - overview.suspendedUsers - overview.pendingUsers)
-										/ Math.max(overview.totalUsers, 1)) * 100
-									)}%` : '—',
-									sub: 'active ÷ total users',
 								},
 							].map(stat => (
 								<div key={stat.label} className="flex items-center justify-between">

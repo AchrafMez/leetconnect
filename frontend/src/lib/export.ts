@@ -53,7 +53,6 @@ export function exportCSV(data: ExportData): void {
 			['Active Jobs', data.overview.activeJobs],
 			['Flagged Jobs', data.overview.flaggedJobs],
 			['Suspended Users', data.overview.suspendedUsers],
-			['Pending Users', data.overview.pendingUsers],
 			['New User This Week', data.overview.newUsersThisWeek],
 			['New Jobs This Week', data.overview.newJobsThisWeek],
 			[]

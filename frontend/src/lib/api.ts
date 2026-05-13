@@ -41,7 +41,7 @@ export interface User {
     // role: 'CLIENT' | 'FREELANCER' | 'ADMIN'; // old
     role: 'ADMIN' | 'USER' | 'MODERATOR';
     type: 'CLIENT' | 'FREELANCER';
-		status: 'active' | 'suspended' | 'pending';
+		status: 'active' | 'suspended';
 		createdAt: string;
 
     // profile settings
@@ -64,7 +64,6 @@ export interface OverviewData {
   activeJobs: number;
   flaggedJobs: number;
   suspendedUsers: number;
-  pendingUsers: number;
   newUsersThisWeek: number;
   newJobsThisWeek: number;
 }
