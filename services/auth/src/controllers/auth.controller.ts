@@ -564,6 +564,10 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
             select: { avatar: true }
         });
 
+        if (!existingUser) {
+            return res.status(404).json({ error: "User record not found" });
+        }
+        
         //  Sharp re-encode destroys any hidden payloads
         try {
             await sharp(req.file.buffer)

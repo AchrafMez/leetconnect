@@ -17,8 +17,8 @@ export const USER_TYPES = {
 } as const;
 
 export const AUTH_EVENTS = {
-  USER_REGISTERED: 'user.registered',
-  USER_UPDATED: 'user.updated',
+  USER_REGISTERED: 'auth:user.registered',
+  USER_UPDATED: 'auth:user.updated',
 };
 
 export const ADMIN_EVENTS = {
