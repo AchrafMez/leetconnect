@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api, userApi } from "@/lib/api";
+import { api, userApi, chatApi } from "@/lib/api";
 import { useAuth } from "@/context/userContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +101,20 @@ const JobDetails: React.FC = () => {
       }
     } finally {
       setIsAccepting(false);
+    }
+  };
+
+  const handleMessage = async (targetUserId: string) => {
+    if (!targetUserId) return;
+    try {
+      const convers = await chatApi.createConversation({
+        type: "Direct",
+        member_ids: [targetUserId],
+      });
+      navigate(`/chat?conv=${convers.id}`);
+    } catch (err) {
+      if (err instanceof Error) setActionError(err.message);
+      else setActionError("Failed to open conversation");
     }
   };
 
@@ -377,7 +391,9 @@ const JobDetails: React.FC = () => {
                                   variant="secondary"
                                   size="sm"
                                   className="text-xs"
-                                  onClick={() => navigate("/messages")}
+                                  onClick={() =>
+                                    handleMessage(isClient ? p.freelancerId : job.clientId)
+                                  }
                                 >
                                   Message
                                 </Button>
