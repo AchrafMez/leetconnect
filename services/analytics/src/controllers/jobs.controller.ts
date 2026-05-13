@@ -8,8 +8,7 @@ export const getJobsAnalytics = async (req: Request, res:Response, next: NextFun
 		const { startDate, endDate} = getDateRange(req.query);
 
 		const [
-			jobsOverTime, byStatus, byCategory,
-			byBudgetType, avgProposals,
+			jobsOverTime, byStatus, byCategory, avgProposals,
 		] = await Promise.all([
 			prisma.$queryRaw<{ date: Date; count: bigint }[]>`
 				SELECT
@@ -36,12 +35,6 @@ export const getJobsAnalytics = async (req: Request, res:Response, next: NextFun
 				orderBy: { _count: { category: 'desc'}},
 			}),
 
-			prisma.job.groupBy({
-				by: ['budgetType'],
-				where: { createdAt: { gte: startDate, lte: endDate } },
-				_count: { budgetType: true},
-			}),
-
 			// average proposals across all jobs in date range
 			prisma.job.aggregate({
 				_avg: { proposals: true},
@@ -64,16 +57,10 @@ export const getJobsAnalytics = async (req: Request, res:Response, next: NextFun
       count: c._count.category,
     }));
 
-    const budgetTypeSafe = byBudgetType.map(b => ({
-      type: b.budgetType,
-      count: b._count.budgetType,
-    }));
-
 		res.status(StatusCodes.OK).json({
 			jobsOverTime: jobsOverTimeSafe,
 			byStatus: statusSafe,
 			byCategory: categorySafe,
-			byBudgetType: budgetTypeSafe,
 			avgProposals: Math.round(avgProposals._avg.proposals ?? 0),
 		});
 	} catch (error) {

@@ -27,10 +27,6 @@ const ALL_STATUSES: JobStatus[] = ['active', 'closed', 'flagged'];
 
 const ALL_CATEGORIES: JobCategory[] = Object.keys(categoriesData);
 
-function formatBudget(job: Job) {
-	return job.budgetType === 'hourly' ? `$${job.budget}/hr` : `$${job.budget.toLocaleString()}`;
-}
-
 function timeAgo(date: string) {
 	const diff = Date.now() - new Date(date).getTime();
 	const days = Math.floor(diff / 86400000);
@@ -76,10 +72,9 @@ function JobDrawer({ job, onClose, onDelete, onStatusChange }: {
 
 				<div className="px-6 py-5 grid grid-cols-2 gap-4 border-b border-border">
           {[
-            { label: 'Budget', value: formatBudget(job) },
+            { label: 'Budget', value: job.budget },
             { label: 'Proposals', value: `${job.proposals} received` },
             { label: 'Posted', value: timeAgo(job.createdAt) },
-            { label: 'Deadline', value: job.deadline ? new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline' },
           ].map(item => (
             <div key={item.label}>
               <p className="text-xs text-muted-foreground mb-0.5">{item.label}</p>
@@ -323,14 +318,6 @@ export const JobsPage = () => {
 						))}
 					</SelectContent>
 				</Select>
-        {/* <select
-          value={categoryFilter}
-          onChange={e => setCategoryFilter(e.target.value as JobCategory | 'all')}
-          className="bg-input border border-border rounded-lg px-3 py-2.5 text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
-        >
-          <option value="all">All categories</option>
-          {ALL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select> */}
         <span className="ml-auto text-sm font-semibold text-muted-foreground">{jobs.length} jobs</span>
       </div>
       
@@ -382,10 +369,7 @@ export const JobsPage = () => {
                   </td>
                   
                   <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-foreground">{formatBudget(job)}</span>
-                    <span className="text-xs text-muted-foreground ml-1">
-                      {job.budgetType === 'hourly' ? '/ hr' : 'fixed'}
-                    </span>
+                    <span className="text-sm font-medium text-foreground">{`$${job.budget}`}</span>
                   </td>
                 
                   <td className="px-6 py-4">

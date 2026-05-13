@@ -34,8 +34,6 @@ function formatDate(dateStr: string): string {
 }
 
 export const JobsOverTimeChart = ({ data }: JobsOverTimeChartProps) => {
-	console.log("DATA: ", data);
-
   if (!data.length) {
     return (
       <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">

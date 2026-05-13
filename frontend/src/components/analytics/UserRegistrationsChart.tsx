@@ -35,7 +35,6 @@ function formatDate(dateStr: string): string {
 }
 
 export const UserRegistrationsChart = ({ data }: UserRegistrationsChartProps ) => {
-	// console.log("DATA: ", data);
 	if (!data.length) {
     return (
       <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">

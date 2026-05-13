@@ -127,7 +127,6 @@ exports.Prisma.UserScalarFieldEnum = {
   firstname: 'firstname',
   lastname: 'lastname',
   status: 'status',
-  password: 'password',
   role: 'role',
   type: 'type',
   avatar: 'avatar',
@@ -145,7 +144,6 @@ exports.Prisma.JobScalarFieldEnum = {
   title: 'title',
   description: 'description',
   budget: 'budget',
-  budgetType: 'budgetType',
   category: 'category',
   clientId: 'clientId',
   status: 'status',
@@ -154,15 +152,6 @@ exports.Prisma.JobScalarFieldEnum = {
   skills: 'skills',
   deadline: 'deadline',
   postedByName: 'postedByName'
-};
-
-exports.Prisma.RefreshTokenScalarFieldEnum = {
-  id: 'id',
-  token: 'token',
-  userId: 'userId',
-  revoked: 'revoked',
-  expiresAt: 'expiresAt',
-  createdAt: 'createdAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -181,8 +170,7 @@ exports.Prisma.NullsOrder = {
 };
 exports.Status = exports.$Enums.Status = {
   active: 'active',
-  suspended: 'suspended',
-  pending: 'pending'
+  suspended: 'suspended'
 };
 
 exports.Role = exports.$Enums.Role = {
@@ -196,11 +184,6 @@ exports.UserType = exports.$Enums.UserType = {
   CLIENT: 'CLIENT'
 };
 
-exports.BudgetType = exports.$Enums.BudgetType = {
-  hourly: 'hourly',
-  fixed: 'fixed'
-};
-
 exports.JobStatus = exports.$Enums.JobStatus = {
   active: 'active',
   flagged: 'flagged',
@@ -209,8 +192,7 @@ exports.JobStatus = exports.$Enums.JobStatus = {
 
 exports.Prisma.ModelName = {
   User: 'User',
-  Job: 'Job',
-  RefreshToken: 'RefreshToken'
+  Job: 'Job'
 };
 
 /**

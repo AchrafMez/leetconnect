@@ -20,7 +20,7 @@ export const RoleBadge = ({ role, size = 'md' }: RoleBadgeProps) => {
 }
 
 interface StatusBadgeProps {
-  status: 'active' | 'suspended' | 'pending';
+  status: 'active' | 'suspended';
 }
 
 interface JobStatusBadgeProps {
@@ -50,12 +50,10 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const styles = {
     active:    'bg-primary/15 text-primary border-primary/15',
     suspended: 'bg-destructive/15 text-destructive border-destructive/15',
-    pending:   'bg-amber-400/15 text-amber-400 border-amber-500/15',
   };
   const dotStyles = {
     active:    'bg-primary',
     suspended: 'bg-destructive',
-    pending:   'bg-amber-400',
   };
   return (
     <span className={`inline-flex items-center gap-1 border rounded-full text-xs px-2 py-1 font-medium ${styles[status]}`}>

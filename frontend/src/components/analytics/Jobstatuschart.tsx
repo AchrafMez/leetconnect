@@ -12,8 +12,7 @@ interface JobStatusChartProps {
 const STATUS_COLORS: Record<string, string> = {
   active:  'var(--color-primary)',
   closed:  '#6b7280',
-  flagged: 'var(--color-destructive)',
-  draft:   '#f59e0b',
+  flagged: 'var(--color-destructive)'
 };
  
 function getColor(status: string): string {

@@ -2,18 +2,6 @@ import { User } from "@/lib/api";
 
 export type Role = 'ADMIN' | 'MODERATOR' | 'USER';
 
-/* export interface AdminUser extends User {
-  // id: string;
-  // name: string;
-  // email: string;
-	firstname: string;
-	lastname: string;
-  role: Role;
-  avatar?: string;
-  createdAt: string;
-  status: 'active' | 'suspended' | 'pending';
-}
- */
 export type JobStatus = 'active' | 'closed' | 'flagged';
 export type JobCategory = string;
 
@@ -22,15 +10,12 @@ export interface Job {
   title: string;
   description: string;
   budget: number;
-  budgetType: 'fixed' | 'hourly';
   category: JobCategory;
   status: JobStatus;
   createdAt: string;
   proposals: number;
   skills: string[];
-  deadline?: string;
   postedByName: string;
-  // postedByAvatar: string;
 	createdBy: User;
 }
 
