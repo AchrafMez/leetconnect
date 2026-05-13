@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { publishEvent } from "../config/events";
-import { EVENTS } from "@leetconnect/shared";
+import { EVENTS, MARKET_EVENTS } from "@leetconnect/shared";
 
 export const addProposal = async (req: Request, res: Response) => {
   try {
@@ -19,8 +19,12 @@ export const addProposal = async (req: Request, res: Response) => {
     if (!job) {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
-    if (job.status !== "OPEN") {
-      return res.status(400).json({ success: false, message: "This job is no longer accepting proposals" });
+    if (job.status !== 'OPEN') {
+      return res.status(403).json({ 
+        message: job.status === 'FLAGGED' 
+          ? 'This job is under review and not accepting proposals'
+          : 'This job is not accepting proposals'
+      });
     }
 
     // Prevent freelancer from proposing on their own job (if they're also a client)
@@ -75,6 +79,12 @@ export const addProposal = async (req: Request, res: Response) => {
         throw err;
       }
     }
+
+    const proposalCount = await prisma.proposal.count({ where: { jobId } });
+    await publishEvent(MARKET_EVENTS.JOB_UPDATED, {
+      jobId,
+      proposals: proposalCount
+    });
 
     // Notify client about new proposal
     if (job) {
@@ -173,9 +183,14 @@ export const acceptProposal = async (req: Request, res: Response) => {
     }
 
     // State check — job must be OPEN
-    if (proposal.job.status !== "OPEN") {
-      return res.status(400).json({ success: false, message: "This job is no longer accepting proposals" });
-    }
+  if (proposal.job.status !== "OPEN") {
+  return res.status(400).json({ 
+    success: false, 
+    message: proposal.job.status === "FLAGGED"
+      ? "This job is under admin review"
+      : "This job is no longer accepting proposals"
+  });
+}
 
     // Use interactive transaction for atomicity
     const payment = await prisma.$transaction(async (tx) => {

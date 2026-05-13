@@ -24,15 +24,23 @@ async function publishEvent(channel: string, data: unknown): Promise<void>{
     await publisher.publish(channel, JSON.stringify({ event: channel, data, timestamp: new Date().toISOString() }));
 }
 
-function subscribeToEvents(pattern: string, handler: (channel: string, data: unknown) => void): void{
-    if (!subscriber) { console.warn('Event bus not initialized'); return;
+function subscribeToEvents(
+  pattern: string,
+  handler: (channel: string, data: unknown) => void
+): void {
+  if (!subscriber) { console.warn('Event bus not initialized'); return; }
+  
+  subscriber.psubscribe(pattern);
+  
+  subscriber.on('pmessage', (pat, channel, message) => {
+    // ← Only fire this handler if the channel matches THIS pattern
+    if (pat !== pattern) return;
+    try {
+      handler(channel, JSON.parse(message));
+    } catch (err) {
+      console.error('Failed to parse event:', (err as Error).message);
     }
-    subscriber.psubscribe(pattern);
-    subscriber.on('pmessage', (pat, channel, message) => {
-        try { handler(channel, JSON.parse(message));}
-        catch (err) { console.error('Failed to parse event:', (err as Error).message);
-        }
-    });
+  });
 }
 
 async function closeEventBus(): Promise<void>{

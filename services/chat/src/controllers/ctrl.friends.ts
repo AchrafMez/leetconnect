@@ -201,6 +201,8 @@ export async function list_incoming(req: Request, res: Response, next: NextFunct
 					select: {
 						id: true,
 						username: true,
+						firstname: true,
+						lastname: true,
 						avatar: true
 					}
 				}
@@ -226,6 +228,8 @@ export async function list_outgoing(req: Request, res: Response, next: NextFunct
 					select: {
 						id: true,
 						username: true,
+						firstname: true,
+						lastname: true,
 						avatar: true
 					}
 				}
@@ -260,12 +264,14 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 			r.sender_id === user_id ? r.receiver_id : r.sender_id
 		);
 
-		const users: {id: string; username: string; avatar: string; isOnline: boolean}[] =
+		const users: {id: string; username: string; firstname: string; lastname: string; avatar: string; isOnline: boolean}[] =
 			await prisma.user.findMany({
 				where: {id: {in: friend_ids}},
 				select: {
 					id: true,
 					username: true,
+					firstname: true,
+					lastname: true,
 					avatar: true,
 					isOnline: true
 				}
@@ -274,6 +280,8 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 		const friends = users.map((u) => ({
 				id:			u.id,
 				username:	u.username,
+				firstname:	u.firstname,
+				lastname:	u.lastname,
 				avatar:		u.avatar,
 				is_online:	u.isOnline,
 		}));

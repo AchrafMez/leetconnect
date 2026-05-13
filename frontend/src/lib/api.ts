@@ -126,7 +126,6 @@ export interface RegisterRequest {
 
 export interface AuthResponse {
     accessToken: string;
-    accessToken: string;
     user: User;
     requires2FA?: boolean; // If true, frontend must show the 6-digit code input
     userId?: string;       // Needed to identify which user is finishing 2FA login
@@ -469,13 +468,15 @@ export interface FriendRequest {
     created_at:     string;
     updated_at:     string;
 
-    sender?:   {id: string, username: string, avatar: string};
-    receiver?: {id: string, username: string, avatar: string};
+    sender?:   {id: string, username: string, firstname?: string, lastname?: string, avatar: string};
+    receiver?: {id: string, username: string, firstname?: string, lastname?: string, avatar: string};
 }
 
 export interface Friend {
     id:         string;
     username:   string;
+    firstname?: string;
+    lastname?:  string;
     avatar:     string;
     is_online:  boolean;
 }

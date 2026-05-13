@@ -19,6 +19,7 @@ router.get('/users/:username', authMiddleware, async (req: Request, res: Respons
 							avatar: true,
 							isOnline: true,
 							type: true,
+							title: true,
 							bio: true,
 							location: true,
 							website: true,

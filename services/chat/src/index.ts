@@ -113,7 +113,7 @@ async function start_chat_server() {
 					data:  {
 							email: data.email, username: data.username, firstname: data.firstname,
 							lastname: data.lastname, avatar: data.avatar, bio: data.bio,
-							location: data.location, website: data.website
+							location: data.location, website: data.website, title: data.title
 						}
 					});
 				} else if (channel === ADMIN_EVENTS.USER_DELETED) {

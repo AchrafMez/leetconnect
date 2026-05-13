@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { MessageCircle, Plus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Conversation } from "./ConverLayer";
 import ConversLayer from "./ConverLayer";
 import type { Friend } from "../../lib/api";
@@ -20,30 +22,41 @@ export default function ConversPanel({
 	const [show_modal, setShowModal] = useState(false);
 
 	return (
-		<div className="w-full sm:w-80 h-full border-r border-border flex flex-col">
-			<div className="px-4 py-5">
-				<h2 className="text-foreground font-semibold text-center">Conversations</h2>
-			</div>
+		<Card className="flex flex-col w-full overflow-hidden border-border/50 bg-background-elevated">
+			<CardHeader className="p-4 pb-3">
+				<CardTitle className="flex items-center gap-2 text-base">
+					<MessageCircle size={16} className="text-primary" />
+					Conversations
+				</CardTitle>
+			</CardHeader>
 
-			<div className="flex-1 overflow-y-auto">
-				{conversations.map((convers) => (
-					<ConversLayer
-						key={convers.id}
-						convers={convers}
-						is_active={convers.id === active_id}
-						curr_user={curr_user}
-						onClick={() => onSelect(convers.id)}
-					/>
-				))}
-			</div>
+			<CardContent className="p-0 flex-1 overflow-y-auto border-t border-border/50">
+				{conversations.length === 0 ? (
+					<p className="text-xs text-muted-foreground text-center py-8 px-4">
+						No conversations yet.
+					</p>
+				) : (
+					conversations.map((convers) => (
+						<ConversLayer
+							key={convers.id}
+							convers={convers}
+							is_active={convers.id === active_id}
+							curr_user={curr_user}
+							onClick={() => onSelect(convers.id)}
+						/>
+					))
+				)}
+			</CardContent>
 
-			<div className="p-4">
+			<div className="p-4 border-t border-border/50">
 				<button
 					onClick={() => setShowModal(true)}
-					className="w-full h-12 py-3 px-4 rounded-xl bg-primary text-foreground
-							   text-sm font-medium hover:bg-primary/80 transition-colors cursor-pointer"
+					className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+						bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium
+						transition-colors cursor-pointer"
 				>
-					+ Create Network
+					<Plus size={16} />
+					Create Network
 				</button>
 			</div>
 
@@ -54,6 +67,6 @@ export default function ConversPanel({
 					onCreated={onGroupCreated}
 				/>
 			)}
-		</div>
+		</Card>
 	);
 }

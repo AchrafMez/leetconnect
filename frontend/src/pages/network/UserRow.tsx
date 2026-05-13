@@ -19,13 +19,12 @@ export default function UserRow({ name, avatar, online, subtitle, onSelect, chil
 				onClick={onSelect}
 				className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer"
 			>
-				<div className="relative shrink-0">
+				<div
+					className={`shrink-0 rounded-full ${
+						online ? 'ring-2 ring-primary ring-offset-2 ring-offset-background-elevated' : ''
+					}`}
+				>
 					<Avatar name={name || '?'} image={avatar} size="sm" />
-					{online !== undefined && (
-						<span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background-elevated ${
-							online ? 'bg-primary' : 'bg-muted-foreground'
-						}`} />
-					)}
 				</div>
 				<div className="min-w-0">
 					<p className="text-sm font-medium text-foreground truncate">
