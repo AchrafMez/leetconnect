@@ -654,6 +654,7 @@ export const SetupProfile = async (req: Request, res: Response) => {
     await publishEvent(AUTH_EVENTS.USER_UPDATED, {
       id: updatedUser.id,
       bio: updatedUser.bio,
+      title: updatedUser.title,
     });
 
     return res.json({

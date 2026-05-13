@@ -24,7 +24,7 @@ export function NotifProvider({ children }: { children: ReactNode }) {
 	useEffect(() => {
 		const socket = getSocket();
 
-		const onNew  = (n: ChatNotif) => setNotifs(p => [n, ...p]);
+		const onNew  = (n: ChatNotif) => setNotifs(p => [n, ...p.filter(x => x.id !== n.id)]);
 		const onRead = ({id}: {id: number}) =>
 			setNotifs(p => p.map(n => n.id === id ? { ...n, is_read: true } : n));
 		const onReadAll  = () =>
