@@ -61,7 +61,7 @@ export function Intro(){
                         </Button>
 
                         <Button size="lg" variant="outline" asChild>
-                            <Link to="/auth/sign-up?type=FREELANCER">Find Work</Link>
+                            <Link to="/market/find-work">Find Work</Link>
                         </Button>
                     </motion.div>
 

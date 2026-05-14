@@ -9,9 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Search, Loader2, Briefcase, Inbox, Send } from "lucide-react";
+import { useAuth } from "@/context/userContext";
 
 const FindWork: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [jobs, setJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +48,14 @@ const FindWork: React.FC = () => {
     const timer = setTimeout(() => fetchJobs(), 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  const handleInteraction = (action: () => void) => {
+    if (!user) {
+      navigate('/auth/sign-up?type=FREELANCER');
+    } else {
+      action();
+    }
+  };
 
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,9 +105,17 @@ const FindWork: React.FC = () => {
 
   const openProposal = (e: React.MouseEvent, job: any) => {
     e.stopPropagation();
-    setSelectedJob(job);
-    setSubmitError(null);
-    setShowApply(true);
+    handleInteraction(() => {
+      setSelectedJob(job);
+      setSubmitError(null);
+      setShowApply(true);
+    });
+  };
+
+  const handleJobClick = (jobId: string) => {
+    handleInteraction(() => {
+      navigate(`/market/jobs/${jobId}`);
+    });
   };
 
   return (
@@ -161,11 +179,11 @@ const FindWork: React.FC = () => {
               key={job.id}
               role="button"
               tabIndex={0}
-              onClick={() => navigate(`/market/jobs/${job.id}`)}
+              onClick={() => handleJobClick(job.id)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
-                  navigate(`/market/jobs/${job.id}`);
+                  handleJobClick(job.id);
                 }
               }}
               className="group border-border/50 bg-background-elevated shadow-none hover:bg-secondary/50 transition-colors cursor-pointer"
