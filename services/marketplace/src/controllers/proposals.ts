@@ -20,7 +20,7 @@ export const addProposal = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: "Job not found" });
     }
     if (job.status !== 'OPEN') {
-  return res.status(403).json({ 
+    return res.status(403).json({ 
     message: job.status === 'FLAGGED' 
       ? 'This job is under review and not accepting proposals'
       : 'This job is not accepting proposals'
