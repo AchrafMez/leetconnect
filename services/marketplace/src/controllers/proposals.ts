@@ -205,6 +205,11 @@ export const acceptProposal = async (req: Request, res: Response) => {
         throw new Error("Job already accepted by another freelancer");
       }
 
+       await tx.proposal.update({
+        where: { id },
+        data: { status: "ACCEPTED" },
+      });
+
       // Reject all other pending proposals for this job
       await tx.proposal.updateMany({
         where: {

@@ -51,7 +51,7 @@ model Review {
 model Payment {
   id            String        @id @default(uuid())
 
-  amount        Float
+  amount        Int
   status        PaymentStatus @default(PENDING)
 
   proposalId    String        @unique
@@ -81,7 +81,7 @@ model Job {
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  @@unique([id, status])
+
 }
 
 model Proposal {
