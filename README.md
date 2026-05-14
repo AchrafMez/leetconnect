@@ -233,13 +233,84 @@ Grafana is configured with Prometheus as its datasource.
 - ...
 
 ## Analytics and admin: `abmahfou`
+### Modules:
+* **Major**: Advanced permissions system
+* **Major**:  Advanced analytics dashboard with data visualization
 ### What this work includes
 
-- ...
-- ...
-- ...
+#### 1. Role-Based Access Control (RBAC) System
+Designed and implemented a complete permission system from scratch covering both frontend enforcement and backend protection.
 
+* Defined a three-tier role hierarchy — `ADMIN`, `MODERATOR`, `USER` — where higher roles inherit all permissions of lower roles
+* Implemented three permission helpers — `hasRole`, `hasPermission`, and `canAccess` (hierarchy-aware) — exposed globally via React Context
+* Built `CanAccess` component for conditional UI rendering supporting role, roles, permission, and minRole props simultaneously
+* Built `ProtectedRoute` component for route-level access control with automatic redirect to `/admin/login` for unauthenticated users and `/403` for unauthorized ones
 
+#### 2. Admin Dashboard Overview
+* Built the main admin dashboard page showing platform-wide metrics — total users, total jobs, flagged jobs with pulsing alert badge, suspended users
+* Implemented "Recent Users" and "Recent Jobs" tables with live navigation to management pages
+* Flagged jobs are automatically floated to the top of the Recent Jobs table and highlighted with a red tint row and flag icon
+* "Manage" action button adapts its label and color per job status — shows "Review" in red for flagged jobs
+
+#### 3. User Management System
+
+* `GET /api/admin/users` — full user listing with simultaneous search across name, email, and username fields using Prisma OR with mode: insensitive, plus role and status filters
+* `PATCH /api/admin/users/:id/role` — role update with self-modification protection and atomic TOCTOU-safe Prisma query using where: { role: { not: 'ADMIN' } }
+* `PATCH /api/admin/users/:id/status` — status update with same protections
+* `DELETE /api/admin/users/:id` — permanent deletion with self-deletion protection
+* Frontend `UsersPage` features role stat cards (clickable to filter), search, role dropdown filter, inline role editing with optimistic updates and automatic rollback on failure, suspend/activate toggle, and two-step delete confirmation
+
+#### 4. Job Management System
+
+* `GET /api/admin/jobs` — full job listing with search across title, description, and category, plus status.
+* `PATCH /api/admin/jobs/:id/status` — status transition endpoint supporting flag, restore, and close actions
+* `DELETE /api/admin/jobs/:id` — permanent job removal
+* Frontend `JobsPage` features a status tab bar with live counts, multi-filter toolbar, inline flag/unflag and delete actions with confirmation, and a slide-in detail drawer showing full job information, skill tags, client details, status changer, and delete action
+* Drawer updates in real-time — changing status in the drawer simultaneously updates the table row badge without closing and reopening
+
+#### 5. Roles & Permissions Page
+
+* Built `GET /api/admin/roles` endpoint that returns the complete role configuration including labels, descriptions, permission lists, and real user counts per role via` prisma.user.groupBy`
+* Frontend is a pure renderer — zero hardcoded permission data, everything comes from the backend
+* Permission checklist grouped by category (Users, Roles, Content) with granted/denied visual indicators
+* Full comparison matrix showing all roles side-by-side for every permission
+* Role selector cards show real-time user counts from the database
+
+#### 6. Analytics Dashboard
+##### Backend — three dedicated endpoints:
+* `GET /api/admin/analytics/overview` — platform-wide absolute counts (total users, total jobs, active jobs, flagged jobs, suspended users, new this week) using `Promise.all` for parallel query execution
+* `GET /api/admin/analytics/users` — user registration time-series using prisma.$queryRaw with PostgreSQL `DATE_TRUNC('day', createdAt)`, plus role distribution and status breakdown via `groupBy`
+* `GET /api/admin/analytics/jobs` — job posting time-series, status breakdown, category ranking, and average proposals via `prisma.job.aggregate`
+* Both time-series endpoints support preset ranges (`7d`, `30d`, `90d`, `1y`) and custom date ranges (`from` / `to` ISO strings) with full Zod validation including future-date prevention and from-before-to enforcement
+* `bigint` results from `$queryRaw` safely converted to `Number` before JSON serialization
+
+##### Frontend — full visualization layer:
+* `DateRangePicker` — preset tab bar plus custom date range via react-datepicker
+* `UserRegistrationsChart` — Recharts `LineChart` with custom dark-themed tooltip
+* `JobsOverTimeChart` — Recharts `BarChart` with rounded bar tops
+* `RoleDistributionChart` — Recharts `PieChart` with custom legend showing counts and percentages
+* `JobStatusChart` — Recharts donut chart with center total count display
+* `CategoryChart` — pure div-based horizontal bar chart with proportional fill widths
+* Real-time updates via 30-second polling using `setInterval` with `fetchAll(false)` for silent background refresh — no loading flash during updates — with "last updated X seconds ago" indicator
+* `Promise.all` on all three endpoints for simultaneous fetch
+
+#### 7. Export Functionality
+- **CSV export** — multi-section file generated entirely client-side using `papaparse` from already-fetched React state, covering overview metrics, registration trends, role breakdown, job trends, category ranking, and status breakdown. Zero server round-trip on export
+
+#### Challenges Faced & How They Were Overcome
+
+* **Handling Data Serialization & Type Mismatches**
+  Encountered issues when serializing complex database types (like Postgres BigInt) into JSON for the frontend.
+  * **Solution:** Implemented a standardized transformation layer in the backend controllers to cast raw database outputs into JS-compatible formats.
+
+* **Optimizing Frontend Performance for Heavy Analytics**
+	Balancing real-time data accuracy with UI responsiveness when handling large datasets and frequent polling.
+	* **Solution**: Implemented background data fetching (silent refreshes) and optimized Recharts rendering. Used Promise.all to parallelize API requests, significantly reducing initial load times for the analytics dashboard.
+
+* **Ensuring Data Consistency in Microservices**
+	Maintaining a local "shadow" database for the Admin/Analytics services while keeping it in sync with the Auth service without direct database coupling.
+
+	* **Solution**: We developed an event-driven synchronization system using Redis. Leveraged the "upsert" pattern to handle incoming user events, ensuring the admin dashboard remains accurate without creating cross-service dependencies.
 
 ## Modules
 
@@ -268,4 +339,5 @@ Grafana is configured with Prometheus as its datasource.
 ### Chat References
 - ...
 ### Analytics References
-- ...
+- [recharts guide](https://recharts.github.io/en-US/guide/getting-started/)
+- [papaparse docs](https://www.papaparse.com/docs)
