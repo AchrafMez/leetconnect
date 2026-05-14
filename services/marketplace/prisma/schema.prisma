@@ -81,6 +81,7 @@ model Job {
 
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  @@unique([id, status])
 }
 
 model Proposal {
@@ -97,4 +98,5 @@ model Proposal {
   createdAt      DateTime        @default(now())
 
   @@unique([freelancerId, jobId])
+  
 }

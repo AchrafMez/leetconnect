@@ -189,10 +189,21 @@ export const acceptProposal = async (req: Request, res: Response) => {
     // Use interactive transaction for atomicity
     const payment = await prisma.$transaction(async (tx) => {
       // Update proposal status
-      await tx.proposal.update({
-        where: { id },
-        data: { status: "ACCEPTED" },
+
+      // empecher d accepter 2 proposal de freelancer different
+      const jobUpdate = await tx.job.updateMany({
+        where: {
+          id: proposal.jobId,
+          status: "OPEN",
+        },
+        data: {
+          status: "IN_PROGRESS",
+        },
       });
+
+      if (jobUpdate.count === 0) {
+        throw new Error("Job already accepted by another freelancer");
+      }
 
       // Reject all other pending proposals for this job
       await tx.proposal.updateMany({
@@ -216,12 +227,8 @@ export const acceptProposal = async (req: Request, res: Response) => {
         },
       });
 
-      // Update job status
-      await tx.job.update({
-        where: { id: proposal.jobId },
-        data: { status: "IN_PROGRESS" },
-      });
-
+  
+  
       return newPayment;
     });
 
