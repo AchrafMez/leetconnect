@@ -58,6 +58,7 @@ profileSettings.png
 userContext.md
 **/prisma/generated/
 migrations/
+generated/
 *.md
 # test scripts
 /security-test.sh
