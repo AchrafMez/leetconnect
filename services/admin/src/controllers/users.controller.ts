@@ -37,33 +37,6 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
 	}
 }
 
-export const getUser =  async (req: Request, res: Response, next: NextFunction) => {
-	try {
-			const id = req.params.id as string;
-			if(!id) {
-				return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid user id'});
-			}
-	
-			const u = await prisma.user.findUnique({
-				where: { id },
-				select: {
-					id: true, email: true, username: true, firstname: true,
-					lastname: true, status: true, role: true, type: true,
-					avatar: true, createdAt: true
-				},
-			});
-	
-			if(!u) {
-				return res.status(StatusCodes.NOT_FOUND).json({ message: 'User not found!'});
-			}
-	
-			return res.status(StatusCodes.OK).json(u);
-	} catch (error) {
-		console.error('[getUser]: ', error);
-		next(error);
-	}
-}
-
 export const editUserStatus = async (req: Request, res: Response, next: NextFunction) => {
 	const user = req.user;
 
