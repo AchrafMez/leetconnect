@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
 
 export function Intro(){
     return (
@@ -53,14 +54,14 @@ export function Intro(){
                         transition={{duration: 0.5, delay: 0.4}}
                         className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                         <Button size="lg" className="gap-2 group" asChild>
-                            <a href="#get-started">
+                            <Link to="/auth/sign-up?type=CLIENT">
                                 Start Hiring
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </a>
+                            </Link>
                         </Button>
 
                         <Button size="lg" variant="outline" asChild>
-                            <a href="#get-started">Find Work</a>
+                            <Link to="/market/find-work">Find Work</Link>
                         </Button>
                     </motion.div>
 

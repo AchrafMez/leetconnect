@@ -17,13 +17,6 @@ interface DateRangePickerProps {
 	onChange: (value: DateRangeValue) => void;
 }
 
-/* const RANGES: { label: string; value: DateRange; description: string }[] = [
-  { label: '7D', value: '7d', description: 'Last 7 days' },
-  { label: '30D', value: '30d', description: 'Last 30 days' },
-  { label: '90D', value: '90d', description: 'Last 90 days' },
-  { label: '1Y', value: '1y', description: 'Last year' },
-]; */
-
 export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
 	const [showCustom, setShowCustom] = useState(value.preset === 'custom');
 

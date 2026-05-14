@@ -173,14 +173,6 @@ export const UsersPage = () => {
 						))}
 					</SelectContent>
 				</Select>
-        {/* <select
-          value={roleFilter}
-          onChange={e => setRoleFilter(e.target.value as Role | 'all')}
-          className="bg-input border border-border rounded-lg px-3 py-2.5 text-sm text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
-        >
-          <option value="all">All roles</option>
-          {ALL_ROLES.map(r => <option key={r} value={r}>{ROLE_META[r].label}</option>)}
-        </select> */}
         <span className="ml-auto text-sm font-semibold text-muted-foreground">{users.length} users</span>
       </div>
 
@@ -229,15 +221,6 @@ export const UsersPage = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {/* <select
-                        value={u.role}
-                        onChange={e => handleRoleChange(u.id, e.target.value as Role)}
-                        className="text-xs font-medium border rounded-full px-2.5 py-1 bg-foreground/10 text-foreground border-foreground/30 focus:outline-none cursor-pointer"
-                      >
-                        {ALL_ROLES.map(r => (
-                          <option key={r} value={r} className="bg-card text-foreground">{ROLE_META[r].label}</option>
-                        ))}
-                      </select> */}
                     </CanAccess>
                   )}
                 </td>

@@ -8,8 +8,6 @@ import { getDateRange } from './utils';
 export const getUsersAnalytics = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const { startDate, endDate } = getDateRange(req.query);
-		// console.log("STARTDATE: ", startDate);
-		// console.log("ENDDATE: ", endDate);
 
 		const [
 			registrationsOverTime,

@@ -48,6 +48,7 @@ export const handleJobUpdated = async (channel: string, message: any) => {
     if (payload.category !== undefined) data.category = payload.category;
     if (payload.budget !== undefined) data.budget = payload.budget;
     if (payload.skills !== undefined) data.skills = payload.skills;
+    if (payload.proposals !== undefined) data.proposals = payload.proposals;
     if (payload.status !== undefined) {
        data.status = payload.status === "OPEN" ? "active" : (payload.status === "CLOSED" ? "closed" : "active");
     }

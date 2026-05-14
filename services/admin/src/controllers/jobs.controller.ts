@@ -22,9 +22,9 @@ export const getAllJobs = async (req: Request, res: Response, next: NextFunction
 
 			select: {
 				id: true, title: true, description: true, budget: true,
-				budgetType: true, category: true, createdBy: true, status: true,
+				category: true, createdBy: true, status: true,
 				createdAt: true, proposals: true, skills: true,
-				deadline: true, postedByName: true
+				postedByName: true
 			},
 			orderBy: { createdAt: 'desc'} 
 		})
@@ -45,9 +45,9 @@ export const getJob = async (req: Request, res: Response, next: NextFunction) =>
 			where: { id },
 			select: {
 				id: true, title: true, description: true, budget: true,
-				budgetType: true, category: true, createdBy: true, status: true,
+				category: true, createdBy: true, status: true,
 				createdAt: true, proposals: true, skills: true,
-				deadline: true, postedByName: true
+				postedByName: true
 			},
 		});
 
@@ -74,9 +74,9 @@ export const editJobStatus = async (req: Request, res: Response, next: NextFunct
 			data: { status },
 			select: {
 				id: true, title: true, description: true, budget: true,
-				budgetType: true, category: true, createdBy: true, status: true,
+				category: true, createdBy: true, status: true,
 				createdAt: true, proposals: true, skills: true,
-				deadline: true, postedByName: true
+				postedByName: true
 			},
 		});
 

@@ -9,7 +9,8 @@ const router = Router();
 router.post("/", authMiddleware, requireType("CLIENT"), validateJob, addJob);
 router.get("/my-jobs", authMiddleware, getMyJobs);
 router.get("/", getAllJobs);
-router.get("/:id", validateIdParam("id"), getSingleJob);
+router.put("/:id", authMiddleware, validateIdParam("id"), validateJobUpdate, updateJob);
+router.get("/:id", authMiddleware, validateIdParam("id"), getSingleJob);
 router.put("/:id", authMiddleware, validateIdParam("id"), validateJobUpdate, updateJob);
 router.delete("/:id", authMiddleware, validateIdParam("id"), deleteJob);
 router.post("/:id/complete", authMiddleware, validateIdParam("id"), completeJob);
@@ -20,6 +21,6 @@ router.post("/payments/:id/pay", authMiddleware, validateIdParam("id"), pay);
 
 // Reviews
 router.post("/reviews", authMiddleware, validateReview, submitReview);
-router.get("/reviews/user/:userId", validateIdParam("userId"), getUserReviews);
+router.get("/reviews/user/:userId", authMiddleware, validateIdParam("userId"), getUserReviews);
 
 export default router;

@@ -100,11 +100,11 @@ async function start_chat_server() {
 						where:  {id: data.id},
 						update: {email: data.email, username: data.username,
 							firstname: data.firstname, lastname: data.lastname,
-							role: data.role, type: data.type
+							role: data.role, type: data.type, avatar: data.avatar
 						},
 						create: {id: data.id, email: data.email, username: data.username,
 							firstname: data.firstname, lastname: data.lastname,
-							role: data.role, type: data.type
+							role: data.role, type: data.type, avatar: data.avatar
 						}
 					});
 				} else if (channel === AUTH_EVENTS.USER_UPDATED) {
@@ -113,7 +113,7 @@ async function start_chat_server() {
 					data:  {
 							email: data.email, username: data.username, firstname: data.firstname,
 							lastname: data.lastname, avatar: data.avatar, bio: data.bio,
-							location: data.location, website: data.website
+							location: data.location, website: data.website, title: data.title
 						}
 					});
 				} else if (channel === ADMIN_EVENTS.USER_DELETED) {

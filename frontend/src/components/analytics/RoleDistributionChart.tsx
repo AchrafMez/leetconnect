@@ -12,11 +12,10 @@ interface RoleDistributionChartProps {
 const ROLE_COLORS: Record<string, string> = {
   ADMIN:     'var(--color-primary)',
   MODERATOR: '#3b82f6',
-  USER:      '#8b5cf6',
-  GUEST:     '#6b7280',
+  USER:      '#8b5cf6'
 };
 
-const DEFAULT_COLORS = ['var(--color-primary)', '#3b82f6', '#8b5cf6', '#6b7280', '#f59e0b'];
+const DEFAULT_COLORS = ['var(--color-primary)', '#3b82f6', '#8b5cf6', '#f59e0b'];
  
 function getColor(role: string, index: number): string {
   return ROLE_COLORS[role] ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length]!;

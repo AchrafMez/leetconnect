@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/context/userContext';
@@ -10,6 +10,9 @@ import { api } from '@/lib/api';
 
 export default function Register() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const initialType = searchParams.get('type') === 'CLIENT' ? 'CLIENT' : 'FREELANCER';
+    
     const auth = useAuth();
     const {user} = useAuth()
     const { register: registerUser } = auth || { register: async () => { } };
@@ -25,7 +28,7 @@ export default function Register() {
         email: '',
         password: '',
         confirmPassword: '',
-        type: 'FREELANCER' as 'FREELANCER' | 'CLIENT', // Default value
+        type: initialType as 'FREELANCER' | 'CLIENT', // Default value from URL or FREELANCER
         agreeToTerms: false,
     });
 

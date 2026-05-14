@@ -40,6 +40,11 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
 
+        {/* Public market routes that still use Layout/Navbar */}
+        <Route element={<Layout />}>
+          <Route path="/market/find-work" element={<FindWork />} />
+        </Route>
+
         <Route element={<RequireAuth />}>
           <Route element={<Layout />}>
             {/* Redirect old dashboard paths to new /market/dashboard */}
@@ -47,7 +52,6 @@ export default function App() {
             <Route path="/freedashboard" element={<Navigate to="/market/dashboard" replace />} />
             
             <Route path="/market/dashboard" element={<MarketDashboard />} />
-            <Route path="/market/find-work" element={<FindWork />} />
             <Route path="/market/freelancers" element={<Freelancers />} />
             <Route path="/market/my-jobs" element={<MyJobs />} />
             <Route path="/market/post-job" element={<PostJob />} />

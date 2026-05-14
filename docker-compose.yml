@@ -74,6 +74,7 @@ services:
     - "5555:5555"  # exposed this port so I can connect to prisma ui
     env_file:
       - .env
+      - .env.ip
     environment:
       - DATABASE_URL=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASS}@postgres:5432/${AUTH_DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
@@ -167,8 +168,8 @@ services:
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
     volumes:
       - ./certs:/etc/ssl/internal:ro
-      - ./services/analytics:/app/service
-      - /app/service/node_modules
+      # - ./services/analytics:/app/service
+      # - /app/service/node_modules
   admin:
     container_name: admin
     # image_name: admin
@@ -196,8 +197,8 @@ services:
       - DATABASE_URL=postgresql://${ADMIN_DB_USER}:${ADMIN_DB_PASS}@postgres:5432/${ADMIN_DB_NAME}
     volumes:
       - ./certs:/etc/ssl/internal:ro
-      - ./services/admin:/app/service
-      - /app/service/node_modules
+      # - ./services/admin:/app/service
+      # - /app/service/node_modules
       # - SSL_KEY_PATH=/etc/ssl/internal/admin.key
       # - SSL_CERT_PATH=/etc/ssl/internal/admin.crt
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
@@ -212,7 +213,6 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      - ./public/avatars:/app/public/avatars
     # environment: # added to auto apply changes in front
     # - CHOKIDAR_USEPOLLING=true
     # - WATCHPACK_POLLING=true

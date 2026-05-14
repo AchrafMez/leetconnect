@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/Theme";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/context/userContext";
+import { useNotifications } from "@/context/NotifProvider";
 import NotifBell from "@/components/NotifBell";
 
 import {
@@ -27,6 +28,7 @@ const clientMenuItems = [
 
 const freelancerMenuItems = [
   { name: "Overview", path: "/market/dashboard", icon: LayoutDashboard, desc: "View your earnings and profile stats" },
+  { name: "Talent", path: "/market/freelancers", icon: Users, desc: "Browse and hire top freelancers" },
   { name: "Marketplace", path: "/market/find-work", icon: Search, desc: "Find new jobs and projects" },
   { name: "Proposals", path: "/market/proposals", icon: Briefcase, desc: "Track your active proposals" },
 ];
@@ -45,6 +47,13 @@ export default function Navbar() {
   const auth = useAuth();
   const { user, loading, logout } = auth || { user: null, loading: true, logout: async () => { } };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const notifContext = useNotifications();
+  const notifs = notifContext?.notifs || [];
+
+  const unreadMessages = notifs.filter(n => !n.is_read && n.type === 'MESSAGE').length;
+  const unreadNetwork = notifs.filter(n => !n.is_read && n.type === 'FRIEND_REQ').length;
+  const unreadProposals = notifs.filter(n => !n.is_read && n.type === 'SYSTEM' && n.title.toLowerCase().includes('proposal')).length;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -80,16 +89,25 @@ export default function Navbar() {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={navLinkClass(isActive(item.path))}
+                    className={`${navLinkClass(isActive(item.path))} relative flex items-center gap-1`}
                   >
                     {item.name}
+                    {item.name === "Proposals" && unreadProposals > 0 && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    )}
                   </Link>
                 ))}
-                <Link to="/chat" className={navLinkClass(isActive('/chat'))}>
+                <Link to="/chat" className={`${navLinkClass(isActive('/chat'))} relative flex items-center gap-1`}>
                   Messages
+                  {unreadMessages > 0 && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  )}
                 </Link>
-                <Link to="/network" className={navLinkClass(isActive('/network'))}>
+                <Link to="/network" className={`${navLinkClass(isActive('/network'))} relative flex items-center gap-1`}>
                   Network
+                  {unreadNetwork > 0 && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                  )}
                 </Link>
               </>
             ) : (
@@ -200,7 +218,12 @@ export default function Navbar() {
                       className={`flex items-center gap-3 text-left py-2 px-3 rounded ${navLinkClass(isActive(item.path))}`}
                     >
                       <item.icon size={16} />
-                      {item.name}
+                      <span className="flex items-center gap-1.5">
+                        {item.name}
+                        {item.name === "Proposals" && unreadProposals > 0 && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        )}
+                      </span>
                     </button>
                   ))}
                   
@@ -212,14 +235,24 @@ export default function Navbar() {
                     className={`flex items-center gap-3 text-left py-2 px-3 rounded ${navLinkClass(isActive('/chat'))}`}
                   >
                     <MessageCircle size={16} />
-                    Messages
+                    <span className="flex items-center gap-1.5">
+                      Messages
+                      {unreadMessages > 0 && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      )}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleNavigate('/network')}
                     className={`flex items-center gap-3 text-left py-2 px-3 rounded ${navLinkClass(isActive('/network'))}`}
                   >
                     <Users size={16} />
-                    Network
+                    <span className="flex items-center gap-1.5">
+                      Network
+                      {unreadNetwork > 0 && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      )}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleNavigate(`/profile/${user?.username}`)}

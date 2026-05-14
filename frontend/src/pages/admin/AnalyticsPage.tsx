@@ -98,8 +98,6 @@ export const AnalyticsPage = () => {
 	if(error) {
 		return <div className="p-8 text-destructive">{error}</div>
 	}
-	console.log("USERS: ", users)
-	console.log("JOBS: ", jobs)
   return (
 		<div className="p-8">
 			<div className="mb-8 flex items-start justify-between">
@@ -146,7 +144,6 @@ export const AnalyticsPage = () => {
 					<StatCard 
 					label="Suspended Users"
 					value={overview.suspendedUsers}
-					sub={`↑ ${overview.pendingUsers} pending approval`}
 					subColor="text-muted-foreground"
           iconBg="bg-amber-500/10"
 					attention={overview.suspendedUsers > 0}
@@ -208,34 +205,7 @@ export const AnalyticsPage = () => {
 
 			{/* buttom row - extra stats */}
 			{jobs && (
-				<div className="grid grid-cols-2 gap-6">
-					{/* budget type breakdown */}
-					<div className="bg-card border border-border p-5">
-						<h2 className="text-sm font-semibold text-foreground mb-4">Budget Type</h2>
-						<div className="space-y-3">
-							{jobs.byBudgetType.map(item => {
-								const total = jobs.byBudgetType.reduce((s, i) => s + i.count, 0);
-								const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
-								return(
-									<div key={item.type} className="flex items-center gap-3">
-                    <div className="w-16 shrink-0">
-                      <p className="text-xs text-muted-foreground capitalize">{item.type}</p>
-                    </div>
-                    <div className="flex-1 bg-secondary rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-semibold text-foreground w-12 text-right tabular-nums">
-                      {item.count} ({pct}%)
-                    </span>
-                  </div>
-								)
-							})}
-						</div>
-					</div>
-
+				<div className="grid">
 					{/* Quick stats */}
 					<div className="bg-card border border-border p-5">
 						<h2 className="text-sm font-semibold text-foreground mb-4">Quick Stats</h2>
@@ -250,14 +220,6 @@ export const AnalyticsPage = () => {
 									label: 'Active jobs',
 									value: overview?.activeJobs ?? 0,
 									sub: 'currently open for proposals',
-								},
-								{
-									label: 'User activation rate',
-									value: overview ? `${Math.round(
-										((overview.totalUsers - overview.suspendedUsers - overview.pendingUsers)
-										/ Math.max(overview.totalUsers, 1)) * 100
-									)}%` : '—',
-									sub: 'active ÷ total users',
 								},
 							].map(stat => (
 								<div key={stat.label} className="flex items-center justify-between">
