@@ -23,9 +23,9 @@ router.post('/refresh', refresh);
 router.post('/logout', logout);
 
 
-router.get("/users/:id",  getUserById);
-router.get("/freelancers", getAllFreelancers);
-router.get("/clients", getAllClients);
+router.get("/users/:id",  authMiddleware, getUserById);
+router.get("/freelancers",authMiddleware,  getAllFreelancers);
+router.get("/clients",authMiddleware, getAllClients);
 router.post('/setup', authMiddleware, SetupProfile)
 router.patch('/settings', authMiddleware, updateProfileValidator, validate, updateProfile);
 // rate limit for changing password

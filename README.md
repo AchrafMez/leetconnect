@@ -99,6 +99,9 @@ make
 - PostgreSQL (single instance with logical DB separation)
 - Redis (pub/sub and shared event communication)
 
+#### db schema
+![Database schema](./schema.svg)
+
 
 ## Infrastructure & Monitoring: `amezioun`
 

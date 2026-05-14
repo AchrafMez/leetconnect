@@ -100,11 +100,11 @@ async function start_chat_server() {
 						where:  {id: data.id},
 						update: {email: data.email, username: data.username,
 							firstname: data.firstname, lastname: data.lastname,
-							role: data.role, type: data.type
+							role: data.role, type: data.type, avatar: data.avatar
 						},
 						create: {id: data.id, email: data.email, username: data.username,
 							firstname: data.firstname, lastname: data.lastname,
-							role: data.role, type: data.type
+							role: data.role, type: data.type, avatar: data.avatar
 						}
 					});
 				} else if (channel === AUTH_EVENTS.USER_UPDATED) {

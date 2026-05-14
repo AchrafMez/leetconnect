@@ -16,6 +16,7 @@ export default function FreelancerSetupModal() {
   const { user, updateUser } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     rate: "",
@@ -57,6 +58,12 @@ export default function FreelancerSetupModal() {
     setFormData({ ...formData, skills: formData.skills.filter((s) => s !== skill) });
   };
 
+  const addSuggestedSkill = (skill: string) => {
+    if (!formData.skills.includes(skill)) {
+      setFormData({ ...formData, skills: [...formData.skills, skill] });
+    }
+  };
+
   const toggleCategory = (cat: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -68,6 +75,13 @@ export default function FreelancerSetupModal() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
+    if (formData.skills.length === 0) {
+      setError("You must select or enter at least one skill.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await api<any>("/auth/setup", {
@@ -78,12 +92,19 @@ export default function FreelancerSetupModal() {
         updateUser(res.user);
         setIsOpen(false);
       }
-    } catch (error) {
-      console.error("Failed to update profile:", error);
+    } catch (err: any) {
+      console.error("Failed to update profile:", err);
+      setError(err.message || "Failed to complete setup. Please try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  const suggestedSkills = Array.from(
+    new Set(
+      formData.category.flatMap((cat) => categoriesData[cat as keyof typeof categoriesData] || [])
+    )
+  ).filter((s) => !formData.skills.includes(s));
 
   return (
     <Dialog open={isOpen}>
@@ -104,6 +125,12 @@ export default function FreelancerSetupModal() {
             </div>
           </div>
         </DialogHeader>
+
+        {error && (
+          <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mt-2 whitespace-pre-wrap">
+            <p className="text-sm font-medium">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5 pt-2">
           {/* Title */}
@@ -173,6 +200,24 @@ export default function FreelancerSetupModal() {
                 onKeyDown={handleAddSkill}
               />
             </div>
+            
+            {suggestedSkills.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <p className="text-xs text-muted-foreground">Suggested skills:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {suggestedSkills.map((skill) => (
+                    <button
+                      key={skill}
+                      type="button"
+                      onClick={() => addSuggestedSkill(skill)}
+                      className="px-2.5 py-1 rounded-md text-xs font-medium border border-dashed border-border text-muted-foreground hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all cursor-pointer"
+                    >
+                      + {skill}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Bio */}

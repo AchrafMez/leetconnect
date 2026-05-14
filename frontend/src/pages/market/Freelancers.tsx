@@ -52,7 +52,8 @@ const Freelancers: React.FC = () => {
     if (search.trim()) {
       const q = search.toLowerCase();
       filtered = filtered.filter((f) => {
-        const matchName = f.username?.toLowerCase().includes(q);
+        const fullName = [f.firstname, f.lastname].filter(Boolean).join(" ").toLowerCase();
+        const matchName = f.username?.toLowerCase().includes(q) || fullName.includes(q);
         const matchTitle = f.title?.toLowerCase().includes(q);
         const matchSkills = f.skills?.some((s: string) => s.toLowerCase().includes(q));
         return matchName || matchTitle || matchSkills;
