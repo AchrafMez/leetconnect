@@ -2,6 +2,8 @@ import dotenv			from 'dotenv';
 import express			from 'express';
 import morgan			from 'morgan';
 import http				from 'http';
+import cors				from 'cors';
+import helmet			from 'helmet';
 import { Server }		from 'socket.io';
 
 import health_routes	from './routes/route.health';
@@ -14,6 +16,7 @@ import users_routes		from './routes/route.users';
 import prisma			from './config/config.database';
 
 import error_handler	from './middleware/error.handler';
+import { rateLimit, ipKeyGenerator }from 'express-rate-limit';
 import { setup_sockets } from './sockets/socket.handler';
 
 import {
@@ -33,13 +36,53 @@ import {  type NotifEventPayload, notify } from './lib/notify';
 dotenv.config({ path: '../../.env', quiet: true});
 
 const PORT = process.env.CHAT_DB_PORT || 3003;
+const ORIGIN = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-	cors: { origin: '*' },
+	cors: {
+		origin: ORIGIN,
+		credentials: true
+	}
 });
+
+app.set('trust proxy', 1);
+const global_limiter = rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: 1000,
+	standardHeaders: true,
+	legacyHeaders: false,
+	skip: (req) => req.path === '/metrics' || req.path === '/api/chat/health',
+});
+
+const message_limiter = rateLimit({
+	windowMs: 60 * 1000,
+	max: 30,
+	message: {error: 'Messaging spam detected.'},
+	standardHeaders: true,
+	legacyHeaders: false,
+	keyGenerator: (req) => (req as any).user?.userId ?? ipKeyGenerator(req.ip ?? ''),
+});
+
+const write_limiter = rateLimit({
+	windowMs: 15 * 60 * 1000,
+	max: 60,
+	message: {error: 'Too many requests detected.'},
+	standardHeaders: true,
+	legacyHeaders: false,
+	keyGenerator: (req) => (req as any).user?.userId ?? ipKeyGenerator(req.ip ?? ''),
+});
+
+app.use(helmet());
+
+app.use(cors({
+	origin: ORIGIN,
+	credentials: true
+}));
+
+app.use(global_limiter);
 
 app.use(morgan('dev'));
 app.use(express.json());
@@ -72,9 +115,9 @@ app.get('/metrics', async (_req, res) => {
 app.use('/api/chat', health_routes);
 
 app.use(authMiddleware);
-app.use('/api/chat/convers', 			  convers_routes);
-app.use('/api/chat/convers/:id/messages', message_routes);
-app.use('/api/friend/requests', 		  friends_routes);
+app.use('/api/chat/convers', 			  write_limiter, convers_routes);
+app.use('/api/chat/convers/:id/messages', message_limiter, message_routes);
+app.use('/api/friend/requests', 		  write_limiter, friends_routes);
 app.use('/api/notifs', 					  notif_routes);
 app.use('/api/chat',					  users_routes);
 
