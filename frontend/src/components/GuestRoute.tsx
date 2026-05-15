@@ -16,9 +16,9 @@ export const GuestRoute = ({ children }: GuestRouteProps) => {
   }
 
   //  If user is already authenticated, redirect to dashboard
-  // if (user) {
-  //   return <Navigate to="/dashboard" replace />;
-  // }
+  if (user) {
+    return <Navigate to="/market/dashboard" replace />;
+  }
 
   // Otherwise, show the Sign In / Sign Up page
   return <Outlet />;

@@ -63,3 +63,4 @@ migrations/
 /security-test.sh
 /rate-limit-test.sh
 /.env.ip
+/audit_test.sh
