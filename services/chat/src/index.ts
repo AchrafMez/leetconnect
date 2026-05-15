@@ -52,6 +52,7 @@ app.set('trust proxy', 1);
 const global_limiter = rateLimit({
 	windowMs: 15 * 60 * 1000,
 	max: 1000,
+	message: {error: 'Chat service global limiter'},
 	standardHeaders: true,
 	legacyHeaders: false,
 	skip: (req) => req.path === '/metrics' || req.path === '/api/chat/health',
@@ -67,7 +68,7 @@ const message_limiter = rateLimit({
 });
 
 const write_limiter = rateLimit({
-	windowMs: 15 * 60 * 1000,
+	windowMs: 10 * 60 * 1000,
 	max: 60,
 	message: {error: 'Too many requests detected.'},
 	standardHeaders: true,

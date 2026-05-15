@@ -5,6 +5,7 @@ import {
 	MessageCircle, Settings, Briefcase, MapPin, Calendar,
 } from 'lucide-react';
 import { chatApi, friendApi } from '../../lib/api';
+import { useRateLimit, RateLimitBanner } from '../../lib/RateLimit';
 import Avatar from '@/components/ui/Avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePresence } from '@/context/PresenceProvider';
@@ -23,6 +24,7 @@ export default function ProfileHeader({
 	const [actionLoading, setActionLoading] = useState(false);
 	const [messageLoading, setMessageLoading] = useState(false);
 	const navigate = useNavigate();
+	const rl = useRateLimit();
 
 	const {
 		id: targetUserId,
@@ -40,6 +42,7 @@ export default function ProfileHeader({
 	const typeLabel = type === 'FREELANCER' ? 'Freelancer' : type === 'CLIENT' ? 'Client' : null;
 
 	const handleMessage = async () => {
+		if (rl.isLimited) return;
 		setMessageLoading(true);
 		try {
 			const convers = await chatApi.createConversation({
@@ -48,39 +51,41 @@ export default function ProfileHeader({
 			});
 			navigate(`/chat?conv=${convers.id}`);
 		} catch (err) {
-			console.error('Failed to open conversation:', err);
+			if (!rl.handle(err)) console.error('Failed to open conversation:', err);
 		} finally {
 			setMessageLoading(false);
 		}
 	};
 
 	const handleSendRequest = async () => {
+		if (rl.isLimited) return;
 		setActionLoading(true);
 		try { await friendApi.sendRequest(targetUserId); onFriendAction(); }
-		catch (err) { console.error('Failed to send friend request:', err); }
+		catch (err) { if (!rl.handle(err)) console.error('Failed to send friend request:', err); }
 		finally { setActionLoading(false); }
 	};
 
 	const handleAccept = async () => {
-		if (!friendRequestId) return;
+		if (!friendRequestId || rl.isLimited) return;
 		setActionLoading(true);
 		try { await friendApi.acceptRequest(friendRequestId); onFriendAction(); }
-		catch (err) { console.error('Failed to accept request:', err); }
+		catch (err) { if (!rl.handle(err)) console.error('Failed to accept request:', err); }
 		finally { setActionLoading(false); }
 	};
 
 	const handleReject = async () => {
-		if (!friendRequestId) return;
+		if (!friendRequestId || rl.isLimited) return;
 		setActionLoading(true);
 		try { await friendApi.rejectRequest(friendRequestId); onFriendAction(); }
-		catch (err) { console.error('Failed to reject request:', err); }
+		catch (err) { if (!rl.handle(err)) console.error('Failed to reject request:', err); }
 		finally { setActionLoading(false); }
 	};
 
 	const handleUnfriend = async () => {
+		if (rl.isLimited) return;
 		setActionLoading(true);
 		try { await friendApi.removeFriend(targetUserId); onFriendAction(); }
-		catch (err) { console.error('Failed to remove friend:', err); }
+		catch (err) { if (!rl.handle(err)) console.error('Failed to remove friend:', err); }
 		finally { setActionLoading(false); }
 	};
 
@@ -112,8 +117,10 @@ export default function ProfileHeader({
 				return (
 					<button
 						onClick={handleSendRequest}
+						disabled={rl.isLimited}
 						className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground
-							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
+							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer
+							disabled:opacity-60 disabled:cursor-not-allowed"
 					>
 						<UserPlus size={14} />
 						Connect
@@ -134,16 +141,20 @@ export default function ProfileHeader({
 					<div className="flex gap-2">
 						<button
 							onClick={handleAccept}
+							disabled={rl.isLimited}
 							className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground
-								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
+								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer
+								disabled:opacity-60 disabled:cursor-not-allowed"
 						>
 							<UserCheck size={14} />
 							Accept
 						</button>
 						<button
 							onClick={handleReject}
+							disabled={rl.isLimited}
 							className="px-4 py-2 bg-secondary hover:bg-destructive/90 text-foreground hover:text-destructive-foreground
-								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
+								rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer
+								disabled:opacity-60 disabled:cursor-not-allowed"
 						>
 							<X size={14} />
 							Reject
@@ -155,8 +166,10 @@ export default function ProfileHeader({
 				return (
 					<button
 						onClick={handleUnfriend}
+						disabled={rl.isLimited}
 						className="group px-4 py-2 bg-primary/10 hover:bg-destructive/10 text-primary hover:text-destructive
-							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer"
+							rounded-lg text-sm font-medium flex items-center gap-2 transition-colors cursor-pointer
+							disabled:opacity-60 disabled:cursor-not-allowed"
 					>
 						<UserCheck size={14} className="group-hover:hidden" />
 						<UserMinus size={14} className="hidden group-hover:inline" />
@@ -198,21 +211,24 @@ export default function ProfileHeader({
 								)}
 							</div>
 
-							<div className="flex items-center justify-center sm:justify-end gap-2 shrink-0 flex-wrap">
-								{!isOwnProfile && (
-									<button
-										onClick={handleMessage}
-										disabled={messageLoading}
-										className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground cursor-pointer
-											rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60"
-									>
-										{messageLoading
-											? <Loader2 size={14} className="animate-spin" />
-											: <MessageCircle size={14} />}
-										Message
-									</button>
-								)}
-								{renderActionButton()}
+							<div className="flex flex-col items-center sm:items-end gap-2 shrink-0">
+								<div className="flex items-center justify-center sm:justify-end gap-2 flex-wrap">
+									{!isOwnProfile && (
+										<button
+											onClick={handleMessage}
+											disabled={messageLoading || rl.isLimited}
+											className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground cursor-pointer
+												rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+										>
+											{messageLoading
+												? <Loader2 size={14} className="animate-spin" />
+												: <MessageCircle size={14} />}
+											Message
+										</button>
+									)}
+									{renderActionButton()}
+								</div>
+								<RateLimitBanner message={rl.message} secondsLeft={rl.secondsLeft} />
 							</div>
 						</div>
 

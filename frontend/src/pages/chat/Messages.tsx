@@ -187,12 +187,8 @@ export default function Messages() {
 
 	const handleSend = useCallback(async (content: string) => {
 		if (!active_id) return;
-		try {
-			const msg = await chatApi.sendMessage(active_id, content);
-			setMessages((prev) => [...prev, msg]);
-		} catch (err) {
-			console.error('Send failed:', err instanceof Error ? err.message : err);
-		}
+		const msg = await chatApi.sendMessage(active_id, content);
+		setMessages((prev) => [...prev, msg]);
 	}, [active_id, CURRENT_USER_ID]);
 
 	const active_convers = conversations.find((c) => c.id === active_id);

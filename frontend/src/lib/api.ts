@@ -8,6 +8,18 @@ import type { Job } from '@/types';
 
 const API_BASE = '/api';
 
+export class ApiError extends Error {
+    status: number;
+    retryAfter?: number;
+    constructor(message: string, status: number, retryAfter?: number) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+        if (retryAfter !== undefined)
+            this.retryAfter = retryAfter;
+    }
+}
+
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 // storing access token in this variable that will live in RAM so its not accessable by XSS attack :3
@@ -193,7 +205,11 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
         if (!err?.message && Array.isArray(err?.errors)) {
             message = err.errors.join(', ');
         }
-        throw new Error(message);
+
+        const retryAfter = res.status === 429
+            ? Number(res.headers.get('Retry-After')) || undefined
+            : undefined;
+        throw new ApiError(message, res.status, retryAfter);
     }
 
     // Handle 204 No Content response

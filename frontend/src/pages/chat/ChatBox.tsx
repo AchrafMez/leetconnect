@@ -22,7 +22,7 @@ interface ChatBoxProp {
 	receiver_id?: 		string | undefined;
 	recv_rest_online:   boolean;
 
-	onSendMessage: 	(content: string) => void;
+	onSendMessage: 	(content: string) => Promise<void>;
 	onLoadMore:		() => void;
 	onDeleteMessage: (msg_id: number) => void;
 	onBack:			() => void;
