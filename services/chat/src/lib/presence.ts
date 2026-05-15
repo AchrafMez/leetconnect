@@ -6,15 +6,15 @@ import { publishEvent, EVENTS } from "@leetconnect/shared";
 const redis = new Redis(process.env.REDIS_URL!);
 redis.on('error', (err) => console.error('[presence] redis error:', err.message));
 
-const KEY = (user_id: string) => `presence:count:${user_id}`;
-const TTL_SECONDS = 120;
+const KEY = (user_id: string) => `presence:sockets:${user_id}`;
+const ROOM = (user_id: string) => `presence:${user_id}`;
 
-export async function mark_online(io: Server, user_id: string): Promise<void> {
-	const key	= KEY(user_id);
-	const count	= await redis.incr(key);
-	await redis.expire(key, TTL_SECONDS);
+export async function mark_online(io: Server, user_id: string, socket_id: string): Promise<void> {
+	const key  = KEY(user_id);
+	await redis.sadd(key, socket_id);
+	const size = await redis.scard(key);
 
-	if (count !== 1)
+	if (size !== 1)
 		return ;
 
 	await prisma.user.updateMany({
@@ -23,14 +23,15 @@ export async function mark_online(io: Server, user_id: string): Promise<void> {
 	});
 
 	await publishEvent(EVENTS.USER_ONLINE, {id: user_id});
-	io.emit('presence_changed', {id: user_id, isOnline: true});
+	io.to(ROOM(user_id)).emit('presence_changed', {id: user_id, isOnline: true});
 }
 
-export async function mark_offline(io: Server, user_id: string): Promise<void> {
-	const key	= KEY(user_id);
-	const rem	=await redis.decr(key);
+export async function mark_offline(io: Server, user_id: string, socket_id: string): Promise<void> {
+	const key  = KEY(user_id);
+	await redis.srem(key, socket_id);
+	const size = await redis.scard(key);
 
-	if (rem > 0)
+	if (size > 0)
 		return ;
 
 	await redis.del(key);
@@ -41,7 +42,7 @@ export async function mark_offline(io: Server, user_id: string): Promise<void> {
 	});
 
 	await publishEvent(EVENTS.USER_OFFLINE, {id: user_id});
-	io.emit('presence_changed', {id: user_id, isOnline: false});
+	io.to(ROOM(user_id)).emit('presence_changed', {id: user_id, isOnline: false});
 }
 
 export async function reset_presence(): Promise<void> {
@@ -50,7 +51,7 @@ export async function reset_presence(): Promise<void> {
 		data: {isOnline: false}
 	});
 
-	const stream = redis.scanStream({match: 'presence:count:*'});
+	const stream = redis.scanStream({match: 'presence:sockets:*'});
 	const keys: string[] = [];
 	for await (const batch of stream) {
 		keys.push(...(batch as string[]));

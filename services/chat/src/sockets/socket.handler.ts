@@ -32,12 +32,23 @@ export function setup_sockets(io: Server) {
 		const userId = socket.data.user.userId;
 		console.log(`socket connected: ${socket.id} (user: ${userId})`);
 		socket.join(`user:${userId}`);
+		socket.join(`presence:${userId}`);
 
 		try {
-			await mark_online(io, userId);
+			await mark_online(io, userId, socket.id);
 		} catch (err) {
 			console.error('[presence] mark_online failed:', (err as Error).message);
 		}
+		socket.on('watch_presence', (ids: unknown) => {
+			if (!Array.isArray(ids)) return;
+			const valid = ids.filter((id): id is string => typeof id === 'string' && id.length > 0).slice(0, 200);
+			for (const id of valid) socket.join(`presence:${id}`);
+		});
+		socket.on('unwatch_presence', (ids: unknown) => {
+			if (!Array.isArray(ids)) return;
+			const valid = ids.filter((id): id is string => typeof id === 'string' && id.length > 0).slice(0, 200);
+			for (const id of valid) socket.leave(`presence:${id}`);
+		});
 		socket.on('join_convers', async (convers_id: number) => {
 			
 			if (!Number.isInteger(convers_id) || convers_id <= 0) return;
@@ -61,7 +72,7 @@ export function setup_sockets(io: Server) {
 		});
 		socket.on('disconnect', async (reason: string) => {
 			try {
-				await mark_offline(io, userId);
+				await mark_offline(io, userId, socket.id);
 			} catch(err) {
 				console.error('[presence] mark_offline failed:', (err as Error).message);
 			}
