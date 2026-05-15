@@ -60,7 +60,7 @@ export default function Messages() {
 		socket.on('delete_message', handleDeleted);
 
 		return () => {
-			socket.emit('leave_covers', active_id);
+			socket.emit('leave_convers', active_id);
 			socket.off('new_message', handleNew);
 			socket.off('delete_message', handleDeleted);
 		};

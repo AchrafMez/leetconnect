@@ -4,34 +4,36 @@ import morgan			from 'morgan';
 import http				from 'http';
 import cors				from 'cors';
 import helmet			from 'helmet';
-import { Server }		from 'socket.io';
-
 import health_routes	from './routes/route.health';
 import convers_routes	from './routes/route.convers';
 import message_routes	from './routes/route.messages';
 import notif_routes		from './routes/route.notifs';
 import friends_routes	from './routes/route.friends';
 import users_routes		from './routes/route.users';
-
 import prisma			from './config/config.database';
-
-import error_handler	from './middleware/error.handler';
-import { rateLimit, ipKeyGenerator }from 'express-rate-limit';
-import { setup_sockets } from './sockets/socket.handler';
-
+import error_handler	from './middleware/error.handler'
+import { rateLimit }	from 'express-rate-limit';
+import {setup_sockets}	from './sockets/socket.handler';
+import { Server }		from 'socket.io';
+import {authMiddleware} from '@leetconnect/shared';
 import {
-	initEventBus, subscribeToEvents,
-	AUTH_EVENTS,
-	ADMIN_EVENTS,
-	getMetrics,
+	shutdown_presence,
+	reset_presence
+} from './lib/presence';
+import {
+	type NotifEventPayload,
+	notify
+} from './lib/notify';
+import {
 	httpRequestDuration,
+	subscribeToEvents,
 	httpRequestsTotal,
+	initEventBus,
+	ADMIN_EVENTS,
+	AUTH_EVENTS,
+	getMetrics,
 	EVENTS,
 } from '@leetconnect/shared';
-
-import { authMiddleware } from '@leetconnect/shared';
-import { reset_presence, shutdown_presence } from './lib/presence';
-import {  type NotifEventPayload, notify } from './lib/notify';
 
 dotenv.config({ path: '../../.env', quiet: true});
 
@@ -56,25 +58,6 @@ const global_limiter = rateLimit({
 	standardHeaders: true,
 	legacyHeaders: false,
 	skip: (req) => req.path === '/metrics' || req.path === '/api/chat/health',
-});
-
-const message_limiter = rateLimit({
-	windowMs: 60 * 1000,
-	max: 30,
-	message: {error: 'Messaging spam detected.'},
-	standardHeaders: true,
-	legacyHeaders: false,
-	keyGenerator: (req) => (req as any).user?.userId ?? ipKeyGenerator(req.ip ?? ''),
-});
-
-const write_limiter = rateLimit({
-	windowMs: 10 * 60 * 1000,
-	max: 60,
-	message: {error: 'Too many requests detected.'},
-	standardHeaders: true,
-	legacyHeaders: false,
-	keyGenerator: (req) => (req as any).user?.userId ?? ipKeyGenerator(req.ip ?? ''),
-	skip: (req) => req.method === 'GET' || req.method === 'HEAD'
 });
 
 app.use(helmet());
@@ -117,9 +100,9 @@ app.get('/metrics', async (_req, res) => {
 app.use('/api/chat', health_routes);
 
 app.use(authMiddleware);
-app.use('/api/chat/convers', 			  write_limiter, convers_routes);
-app.use('/api/chat/convers/:id/messages', message_limiter, message_routes);
-app.use('/api/friend/requests', 		  write_limiter, friends_routes);
+app.use('/api/chat/convers', 			  convers_routes);
+app.use('/api/chat/convers/:id/messages', message_routes);
+app.use('/api/friend/requests', 		  friends_routes);
 app.use('/api/notifs', 					  notif_routes);
 app.use('/api/chat',					  users_routes);
 
