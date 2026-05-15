@@ -47,6 +47,12 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
 
   try { // verify using asymmetric public key
     const decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] }) as unknown as JwtPayload;
+    if ((decoded as any).pending2FA === true) {
+      return res.status(401).json({ 
+        error: '2FA verification required',
+        code: 'PENDING_2FA'
+      });
+    }
     req.user = decoded; // contains token info like : id email username role
     next();
   } catch (err) {

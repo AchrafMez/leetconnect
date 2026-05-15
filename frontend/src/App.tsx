@@ -61,7 +61,7 @@ export default function App() {
 
             <Route path="/messages" element={<Messages />} />
             <Route path="/chat" element={<Messages/>} />
-            <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+            <Route path="/settings" element={<ProfileSettingsPage />} />
             <Route path="/network" element={<NetworkPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/:username" element={<ProfilePage />} />

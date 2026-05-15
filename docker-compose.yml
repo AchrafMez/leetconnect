@@ -70,8 +70,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    ports:
-    - "5555:5555"  # exposed this port so I can connect to prisma ui
     env_file:
       - .env
       - .env.ip

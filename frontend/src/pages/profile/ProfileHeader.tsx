@@ -97,7 +97,7 @@ export default function ProfileHeader({
 		if (isOwnProfile) {
 			return (
 				<button
-					onClick={() => navigate('/settings/profile')}
+					onClick={() => navigate('/settings')}
 					className="px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground cursor-pointer
 						rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
 				>
