@@ -456,9 +456,30 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
                 data[field] = req.body[field];
             }
         }
+
         // there is nothing to update if data is empty so nothing changed
         if (Object.keys(data).length === 0) {
             return res.status(400).json({ message: "No fields to update" });
+        }
+
+        if (data.email || data.username) {
+            const collisionCheck = await prisma.user.findFirst({
+                where: {
+                    OR: [
+                        data.email ? { email: { equals: data.email, mode: 'insensitive' } } : {},
+                        data.username ? { username: { equals: data.username, mode: 'insensitive' } } : {},
+                    ],
+                    // Ensure we aren't checking against the current user's own record
+                    NOT: { id: userId } 
+                }
+            });
+
+            if (collisionCheck) {
+                const isEmailConflict = data.email && collisionCheck.email.toLowerCase() === data.email.toLowerCase();
+                return res.status(409).json({ 
+                    error: isEmailConflict ? 'This Email is already taken by another account' : 'Username is already taken' 
+                });
+            }
         }
 
         // Update in the Auth Database

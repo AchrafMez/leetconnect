@@ -284,6 +284,7 @@ export default function ProfileSettings() {
 
     const handleSaveProfile = async () => {
         setError(null);
+        setFormErrors({});
         if (!validateProfileForm() || !hasChanges) { // check if there is error in form or it didnt change
             return;
         }
@@ -304,7 +305,26 @@ export default function ProfileSettings() {
             setSuccessMessage('Profile updated successfully!');
 
         } catch (err: any) {
-            setError(err.message || 'Failed to update profile');
+            const backendMessage = err.message || '';
+
+            // Check if the error is specifically about Email or Username
+            if (backendMessage.toLowerCase().includes('email')) {
+                setFormErrors(prev => ({ 
+                    ...prev, 
+                    email: backendMessage // This shows it under the Email field
+                }));
+            } 
+            else if (backendMessage.toLowerCase().includes('username')) {
+                setFormErrors(prev => ({ 
+                    ...prev, 
+                    username: backendMessage // This shows it under the Username field
+                }));
+            } 
+            else {
+                // If it's a general error (Server down, etc.), show it at the top
+                setError(backendMessage || 'Failed to update profile');
+            }
+
         } finally {
             setSaving(false);
         }
