@@ -283,40 +283,44 @@ export const submitReview = async (req: Request, res: Response) => {
 
     if (!fromUserId) return res.status(401).json({ success: false, message: "Unauthorized" });
 
-    // Prevent self-review
+    // Prevent self review
     if (fromUserId === toUserId) {
       return res.status(400).json({ success: false, message: "You cannot review yourself" });
     }
 
-    // Verify the job exists and is completed
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    // Fetch job and its single accepted proposal in one query
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        proposals: {
+          where: { status: "ACCEPTED" },
+          select: { freelancerId: true },
+          take: 1,
+        },
+      },
+    });
+
     if (!job) return res.status(404).json({ success: false, message: "Job not found" });
     if (job.status !== "COMPLETED") {
       return res.status(400).json({ success: false, message: "Can only review completed jobs" });
     }
 
-    // Verify the reviewer was part of this job (client or accepted freelancer)
-    const isClient = job.clientId === fromUserId;
-    const acceptedProposal = await prisma.proposal.findFirst({
-      where: { jobId, freelancerId: fromUserId, status: "ACCEPTED" },
-    });
-    const isFreelancer = !!acceptedProposal;
+    const acceptedFreelancerId = job.proposals[0]?.freelancerId;
+    if (!acceptedFreelancerId) {
+      return res.status(400).json({ success: false, message: "No accepted proposal found for this job" });
+    }
+
+    // Determine reviewer role
+    const isClient     = job.clientId === fromUserId;
+    const isFreelancer = acceptedFreelancerId === fromUserId;
 
     if (!isClient && !isFreelancer) {
       return res.status(403).json({ success: false, message: "You are not a participant of this job" });
     }
 
-    // Verify the target is the other party
-    if (isClient && toUserId !== acceptedProposal?.freelancerId) {
-      // Client must review the freelancer who was accepted
-      const accepted = await prisma.proposal.findFirst({
-        where: { jobId, status: "ACCEPTED" },
-      });
-      if (!accepted || toUserId !== accepted.freelancerId) {
-        return res.status(400).json({ success: false, message: "Invalid review target" });
-      }
-    }
-    if (isFreelancer && toUserId !== job.clientId) {
+    // Verify the target is strictly the other party
+    const expectedTarget = isClient ? acceptedFreelancerId : job.clientId;
+    if (toUserId !== expectedTarget) {
       return res.status(400).json({ success: false, message: "Invalid review target" });
     }
 
@@ -336,14 +340,14 @@ export const submitReview = async (req: Request, res: Response) => {
       rating: Number(rating),
     });
 
-    // review notif
+    // Review notification
     await publishEvent(EVENTS.NOTIF_CREATE, {
       user_id: toUserId,
       type: "SYSTEM",
       title: "New Review Received",
-      body: isClient 
+      body: isClient
         ? `The client left a ${rating}-star review on your project "${job.title}".`
-        : `The freelancer left a ${rating}-star review on your project "${job.title}".`
+        : `The freelancer left a ${rating}-star review on your project "${job.title}".`,
     });
 
     return res.json({ success: true, review });
