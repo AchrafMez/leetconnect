@@ -674,6 +674,10 @@ export const SetupProfile = async (req: Request, res: Response) => {
         id: userId,
       },
       data: dataToUpdate,
+      omit: {
+        password: true,
+        twoFASecret: true,
+      },
     });
 
     await publishEvent(AUTH_EVENTS.USER_UPDATED, {
