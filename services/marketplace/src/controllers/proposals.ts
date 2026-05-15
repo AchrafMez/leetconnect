@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { publishEvent } from "../config/events";
 import { EVENTS } from "@leetconnect/shared";
+import { MARKET_EVENTS } from "@leetconnect/shared";
 
 export const addProposal = async (req: Request, res: Response) => {
   try {
@@ -260,6 +261,11 @@ export const acceptProposal = async (req: Request, res: Response) => {
       body: `Your proposal for the job "${proposal.job.title}" has been accepted. Payment is pending.`
     });
 
+    await publishEvent(MARKET_EVENTS.JOB_UPDATED, {
+    jobId: proposal.jobId,
+    status: 'IN_PROGRESS',
+  });
+
     return res.json({
       success: true,
       message: "Proposal accepted, payment pending, and chat initialized.",
@@ -296,12 +302,16 @@ export const rejectProposal = async (req: Request, res: Response) => {
     }
     
     const proposal = await prisma.proposal.update({
-      where: { id , status: "PENDING",},
-      data: { status: "REJECTED" , rejectionCount: {
+      where: { id },
+      data: {
+        status: "REJECTED",
+        rejectionCount: {
           increment: 1,
-        },},
+        },
+      },
     });
 
+ 
     // Notify freelancer about rejection
     await publishEvent(EVENTS.NOTIF_CREATE, {
       user_id: proposal.freelancerId,
