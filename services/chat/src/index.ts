@@ -74,6 +74,7 @@ const write_limiter = rateLimit({
 	standardHeaders: true,
 	legacyHeaders: false,
 	keyGenerator: (req) => (req as any).user?.userId ?? ipKeyGenerator(req.ip ?? ''),
+	skip: (req) => req.method === 'GET' || req.method === 'HEAD'
 });
 
 app.use(helmet());
