@@ -531,25 +531,25 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
         
         // hash and save new password
         const hashed = await bcrypt.hash(newPassword, 12);
-        await prisma.user.update({
-            where: { id: userId },
-            data: { password: hashed }
-        });
+        // await prisma.user.update({
+        //     where: { id: userId },
+        //     data: { password: hashed }
+        // });
 
         // delete all refresh tokens when the user change the pw
-        // await prisma.$transaction([
-        //     // Update the password
-        //     prisma.user.update({
-        //         where: { id: userId },
-        //         data: { password: hashed }
-        //     }),
-        //     // Kill EVERY session for this user across all devices
-        //     // we use userId, not token
-        //     prisma.refreshToken.deleteMany({
-        //         where: { userId: userId } 
-        //     })
-        // ]);
-        res.status(200).json({ message: "Password updated successfully" });
+        await prisma.$transaction([
+            // Update the password
+            prisma.user.update({
+                where: { id: userId },
+                data: { password: hashed }
+            }),
+            // Kill EVERY session for this user across all devices
+            // we use userId, not token
+            prisma.refreshToken.deleteMany({
+                where: { userId: userId } 
+            })
+        ]);
+        res.status(200).json({ message: "Password updated successfully, please log in again" });
     } catch (error) {
         next(error);
     }
