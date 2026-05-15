@@ -32,52 +32,60 @@ export const addProposal = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "You cannot submit a proposal on your own job" });
     }
 
-    const existingProposals = await prisma.proposal.findMany({
-      where: { freelancerId, jobId }
+
+
+    let proposal = await prisma.proposal.findFirst({
+      where: {
+        freelancerId,
+        jobId,
+      },
     });
 
-    const acceptedOrPending = existingProposals.find(p => p.status === 'ACCEPTED' || p.status === 'PENDING');
-    if (acceptedOrPending) {
-        return res.status(400).json({ success: false, message: "You already submitted a proposal" });
-    }
-
-    const rejectedProposals = existingProposals.filter(p => p.status === 'REJECTED');
-    const rejectedCount = rejectedProposals.length;
-    if (rejectedCount >= 2) {
-        return res.status(403).json({ success: false, message: "You can't submit proposal on this offer" });
-    }
-
-    let proposal;
     
-    // Instead of creating a new one (which will violate the unique constraint),
-    // If there is an existing rejected proposal and count < 2, just update it!
-    if (rejectedCount === 1 && rejectedProposals[0]) {
+
+
+    if (proposal && proposal.rejectionCount >= 2) {
+      return res.status(403).json({
+        success: false,
+        message: "You reached maximum number of proposal attempts (2)",
+      });
+    }
+    if (proposal) {
+
+      if (proposal.status === "ACCEPTED") {
+            return res.status(400).json({
+              success: false,
+              message: "You already have an accepted proposal",
+            });
+      }
+      if (proposal.status === "PENDING") {
+            return res.status(400).json({
+              success: false,
+              message: "You already have a pending proposal",
+            });
+      }
       proposal = await prisma.proposal.update({
-        where: { id: rejectedProposals[0].id },
+        where: { id: proposal.id },
         data: {
           coverLetter,
           proposedBudget: Number(proposedBudget),
           deliveryDays: Number(deliveryDays),
-          status: 'PENDING'
-        }
+
+          // reset status to pending
+          status: "PENDING",
+        },
       });
     } else {
-      try {
-        proposal = await prisma.proposal.create({
-          data: {
-            coverLetter,
-            proposedBudget: Number(proposedBudget),
-            deliveryDays: Number(deliveryDays),
-            freelancerId,
-            jobId,
-          },
-        });
-      } catch (err: any) {
-        if (err.code === 'P2002') {
-           return res.status(400).json({ success: false, message: "You already submitted a proposal" });
-        }
-        throw err;
-      }
+      // 5. CREATE first proposal
+      proposal = await prisma.proposal.create({
+        data: {
+          coverLetter,
+          proposedBudget: Number(proposedBudget),
+          deliveryDays: Number(deliveryDays),
+          freelancerId,
+          jobId,
+        },
+      });
     }
 
     // Notify client about new proposal

@@ -90,6 +90,7 @@ model Proposal {
   proposedBudget Float
   deliveryDays   Int
   status         ProposalStatus  @default(PENDING)
+  rejectionCount Int @default(0)
 
   freelancerId   String
   jobId          String
