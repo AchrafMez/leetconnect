@@ -1,7 +1,16 @@
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import type { Socket } from 'socket.io-client';
 import { getSocket } from '../lib/socket';
 import { useAuth } from './userContext';
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useState,
+	useMemo,
+	useRef
+} from 'react';
 
 interface PresenceContextValue {
 	isOnline: (userId: string) => boolean | undefined;
@@ -16,15 +25,19 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
 	const { user } = useAuth();
 	const [map, setMap] = useState<Record<string, boolean>>({});
 	const watchers = useRef<Map<string, number>>(new Map());
+	const socketRef = useRef<Socket | null>(null);
 
 	useEffect(() => {
 		if (!user) {
 			setMap({});
 			watchers.current.clear();
+			socketRef.current = null;
 			return ;
 		}
 
 		const socket = getSocket();
+		socketRef.current = socket;
+
 		const onPresence = (data: { id: string; isOnline: boolean}) => {
 			setMap((prev) => ({...prev, [data.id]: data.isOnline}));
 		};
@@ -38,6 +51,7 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
 		return () => {
 			socket.off('presence_changed', onPresence);
 			socket.off('connect', onConnect);
+			socketRef.current = null;
 		};
 	}, [user?.id]);
 
@@ -63,21 +77,26 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
 		const cur = watchers.current.get(userId) ?? 0;
 		watchers.current.set(userId, cur + 1);
 		if (cur === 0)
-			getSocket().emit('watch_presence', [userId]);
+			socketRef.current?.emit('watch_presence', [userId]);
 	}, []);
 
 	const unsubscribe = useCallback((userId: string) => {
 		const cur = watchers.current.get(userId) ?? 0;
 		if (cur <= 1) {
 			watchers.current.delete(userId);
-			getSocket().emit('unwatch_presence', [userId]);
+			socketRef.current?.emit('unwatch_presence', [userId]);
 		} else {
 			watchers.current.set(userId, cur - 1);
 		}
 	}, []);
 
+	const value = useMemo(
+		() => ({ isOnline, seed, subscribe, unsubscribe }),
+		[isOnline, seed, subscribe, unsubscribe]
+	);
+
 	return (
-		<PresenceContext.Provider value={{ isOnline, seed, subscribe, unsubscribe }}>
+		<PresenceContext.Provider value={value}>
 			{children}
 		</PresenceContext.Provider>
 	);
@@ -88,13 +107,15 @@ export function usePresence(userId: string): boolean | undefined {
 	if (!context)
 		throw new Error('usePresence must be used inside PresenceProvider');
 
+	const { subscribe, unsubscribe, isOnline } = context;
+
 	useEffect(() => {
 		if (!userId) return;
-		context.subscribe(userId);
-		return () => context.unsubscribe(userId);
-	}, [userId, context]);
+		subscribe(userId);
+		return () => unsubscribe(userId);
+	}, [userId, subscribe, unsubscribe]);
 
-	return context.isOnline(userId);
+	return isOnline(userId);
 }
 
 export function usePresenceSeed() {
