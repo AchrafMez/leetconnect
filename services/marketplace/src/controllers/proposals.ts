@@ -42,8 +42,6 @@ export const addProposal = async (req: Request, res: Response) => {
     });
 
     
-
-
     if (proposal && proposal.rejectionCount >= 2) {
       return res.status(403).json({
         success: false,
@@ -296,10 +294,12 @@ export const rejectProposal = async (req: Request, res: Response) => {
     if (existing.status !== "PENDING") {
       return res.status(400).json({ success: false, message: `Cannot reject a ${existing.status.toLowerCase()} proposal` });
     }
-
+    
     const proposal = await prisma.proposal.update({
-      where: { id },
-      data: { status: "REJECTED" },
+      where: { id , status: "PENDING",},
+      data: { status: "REJECTED" , rejectionCount: {
+          increment: 1,
+        },},
     });
 
     // Notify freelancer about rejection
