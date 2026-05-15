@@ -178,7 +178,7 @@ export const updateJob = async (req: Request, res: Response) => {
       : "Can only update jobs that are OPEN"
   });
 }
-    const { title, category, budget, description, skills, status } = req.body;
+    const { title, category, budget, description, skills} = req.body;
 
     const data: Record<string, any> = {};
     if (title !== undefined) data.title = title;
@@ -186,8 +186,7 @@ export const updateJob = async (req: Request, res: Response) => {
     if (budget !== undefined) data.budget = Number(budget);
     if (description !== undefined) data.description = description;
     if (skills !== undefined) data.skills = skills;
-    if (status !== undefined) data.status = status;
-
+    
     const job = await prisma.job.update({
       where: { id },
       data,
@@ -200,7 +199,6 @@ export const updateJob = async (req: Request, res: Response) => {
       category: job.category,
       budget: job.budget,
       skills: job.skills,
-      status: job.status,
     });
 
     return res.json({ success: true, job });
