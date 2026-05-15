@@ -18,10 +18,8 @@ RUN npx --no-install prisma generate
 COPY services/analytics/ ./
 RUN npm run build
 
-# Add postgres client for pg_isready
 RUN apk add --no-cache postgresql-client
 
-# Add entrypoint script
 COPY scripts/entrypoint-with-prisma.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

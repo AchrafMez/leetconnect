@@ -11,10 +11,19 @@ WORKDIR /app/service
 COPY services/marketplace/package.json ./
 RUN npm pkg set dependencies.@leetconnect/shared=file:../shared
 RUN npm install
+
+COPY services/marketplace/prisma ./prisma/
+RUN npx --no-install prisma generate
+
 COPY services/marketplace/ ./
-RUN npx prisma generate
 RUN npm run build
 
+RUN apk add --no-cache postgresql-client
+
+COPY scripts/entrypoint-with-prisma.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 3002
-CMD ["sh", "-c", "npx prisma db push && node dist/index.js"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["node", "dist/index.js"]
 # CMD ["node", "dist/index.js"]
