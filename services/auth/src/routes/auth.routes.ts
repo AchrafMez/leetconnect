@@ -79,13 +79,28 @@ const twoFALoginLimiter = rateLimit({
 
 router.post('/2fa/login', twoFALoginLimiter, twoFA.login2FA); // NO authMiddleware (user is mid-login, not authenticated yet)
 
-// 42 oauth
+// 42 oauth 
 router.get('/42', passport.authenticate('42', { session: false }));
-router.get('/42/callback', 
-    passport.authenticate('42', { session: false, failureRedirect: '/auth/sign-in' }),
-    handleOAuthSuccess 
-);
+// router.get('/42/callback', 
+//     passport.authenticate('42', { session: false, failureRedirect: '/auth/sign-in' }),
+//     handleOAuthSuccess // create token for the user and redirect them to dashboard
+// );
 
+router.get('/42/callback', (req, res, next) => {
+  passport.authenticate('42', { session: false }, (err:any, user:any, info:any) => {
+    if (err) return next(err);
+
+    if (!user) {
+      const code = info?.message || 'OAUTH_FAILED';
+      return res.redirect(
+        `${process.env.FRONTEND_URL || 'https://localhost'}/auth/sign-in?oauth_error=${encodeURIComponent(code)}`
+      );
+    }
+
+    req.user = user;
+    return handleOAuthSuccess(req, res, next);
+  })(req, res, next);
+});
 
 // test auth middleware 
 router.get('/me', authMiddleware, async (req, res) => {
