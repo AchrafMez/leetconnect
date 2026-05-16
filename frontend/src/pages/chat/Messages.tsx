@@ -107,9 +107,34 @@ export default function Messages() {
 		return () => { socket.off('convers_bumped', handleBumped); };
 	}, []);
 
-	// when a group is created
+	// new conversation pushed by the server
+	useEffect(() => {
+		const socket = getSocket();
+
+		const handleCreated = (convers: Conversation) => {
+			setConversations((prev) => {
+				if (prev.some((c) => c.id === convers.id)) return prev;
+				return [convers, ...prev];
+			});
+
+			const entries = convers.members
+				.filter((m) => m.user.isOnline !== undefined)
+				.map((m) => ({
+					id:		  m.user_id,
+					isOnline: m.user.isOnline as boolean,
+				}));
+			if (entries.length) seed(entries);
+		};
+
+		socket.on('convers_created', handleCreated);
+		return () => { socket.off('convers_created', handleCreated); };
+	}, [seed]);
+
 	const handleGroupCreated = useCallback((convers: Conversation) => {
-		setConversations((prev) => [convers, ...prev]);
+		setConversations((prev) => {
+			if (prev.some((c) => c.id === convers.id)) return prev;
+			return [convers, ...prev];
+		});
 		setActiveId(convers.id);
 	}, []);
 

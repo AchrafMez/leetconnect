@@ -8,13 +8,6 @@ import {
 	type ConversAddMemberBody
 } from '../schemas/schema.convers';
 
-function ensure_unique_ids(ids: string[]): string[] {
-	const unique = [...new Set(ids)];
-	if (unique.length !== ids.length)
-		throw new err.BadRequestError('member_ids must be unique');
-	return unique;
-}
-
 async function assert_membership(convers_id: number, user_id: string) {
 	const member = await prisma.conversMember.findFirst({
 		where: {convers_id, user_id},
@@ -22,6 +15,10 @@ async function assert_membership(convers_id: number, user_id: string) {
 	});
 	if (!member)
 		throw new err.ForbiddenError('not a member of conversation');
+}
+
+function dedup_ids(ids: string[]): string[] {
+	return [...new Set(ids)];
 }
 
 export async function list(req: Request, res: Response, next: NextFunction) {
@@ -71,8 +68,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 		const user_id = req.user!.userId;
 		const body    = req.body as ConversCreateBody;
 
-		let member_ids = [...body.member_ids, user_id];
-		member_ids = ensure_unique_ids(member_ids);
+		let member_ids = dedup_ids([...body.member_ids, user_id]);
 
 		if (body.type === 'Direct' && member_ids.length !== 2)
 			throw new err.BadRequestError('Direct conversation must have exactly 2 members');
@@ -197,7 +193,8 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 									username: true,
 									firstname: true,
 									lastname: true,
-									avatar: true
+									avatar: true,
+									isOnline: true
 								}
 							}
 						}
@@ -214,6 +211,13 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 				}
 			});
 		});
+
+		if (created) {
+			const io = req.app.get('io');
+			for (const m of created.members) {
+				io.to(`user:${m.user_id}`).emit('convers_created', created);
+			}
+		}
 
 		res.status(201).json(created);
 	} catch (err) {
