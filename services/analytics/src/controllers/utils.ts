@@ -9,11 +9,6 @@ export function getStartDate(range: _Range) : Date {
 	return d;
 }
 
-function validateRange(raw: unknown): _Range {
-	const allowed: _Range[] = ['7d', '30d', '90d', '1y'];
-	return allowed.includes(raw as _Range) ? (raw as _Range) : '30d';
-}
-
 export function getDateRange(query: any): { startDate: Date; endDate: Date} {
 	if(query.from && query.to) {
 		return {
@@ -22,7 +17,7 @@ export function getDateRange(query: any): { startDate: Date; endDate: Date} {
 		}
 	}
 
-	const range = validateRange(query.range);
+	const range = (query.range ?? '30d') as _Range;
 	return {
 		startDate: getStartDate(range),
 		endDate: new Date()

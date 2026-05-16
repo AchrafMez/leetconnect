@@ -14,8 +14,8 @@ model User {
   firstname     String         @default("")
   lastname      String         @default("")
   status        Status         @default(active)
-  role          Role           @default(ADMIN)
-  type          UserType       @default(CLIENT)
+  role          Role           @default(USER)
+  type          UserType
   avatar        String         @default("")
   isOnline      Boolean        @default(false)
   twoFASecret   String?
@@ -33,7 +33,7 @@ model Job {
   id           String     @id @default(uuid())
   title        String
   description  String
-  budget       Int        @default(0)
+  budget       Float      @default(0)
   category     String
   clientId     String
   status       JobStatus  @default(active)
@@ -42,7 +42,7 @@ model Job {
   skills       String[]
   deadline     DateTime?
   postedByName String
-  createdBy    User       @relation(fields: [clientId], references: [id])
+  createdBy    User       @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
@@ -65,4 +65,6 @@ enum JobStatus {
   active
   flagged
   closed
+  in_progress
+  completed
 }

@@ -4,18 +4,18 @@ import { prisma } from "../../config/prisma";
 export async function handleUserRegistred(channel: string, message: any): Promise<void> {
 	if (channel !== AUTH_EVENTS.USER_REGISTERED) return;
 	try {
-		const { id, username, avatar, role, email, firstname, lastname, status, createdAt } = message.data;
+		const { id, username, avatar, role, email, firstname, lastname, status, createdAt, type } = message.data;
 
 		await prisma.user.upsert({
 			where: { id: id },
 			update: {
 				username: username, avatar: avatar, firstname: firstname,
-				lastname: lastname, status: status, role: role
+				lastname: lastname, status: status, role: role, email: email, type: type
 			},
 			create: {
         id: id, username: username, avatar: avatar, role: role,
 				email: email, firstname: firstname, lastname: lastname,
-				status: status, createdAt: createdAt
+				status: status, createdAt: createdAt, type: type
       }
 		});
 
@@ -71,6 +71,7 @@ export async function handleUserDeleted(channel: string, message: any): Promise<
 	if (channel !== ADMIN_EVENTS.USER_DELETED) return;
 	try {
 		const { id, username } = message.data;
+		if(!id) return;
 
 		await prisma.user.delete({
 			where: { id }

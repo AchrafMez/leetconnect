@@ -65,7 +65,11 @@ export const editUserStatus = async (req: Request, res: Response, next: NextFunc
 				},
 			});
 
-			await publishEvent(ADMIN_EVENTS.USER_UPDATED, updatedUser);
+			try { await publishEvent(ADMIN_EVENTS.USER_UPDATED, {
+				id: updatedUser.id,
+				status: updatedUser.status
+			}); }
+			catch(e) { console.error('publishEvent USER_UPDATED_ADMIN failed', e)}
 			return res.status(StatusCodes.OK).json(updatedUser);
 	} catch (error: any) {
 		console.error('[updateUserStatus]: ', error);
@@ -101,7 +105,11 @@ export const editUserRole = async (req: Request, res: Response, next: NextFuncti
 				},
 			});
 
-			await publishEvent(ADMIN_EVENTS.USER_UPDATED, updatedUser);
+			try { await publishEvent(ADMIN_EVENTS.USER_UPDATED, {
+				id: updatedUser.id,
+				role: updatedUser.role
+			}); }
+			catch(e) { console.error('publishEvent USER_UPDATED_ADMIN failed', e)}
 			return res.status(StatusCodes.OK).json(updatedUser);
 	} catch (error: any) {
 		console.error('[updateUserRole]: ', error);
@@ -120,16 +128,23 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 				return res.status(StatusCodes.FORBIDDEN).json({ message: 'You cannot delete your own account'});
 			}
     		// if the admin delete user also delete all his jobs
-			await prisma.job.deleteMany({ where: { clientId: id } });
+			await prisma.$transaction(async (tx) => {
+				await tx.job.deleteMany({ where: { clientId: id}});
+				await tx.user.delete({ where: { id,
+					role: { not: 'ADMIN'}
+				}})
+			})
+			// await prisma.job.deleteMany({ where: { clientId: id } });
 
-			await prisma.user.delete({
-				where: {
-					id,
-					role: { not: 'ADMIN' }
-				}
-			});
+			// await prisma.user.delete({
+			// 	where: {
+			// 		id,
+			// 		role: { not: 'ADMIN' }
+			// 	}
+			// });
 	
-			await publishEvent(ADMIN_EVENTS.USER_DELETED, { id });
+			try { await publishEvent(ADMIN_EVENTS.USER_DELETED, { id }); }
+			catch (e) { console.error('publishEvent USER_DELETED failed', e)}
 			return res.status(StatusCodes.OK).json( { message: 'User deleted successfully'});
 	} catch (error: any) {
 		console.error('[deleteUser]: ', error);

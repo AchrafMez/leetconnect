@@ -9,7 +9,7 @@ export const validateRequest = (schema: ZodSchema) => {
 			if(!result.success) {
 				return res.status(StatusCodes.BAD_REQUEST).json({
 					message: 'Invalid request params',
-					erros: result.error.flatten().fieldErrors
+					errors: result.error.flatten().fieldErrors
 				})
 			}
 			req.query = result.data as any;

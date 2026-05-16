@@ -5,7 +5,6 @@ export const updateStatusSchema = z.object({
 	status: z.enum([
 		"active",
 		"suspended",
-		"pending"
 	], {
 		error: () => ({
 			message: 'Status must be one of: active, suspended, pending'

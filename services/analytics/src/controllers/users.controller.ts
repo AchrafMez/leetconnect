@@ -12,7 +12,8 @@ export const getUsersAnalytics = async (req: Request, res: Response, next: NextF
 		const [
 			registrationsOverTime,
 			byRole,
-			byStatus
+			byStatus,
+			userType
 		] = await Promise.all([
 			// groups users by day within the date range
 			// shows how many users registered each day
@@ -38,6 +39,12 @@ export const getUsersAnalytics = async (req: Request, res: Response, next: NextF
 				by: ['status'],
 				where: { createdAt: { gte: startDate, lte: endDate } },
 				_count: { status: true},
+			}),
+
+			prisma.user.groupBy({
+				by: ['type'],
+				where: { createdAt: { gte: startDate, lte: endDate}},
+				_count: { type: true},
 			})
 		]);
 
@@ -59,11 +66,17 @@ export const getUsersAnalytics = async (req: Request, res: Response, next: NextF
 			count: s._count.status
 		}));
 
+		const userTypeSafe = userType.map(u => ({
+			userType: u.type,
+			count: u._count.type
+		}));
+
 		res.status(StatusCodes.OK).json({
 			// range,
 			registrationsOverTime: registrationsSafe,
 			byRole: roleSafe,
-			byStatus: statusSafe
+			byStatus: statusSafe,
+			userType: userTypeSafe
 		});
 
 	} catch (error) {

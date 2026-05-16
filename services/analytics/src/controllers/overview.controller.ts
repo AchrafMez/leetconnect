@@ -9,7 +9,7 @@ export const getOverview = async (req: Request, res: Response, next: NextFunctio
 		const [
 			totalUsers, totalJobs, activeJobs, flaggedJobs,
 			suspendedUsers, newUsersThisWeek,
-			newJobsThisWeek
+			newJobsThisWeek, completedJobs
 		] = await Promise.all([
 			prisma.user.count(),
 			prisma.job.count(),
@@ -25,12 +25,15 @@ export const getOverview = async (req: Request, res: Response, next: NextFunctio
 				where: {
 					createdAt: { gte: getStartDate('7d')},
 				},
-			})
+			}),
+			prisma.job.count({
+				where: { status: 'completed'}
+			}),
 		]);
 
 		res.status(StatusCodes.OK).json({
 			totalUsers, totalJobs, activeJobs, flaggedJobs,
-			suspendedUsers, newUsersThisWeek, newJobsThisWeek
+			suspendedUsers, newUsersThisWeek, newJobsThisWeek, completedJobs
 		});
 	} catch (error) {
 		next(error);
