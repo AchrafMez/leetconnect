@@ -456,9 +456,30 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
                 data[field] = req.body[field];
             }
         }
+
         // there is nothing to update if data is empty so nothing changed
         if (Object.keys(data).length === 0) {
             return res.status(400).json({ message: "No fields to update" });
+        }
+
+        if (data.email || data.username) {
+            const collisionCheck = await prisma.user.findFirst({
+                where: {
+                    OR: [
+                        data.email ? { email: { equals: data.email, mode: 'insensitive' } } : {},
+                        data.username ? { username: { equals: data.username, mode: 'insensitive' } } : {},
+                    ],
+                    // Ensure we aren't checking against the current user's own record
+                    NOT: { id: userId } 
+                }
+            });
+
+            if (collisionCheck) {
+                const isEmailConflict = data.email && collisionCheck.email.toLowerCase() === data.email.toLowerCase();
+                return res.status(409).json({ 
+                    error: isEmailConflict ? 'This Email is already taken by another account' : 'Username is already taken' 
+                });
+            }
         }
 
         // Update in the Auth Database
@@ -531,25 +552,25 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
         
         // hash and save new password
         const hashed = await bcrypt.hash(newPassword, 12);
-        await prisma.user.update({
-            where: { id: userId },
-            data: { password: hashed }
-        });
+        // await prisma.user.update({
+        //     where: { id: userId },
+        //     data: { password: hashed }
+        // });
 
         // delete all refresh tokens when the user change the pw
-        // await prisma.$transaction([
-        //     // Update the password
-        //     prisma.user.update({
-        //         where: { id: userId },
-        //         data: { password: hashed }
-        //     }),
-        //     // Kill EVERY session for this user across all devices
-        //     // we use userId, not token
-        //     prisma.refreshToken.deleteMany({
-        //         where: { userId: userId } 
-        //     })
-        // ]);
-        res.status(200).json({ message: "Password updated successfully" });
+        await prisma.$transaction([
+            // Update the password
+            prisma.user.update({
+                where: { id: userId },
+                data: { password: hashed }
+            }),
+            // Kill EVERY session for this user across all devices
+            // we use userId, not token
+            prisma.refreshToken.deleteMany({
+                where: { userId: userId } 
+            })
+        ]);
+        res.status(200).json({ message: "Password updated successfully, please log in again" });
     } catch (error) {
         next(error);
     }
@@ -585,6 +606,10 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
             select: { avatar: true }
         });
 
+        if (!existingUser) {
+            return res.status(404).json({ error: "User record not found" });
+        }
+        
         //  Sharp re-encode destroys any hidden payloads
         try {
             await sharp(req.file.buffer)
@@ -649,6 +674,10 @@ export const SetupProfile = async (req: Request, res: Response) => {
         id: userId,
       },
       data: dataToUpdate,
+      omit: {
+        password: true,
+        twoFASecret: true,
+      },
     });
 
     await publishEvent(AUTH_EVENTS.USER_UPDATED, {

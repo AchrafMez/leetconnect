@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState , useEffect} from 'react';
+import { useNavigate, Link , useSearchParams} from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth} from '@/context/userContext';
@@ -19,6 +19,8 @@ export default function Login() {
 
     // show plain text or dots for the password
     const [showPassword, setShowPassword] = useState(false);
+
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // 2FA
     const [show2FAStep, setShow2FAStep] = useState(false);
@@ -59,6 +61,22 @@ export default function Login() {
         setValidationErrors(errors);
         return Object.keys(errors).length === 0;
     };
+
+    useEffect(() => {
+        const code = searchParams.get('oauth_error');
+        if (!code) return;
+    
+        const messages: Record<string, string> = {
+            EMAIL_ALREADY_USED: 'The email used by your intra account already belongs to an existing account.',
+            OAUTH_FAILED: '42 sign-in failed. Please try again.',
+        };
+        
+        setError(messages[code] || 'OAuth sign-in failed.');
+
+        // remove it from URL after showing once
+        searchParams.delete('oauth_error');
+        setSearchParams(searchParams, { replace: true });
+    }, [searchParams, setSearchParams]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -124,11 +142,6 @@ export default function Login() {
         setLoading(true);
         try {
             await login2FA(tempToken, twoFACode);
-            // if (result.user?.type == "FREELANCER"){
-            //     navigate('/freedashboard');
-            // } else {
-            //     navigate('/dashboard');
-            // }
             navigate('/dashboard');
         } catch (err: any) {
             setTwoFAError("Wrong code, please try again.");
@@ -138,7 +151,6 @@ export default function Login() {
     };
 
     const handle42SignIn = () => {
-        // console.log('Google sign-in implemented!!');
         // Redirect browser to the backend trigger for 42 OAuth
         // window.location.href = 'https://localhost/api/auth/42';
         // dynamic
