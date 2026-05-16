@@ -49,3 +49,24 @@ export async function read_all(req: Request, res: Response, next: NextFunction) 
 		next(err);
 	}
 }
+
+export async function remove(req: Request, res: Response, next: NextFunction) {
+	try {
+		const user_id = req.user!.userId;
+		const {id: notif_id} = req.params as unknown as NotifParams;
+
+		const {count} = await prisma.notification.deleteMany({
+			where: {id: notif_id, user_id: user_id}
+		});
+
+		if (count === 0)
+			return res.status(404).json({error: 'notification not found'});
+
+		const io = req.app.get('io');
+		io.to(`user:${user_id}`).emit('notification_deleted', {id: notif_id});
+
+		res.status(204).send();
+	} catch (err) {
+		next(err);
+	}
+}

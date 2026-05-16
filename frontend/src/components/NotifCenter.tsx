@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
+import { X } from 'lucide-react';
 import { useNotifications } from '../context/NotifProvider';
 import type { ChatNotif } from '../lib/api';
 
@@ -25,7 +26,7 @@ export default function NotifCenter({onClose, wrapperRef}: Props) {
 
 	if (!context)
 		return null;
-	const {notifs, unread, markRead, markAllRead} = context;
+	const {notifs, unread, markRead, markAllRead, remove} = context;
 
 	return (
 		<div ref={panel_ref}
@@ -45,20 +46,24 @@ export default function NotifCenter({onClose, wrapperRef}: Props) {
 					<div className="p-6 text-center text-sm text-muted-foreground">
 						No notifications yet.
 					</div>
-			) : notifs.map(n => <Row key={n.id} n={n} onRead={markRead} />)}
+			) : notifs.map(n => <Row key={n.id} n={n} onRead={markRead} onDelete={remove} />)}
 		</div>
 	);
 }
 
-function Row({n, onRead}: {n: ChatNotif; onRead: (id: number) => void}) {
+function Row({n, onRead, onDelete}: {
+	n: ChatNotif;
+	onRead: (id: number) => void;
+	onDelete: (id: number) => void;
+}) {
 	return (
-		<button
+		<div
 			onClick={() => !n.is_read && onRead(n.id)}
-			className={`cursor-pointer w-full text-left px-4 py-3 border-b border-border/50
+			className={`group relative cursor-pointer w-full text-left px-4 py-3 border-b border-border/50
 						hover:bg-accent transition-colors
 						${n.is_read ? 'opacity-60' : ''}`}
 		>
-			<div className="flex items-start gap-2">
+			<div className="flex items-start gap-2 pr-6">
 				{!n.is_read && (
 					<span className="mt-1.5 w-2 h-2 rounded-full bg-primary shrink-0" />
 				)}
@@ -75,6 +80,15 @@ function Row({n, onRead}: {n: ChatNotif; onRead: (id: number) => void}) {
 					</p>
 				</div>
 			</div>
-		</button>
+			<button
+				onClick={(e) => { e.stopPropagation(); onDelete(n.id); }}
+				aria-label="Delete notification"
+				className="absolute top-2 right-2 p-1 rounded-md text-muted-foreground
+							opacity-0 group-hover:opacity-100 hover:bg-destructive/10
+							hover:text-destructive transition cursor-pointer"
+			>
+				<X size={14} />
+			</button>
+		</div>
 	);
 }

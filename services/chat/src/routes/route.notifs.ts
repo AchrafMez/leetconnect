@@ -8,5 +8,6 @@ const router = Router();
 router.get('/', notif_ctrl.list);
 router.patch('/:id/read', validate({params: notif_params}), notif_ctrl.read);
 router.patch('/read-all', notif_ctrl.read_all);
+router.delete('/:id', validate({params: notif_params}), notif_ctrl.remove);
 
 export default router;

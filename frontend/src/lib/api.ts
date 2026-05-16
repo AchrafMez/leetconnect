@@ -539,6 +539,8 @@ export const notifApi = {
         api(`/notifs/${id}/read`, { method: 'PATCH' }),
     markAllRead: (): Promise<{ message: string }> =>
         api('/notifs/read-all', { method: 'PATCH' }),
+    remove: (id: number): Promise<void> =>
+        api(`/notifs/${id}`, { method: 'DELETE' }),
 };
 
 export const analyticsApi = {
