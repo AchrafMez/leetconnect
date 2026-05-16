@@ -68,7 +68,6 @@ export default function App() {
           </Route>
 
           {/*Admin Area*/}
-         <Route path="/admin" element={<Admin />} />
           <Route path="/admin/*" element={<Admin />} />
         </Route>
       </Routes>

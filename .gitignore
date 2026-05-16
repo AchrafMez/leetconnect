@@ -59,6 +59,8 @@ userContext.md
 **/prisma/generated/
 migrations/
 generated/
+/services/admin/prisma/generated
+/services/analytics/prisma/generated
 *.md
 # test scripts
 /security-test.sh

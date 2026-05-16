@@ -66,6 +66,7 @@ export interface OverviewData {
   suspendedUsers: number;
   newUsersThisWeek: number;
   newJobsThisWeek: number;
+	completedJobs: number;
 }
 
 export interface UsersAnalytics {
@@ -73,6 +74,7 @@ export interface UsersAnalytics {
   registrationsOverTime: { date: string; count: number }[];
   byRole: { role: string; count: number }[];
   byStatus: { status: string; count: number }[];
+	userType: { userType: string; count: number}[];
 }
 
 export interface JobsAnalytics {

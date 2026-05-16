@@ -22,10 +22,10 @@ export const AUTH_EVENTS = {
 };
 
 export const ADMIN_EVENTS = {
-	USER_UPDATED: 'user.updated',
-	USER_DELETED: 'user.deleted',
-	CONTENT_UPDATED: 'content.updated',
-	CONTENT_DELETED: 'content.deleted'
+	USER_UPDATED: 'admin.user.updated',
+	USER_DELETED: 'admin.user.deleted',
+	CONTENT_UPDATED: 'admin.content.updated',
+	CONTENT_DELETED: 'admin.content.deleted'
 }
 
 export const MARKET_EVENTS = {

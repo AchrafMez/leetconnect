@@ -9,10 +9,9 @@ import { heavyQueryLimiter } from '../middleware/limiters';
 
 const router: Router = express.Router();
 
-router.get('/overview', requireRole('ADMIN'), getOverview);
+router.get('/overview', requireRole('ADMIN'), heavyQueryLimiter, getOverview);
 router.get('/users', requireRole('ADMIN'), heavyQueryLimiter, validateRequest(analyticsQueryParams), getUsersAnalytics);
 router.get('/jobs', requireRole('ADMIN'), heavyQueryLimiter, validateRequest(analyticsQueryParams), getJobsAnalytics);
-router.get('/export');
 
 export default router
 

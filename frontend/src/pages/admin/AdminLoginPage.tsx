@@ -20,7 +20,7 @@ export const AdminLoginPage = () => {
       setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
     setLoading(true);
