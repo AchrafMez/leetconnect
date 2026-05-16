@@ -30,7 +30,7 @@ export function setup_sockets(io: Server) {
 
 	io.on('connection', async (socket: Socket) => {
 		const userId = socket.data.user.userId;
-		// console.log(`socket connected: ${socket.id} (user: ${userId})`);
+
 		socket.join(`user:${userId}`);
 		socket.join(`presence:${userId}`);
 
@@ -60,14 +60,12 @@ export function setup_sockets(io: Server) {
 
 			const room = `convers:${convers_id}`;
 			socket.join(room);
-			// console.log(`socket ${socket.id} joined room ${room}`);
 		});
 		socket.on('leave_convers', (convers_id: number) => {
 			if (!Number.isInteger(convers_id) || convers_id <= 0)
 				return ;
 			const room = `convers:${convers_id}`;
 			socket.leave(room);
-			// console.log(`socket ${socket.id} left room ${room}`);
 		});
 		socket.on('chat_active', (active: boolean) => {
 			socket.data.chatActive = !!active;
@@ -78,10 +76,6 @@ export function setup_sockets(io: Server) {
 			} catch(err) {
 				console.error('[presence] mark_offline failed:', (err as Error).message);
 			}
-			console.log(`socket disconnected: ${socket.id} (${reason})`);
 		});
-		// socket.onAny((event, ...args) => {
-		// 	console.log('[WS:event]', socket.id, '→', event, JSON.stringify(args));
-		// });
 	});
 }

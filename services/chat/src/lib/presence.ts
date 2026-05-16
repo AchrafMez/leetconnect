@@ -59,7 +59,6 @@ export async function reset_presence(): Promise<void> {
 	if (keys.length > 0)
 		await redis.del(...keys);
 	await publishEvent(EVENTS.PRESENCE_RESET, {});
-	console.log(`[presence] reset complete (cleared ${keys.length} stale keys)`);
 }
 
 

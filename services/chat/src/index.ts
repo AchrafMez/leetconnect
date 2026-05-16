@@ -152,7 +152,6 @@ async function start_chat_server() {
 				} else {
 					return ;
 				}
-				console.log(`user synced to chat_db: ${channel} [${data.id}]`);
 			} catch (err) {
 				console.error(`[user sync] ${channel} failed:`, (err as Error).message);
 			}
@@ -180,7 +179,8 @@ async function start_chat_server() {
 			console.log(`chat server running on port: ${PORT}`);
 		});
 	} catch (err) {
-		console.log('error accured');
+		console.error('error accured:', err);
+		console.error('CHAT SERVER EXITING');
 		process.exit(1);
 	}
 }
