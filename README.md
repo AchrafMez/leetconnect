@@ -229,11 +229,63 @@ Grafana is configured with Prometheus as its datasource.
 - ...
 - ...
 
+---
+
 ## Chat: `adbouras`
+
 ### What this work includes
 
-- ...
-- ...
+#### 1. Chat Microservice
+Built a dedicated `chat` service behind the Nginx gateway exposing REST routes under `/api/chat/*`, `/api/friend/*`, `/api/notifs/*` and a Socket.IO endpoint at `/socket.io/`.
+
+* Owns its own Postgres database (`chat_db`); cross-service user data arrives via Redis pub/sub (`user.registered` / `user.updated` / `user.deleted`) and is mirrored in a local "shadow" `User` table
+* Conversations modeled as `Convers` (Direct or Group) + `ConversMember` join + `Message` with `(convers_id, created_at)` index for cursor-paginated history
+* Per-route rate limiters keyed by `userId` — `write_limiter` (50 / 10 min) on conversation and friend writes; `message_limiter` (30 / min) on send; reads exempted via `skip: req.method === 'GET'`
+* Global `1000 / 15 min` per-IP limiter as outer wall, skipping `/metrics` and `/health`
+
+#### 2. WebSocket Layer (Socket.IO)
+* JWT-authenticated handshake at `io.use()` using the RS256 public key shared from the auth service
+* Three room conventions: `user:<id>` (per-user pushes), `presence:<id>` (status transitions), `convers:<id>` (live message delivery)
+* Server → client events: `new_message`, `delete_message`, `convers_bumped`, `presence_changed`, `new_notification`, `friend_request_*`, `friend_removed`
+* Client → server events: `watch_presence` / `unwatch_presence`, `join_convers` / `leave_convers`, `chat_active`
+* Graceful disconnect cleanup that calls `mark_offline`
+
+#### 3. Presence System
+Real-time `online/offline` status powering friends list dots, chat headers, conversation pannel and the profile page.
+
+* Redis SET `presence:sockets:<userId>` holds every live socket id; `SCARD = 0` ⇒ offline, `SCARD > 0` ⇒ online
+* Per-user `presence:<id>` rooms with explicit `watch_presence` subscriptions from the frontend, so broadcasts are bounded by viewers
+* `mark_online` / `mark_offline` only emit on 0↔1 transitions; extra tabs of the same user are silent
+* `reset_presence` on boot and `shutdown_presence` on SIGTERM guarantee clean state across container restarts
+* Frontend `PresenceProvider` exposes `usePresence(userId)` (refcounted) and `usePresenceSeed()` (bulk cache from REST)
+
+#### 4. Friend System
+* `FriendRequest` model with `PENDING` → `ACCEPTED` / `REJECTED` transitions and `@@unique([sender_id, receiver_id])`
+* Endpoints: `POST /requests`, `PATCH /:id/accept`, `PATCH /:id/reject`, `DELETE /friends`, `GET /incoming` / `/outgoing` / `/friends`
+* Re-send after reject deletes the old row and creates a fresh `PENDING` in one transaction
+* Group `add_member` requires friendship between requester and invitee
+
+#### 5. Notification System
+* `Notification` table (`MESSAGE` / `FRIEND_REQ` / `SYSTEM`)
+* Created via a `notify()` helper that inserts the row then publishes `notif.create` on the Redis bus; subscriber emits `new_notification` over the socket
+* **On-chat suppression**: backend skips `MESSAGE` notifications for recipients whose sockets have `data.chatActive === true` (set by frontend on mount/unmount of `/chat`)
+* **Dedup**: rapid bursts from the same sender update an existing unread `MESSAGE` row instead of creating new ones
+* `PATCH /:id/read` and `PATCH /read-all` push `notification_read` so all open tabs sync
+
+#### 6. Profile Page
+* `/profile/:username` (any user) and `/profile` (own); fetched via `GET /api/chat/users/:username`
+* `ProfileHeader` displays avatar, name, username, title, type, location, joined date, bio
+* Live online dot via `usePresence(targetUserId)`  works for any user
+* Friend status button with four states: `Connect`, `Request Sent`, `Accept / Reject`, `Connected` (hover-to-Disconnect)
+* "Message" button creates or reuses a Direct conversation and navigates to `/chat?conv=<id>`
+* Inline `RateLimitBanner` with countdown when `write_limiter` triggers; action buttons disabled until clear
+
+#### 7. Network Page
+* `/network` aggregates friends, incoming, and outgoing requests
+* Each friend card has a live online dot fed by `usePresence(friend.id)`
+* Inline `accept/reject` buttons
+
+---
 
 ## Analytics and admin: `abmahfou`
 ### Modules:
@@ -340,7 +392,13 @@ Designed and implemented a complete permission system from scratch covering both
 ### Marketplace References
 - ...
 ### Chat References
-- ...
+- [Socket.IO documentation](https://socket.io/docs/v4/)
+- [Socket.IO client API](https://socket.io/docs/v4/client-api/)
+- [Redis Pub/Sub](https://redis.io/docs/latest/develop/interact/pubsub/)
+- [Redis Sets](https://redis.io/docs/latest/develop/data-types/sets/)
+- [Prisma documentation](https://www.prisma.io/docs)
+- [express-rate-limit](https://express-rate-limit.mintlify.app/)
+
 ### Analytics References
 - [recharts guide](https://recharts.github.io/en-US/guide/getting-started/)
 - [papaparse docs](https://www.papaparse.com/docs)
