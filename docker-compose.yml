@@ -18,7 +18,7 @@ services:
     volumes:
       - ./certs/nginx.crt:/etc/nginx/ssl/cert.pem:ro
       - ./certs/nginx.key:/etc/nginx/ssl/key.pem:ro
-      - avatars_data:/app/service/uploads/avatars:ro
+      - avatars_data:/app/service/uploads/avatars:roq
   postgres:
     container_name: postgres
     build:
@@ -35,6 +35,8 @@ services:
       retries: 5
     ports:
       - "5432:5432"
+    env_file:
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-dbs.sh:/docker-entrypoint-initdb.d/init-dbs.sh
@@ -46,19 +48,19 @@ services:
       context: .
       dockerfile: services/redis/Dockerfile
     restart: unless-stopped
-    # command: ["redis-server", "--tls-port", "6379", "--port", "0", "--tls-cert-file", "/etc/ssl/internal/redis.crt", "--tls-key-file", "/etc/ssl/internal/redis.key", "--tls-ca-cert-file", "/etc/ssl/internal/ca.crt", "--tls-auth-clients", "no"]
     networks:
       - leetconnect
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASS}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASS}
     volumes:
       - redis_data:/data
   auth:
     container_name: auth
-    # image_name: auth
     build:
       context: .
       dockerfile: services/auth/Dockerfile
@@ -75,25 +77,16 @@ services:
       - .env.ip
     environment:
       - DATABASE_URL=postgresql://${AUTH_DB_USER}:${AUTH_DB_PASS}@postgres:5432/${AUTH_DB_NAME}
-      - JWT_SECRET=${JWT_SECRET}
-      - REDIS_URL=${REDIS_URL}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - REDIS_URL=redis://:${REDIS_PASS}@redis:6379
       - JWT_PRIVATE_KEY_PATH=/etc/ssl/internal/jwt_private.key
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
       - INTRA_CLIENT_ID=${INTRA_CLIENT_ID}
       - INTRA_CLIENT_SECRET=${INTRA_CLIENT_SECRET}
-      # - SSL_KEY_PATH=/etc/ssl/internal/auth.key
-      # - SSL_CERT_PATH=/etc/ssl/internal/auth.crt
-      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
     volumes:
       - ./certs:/etc/ssl/internal:ro
       - avatars_data:/app/service/uploads/avatars
   marketplace:
     container_name: marketplace
-    # image_name: marketplace
     build:
       context: .
       dockerfile: services/marketplace/Dockerfile
@@ -107,18 +100,13 @@ services:
         condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://${MARKET_DB_USER}:${MARKET_DB_PASS}@postgres:5432/${MARKET_DB_NAME}
-      - JWT_SECRET=${JWT_SECRET}
-      - REDIS_URL=${REDIS_URL}
+      - REDIS_URL=redis://:${REDIS_PASS}@redis:6379
       - AUTH_SERVICE_URL=http://auth:3001
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
-      # - SSL_KEY_PATH=/etc/ssl/internal/marketplace.key
-      # - SSL_CERT_PATH=/etc/ssl/internal/marketplace.crt
-      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
     volumes:
       - ./certs:/etc/ssl/internal:ro
   chat:
     container_name: chat
-    # image_name: chat
     build:
       context: .
       dockerfile: services/chat/Dockerfile
@@ -132,18 +120,14 @@ services:
         condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://${CHAT_DB_USER}:${CHAT_DB_PASS}@postgres:5432/${CHAT_DB_NAME}
-      - JWT_SECRET=${JWT_SECRET}
-      - REDIS_URL=${REDIS_URL}
+      - REDIS_URL=redis://:${REDIS_PASS}@redis:6379
       - AUTH_SERVICE_URL=http://auth:3001
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
-      # - SSL_KEY_PATH=/etc/ssl/internal/chat.key
-      # - SSL_CERT_PATH=/etc/ssl/internal/chat.crt
-      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - POSTGRES_USER=${POSTGRES_USER}
     volumes:
       - ./certs:/etc/ssl/internal:ro
   analytics:
     container_name: analytics
-    # image_name: analytics
     build:
       context: .
       dockerfile: services/analytics/Dockerfile
@@ -157,20 +141,14 @@ services:
         condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://${ANALYTICS_DB_USER}:${ANALYTICS_DB_PASS}@postgres:5432/${ANALYTICS_DB_NAME}
-      - JWT_SECRET=${JWT_SECRET}
-      - REDIS_URL=${REDIS_URL}
+      - REDIS_URL=redis://:${REDIS_PASS}@redis:6379
       - AUTH_SERVICE_URL=http://auth:3001
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
-      # - SSL_KEY_PATH=/etc/ssl/internal/analytics.key
-      # - SSL_CERT_PATH=/etc/ssl/internal/analytics.crt
-      # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
+      - POSTGRES_USER=${POSTGRES_USER}
     volumes:
       - ./certs:/etc/ssl/internal:ro
-      # - ./services/analytics:/app/service
-      # - /app/service/node_modules
   admin:
     container_name: admin
-    # image_name: admin
     build:
       context: .
       dockerfile: services/admin/Dockerfile
@@ -182,17 +160,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      # - auth
-      # - marketplace
-      # - analytics
     environment:
-      - REDIS_URL=${REDIS_URL} 
-      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_URL=redis://:${REDIS_PASS}@redis:6379
       - AUTH_SERVICE_URL=http://auth:3001
       - MARKETPLACE_SERVICE_URL=http://marketplace:3002
       - ANALYTICS_SERVICE_URL=http://analytics:3004
       - JWT_PUBLIC_KEY_PATH=/etc/ssl/internal/jwt_public.key
       - DATABASE_URL=postgresql://${ADMIN_DB_USER}:${ADMIN_DB_PASS}@postgres:5432/${ADMIN_DB_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
     volumes:
       - ./certs:/etc/ssl/internal:ro
       # - ./services/admin:/app/service
@@ -202,7 +177,9 @@ services:
       # - NODE_EXTRA_CA_CERTS=/etc/ssl/internal/ca.crt
   frontend:
     container_name: frontend
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: dev
     restart: unless-stopped
     networks:
       - leetconnect
@@ -211,9 +188,6 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    # environment: # added to auto apply changes in front
-    # - CHOKIDAR_USEPOLLING=true
-    # - WATCHPACK_POLLING=true
       
   prometheus:
     image: prom/prometheus:v2.54.1
@@ -237,7 +211,7 @@ services:
     restart: unless-stopped
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SECURITY_ADMIN_PASS=${GRAFANA_ADMIN_PASS}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_AUTH_ANONYMOUS_ENABLED=false
     volumes:
