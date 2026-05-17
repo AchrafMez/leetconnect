@@ -14,5 +14,5 @@ export function RegisterEventHandlers(): void {
   subscribeToEvents(ADMIN_EVENTS.CONTENT_UPDATED, handleJobUpdatedAdmin);
   subscribeToEvents(ADMIN_EVENTS.CONTENT_DELETED, handleJobDeletedAdmin);
 
-  console.log('Event Handlers Registered');
+  // console.log('Event Handlers Registered');
 }

@@ -30,7 +30,6 @@ export const getAllJobs = async (req: Request, res: Response, next: NextFunction
 		})
 		return res.status(StatusCodes.OK).json(jobs);
 	} catch (error) {
-		console.error('[getAllJobs]: ', error);
 		next(error);
 	}
 }
@@ -56,7 +55,6 @@ export const getJob = async (req: Request, res: Response, next: NextFunction) =>
 		
 		return res.status(StatusCodes.OK).json(job);
 	} catch (error) {
-		console.error('[getJob]: ', error);
 		next(error);
 	}
 }
@@ -80,10 +78,10 @@ export const editJobStatus = async (req: Request, res: Response, next: NextFunct
 			},
 		});
 
-		await publishEvent(ADMIN_EVENTS.CONTENT_UPDATED, updatedJob);
+		try { await publishEvent(ADMIN_EVENTS.CONTENT_UPDATED, updatedJob); }
+		catch(e) { }
 		return res.status(StatusCodes.OK).json(updatedJob);
 	} catch (error: any) {
-		console.error('[editJob]: ', error);
 		next(error);
 	}
 }
@@ -97,10 +95,10 @@ export const deleteJob = async (req: Request, res: Response, next: NextFunction)
 			where: { id }
 		});
 
-		await publishEvent(ADMIN_EVENTS.CONTENT_DELETED, { id });
+		try { await publishEvent(ADMIN_EVENTS.CONTENT_DELETED, { id }); }
+		catch(e) { }
 		return res.status(StatusCodes.OK).json({ message: 'Job deleted successfully'});
 	} catch (error: any) {
-		console.error('[deleteJob]: ', error);
 		next(error);
 	}
 }

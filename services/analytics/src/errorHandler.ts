@@ -3,7 +3,6 @@ import { Prisma } from '../prisma/generated/client';
 import { StatusCodes, ReasonPhrases } from 'http-status-codes';
 
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error(`[Error Log]: ${err.stack || err.message}`);
 
   // handle known prisma errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {

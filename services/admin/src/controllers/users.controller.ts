@@ -32,7 +32,6 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
 		return res.status(StatusCodes.OK).json(users);
 
 	} catch (error) {
-		console.error('[getAllUsers]', error);
 		next(error);
 	}
 }
@@ -69,10 +68,9 @@ export const editUserStatus = async (req: Request, res: Response, next: NextFunc
 				id: updatedUser.id,
 				status: updatedUser.status
 			}); }
-			catch(e) { console.error('publishEvent USER_UPDATED_ADMIN failed', e)}
+			catch(e) { }
 			return res.status(StatusCodes.OK).json(updatedUser);
 	} catch (error: any) {
-		console.error('[updateUserStatus]: ', error);
 		next(error);
 	}
 }
@@ -109,10 +107,9 @@ export const editUserRole = async (req: Request, res: Response, next: NextFuncti
 				id: updatedUser.id,
 				role: updatedUser.role
 			}); }
-			catch(e) { console.error('publishEvent USER_UPDATED_ADMIN failed', e)}
+			catch(e) { }
 			return res.status(StatusCodes.OK).json(updatedUser);
 	} catch (error: any) {
-		console.error('[updateUserRole]: ', error);
 		next(error);
 	}
 }
@@ -144,10 +141,9 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 			// });
 	
 			try { await publishEvent(ADMIN_EVENTS.USER_DELETED, { id }); }
-			catch (e) { console.error('publishEvent USER_DELETED failed', e)}
+			catch (e) { }
 			return res.status(StatusCodes.OK).json( { message: 'User deleted successfully'});
 	} catch (error: any) {
-		console.error('[deleteUser]: ', error);
 		next(error);
 	}
 }

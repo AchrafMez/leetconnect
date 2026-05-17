@@ -65,7 +65,6 @@ export const AnalyticsPage = () => {
 			setData({ overview, users, jobs });
 			setLastUpdated(new Date());
 		} catch (error: any) {
-			console.error('Failed to fetch analytics: ', error);
 			setError(error.message ?? 'Failed to fetch analytics data');
 		} finally {
 			setLoading(false);
