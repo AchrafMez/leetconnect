@@ -92,6 +92,9 @@ export default function FreelancerSetupModal() {
         updateUser(res.user);
         setIsOpen(false);
       }
+      else {
+        setError(res.message || "Failed to complete setup. Please try again.");
+      }
     } catch (err: any) {
     //   console.error("Failed to update profile:", err);
       setError(err.message || "Failed to complete setup. Please try again.");
@@ -152,7 +155,7 @@ export default function FreelancerSetupModal() {
               id="rate"
               type="number"
               required
-              min="0"
+              min="5"
               placeholder="45"
               value={formData.rate}
               onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
@@ -228,6 +231,7 @@ export default function FreelancerSetupModal() {
             <Textarea
               id="bio"
               rows={3}
+              maxLength={300}
               placeholder="Briefly describe your expertise..."
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}

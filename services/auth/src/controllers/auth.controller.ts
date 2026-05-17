@@ -624,7 +624,6 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
                 .webp({ quality: 80 })
                 .toFile(uploadPath);
         } catch (err){
-            // console.error('Sharp error:', err); 
             return res.status(400).json({ error: 'Invalid or corrupted image file' });
         }
 
@@ -660,7 +659,7 @@ export const SetupProfile = async (req: Request, res: Response) => {
     const { category, skills, rate, expLevel, title, bio } = req.body;
 
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ success: false, message: 'Unauthorized',});
     }
 
     const authUser = req.user as JwtPayload;

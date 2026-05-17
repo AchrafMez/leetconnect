@@ -38,8 +38,6 @@ const ProposalDetailsPage: React.FC = () => {
       setLoading(true);
       const res = await proposalsApi.getProposalById(id)
 
-     console.log('resulta//', res)
-
       setProposal(res.proposal);
 
     } catch (error) {

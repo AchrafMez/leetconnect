@@ -64,13 +64,16 @@ make
 
 | Login | Assigned Role(s) | Responsibilities |
 |------|-------------------|------------------|
-| `noben-ai` | Project Manager & Dev (Auth) | Auth service, login/register, OAuth/2FA integration |
+| `noben-ai` | Project Manager & Dev (Auth) | Auth service, login/register, OAuth/2FA integration, profile settings |
 | `ner-roui` | Dev (Marketplace) | Marketplace service, jobs/proposals/contracts workflows |
 | `adbouras` | Dev (Chat) | Chat service, notifications, Profile  |
 | `abmahfou` | Product Owner & Dev (Analytics/Admin) | Analytics and admin service |
 | `amezioun` | Tech Lead / Infra Dev | Docker Compose, Nginx, monitoring stack, environment orchestration |
 
 ## Project Management
+- Regular communication: Organized weekly meetings to sync on progress, blockers, and upcoming milestones.
+- Communication channel: Kept a dedicated Discord Server active for quick questions, decisions, and updates between team members.
+- Code reviews: Enforced the rule “no direct pushes to dev” by requiring at least one teammate to review and approve pull requests before merge.
 
 ### Work organization
 
@@ -217,11 +220,31 @@ Grafana is configured with Prometheus as its datasource.
 ## Authentication: `noben-ai`
 ### What this work includes
 
-- ...
-- ...
-- ..
+1. **User registration & login**
+   * Email/password signup with strong password rules, role/type selection, and duplicate checks.  
+   * Passwords hashed with bcrypt; issues short-lived JWT access tokens plus DB-backed refresh tokens.  
+   * Publishes user events to Redis so other services stay in sync.
 
-- Friends system — noben-ai and adbouras
+2. **2FA with TOTP**
+   * Optional authenticator-app 2FA using TOTP secrets and QR codes.  
+   * Login flow splits into temp “pending 2FA” tokens and final tokens after code verification.  
+   * Rate limiting on setup, verify, login, and disable to mitigate brute force.
+
+3. **OAuth (42 Intra)**
+   * OAuth login via Passport strategy for 42 accounts.  
+   * Auto-creates or links users based on 42 profile, with basic conflict/error handling.  
+   * OAuth-only users rely on 42 for auth and do not configure local 2FA.
+
+4. **Token & session security**
+   * RS256 JWT access tokens, opaque refresh tokens in httpOnly cookies.  
+   * Auto-refresh on 401 from the frontend, plus logout and suspension-based revocation.  
+   * Central auth middleware verifies tokens, roles/types, and revoked sessions.
+
+5. **Profile Updates**
+	* Supports avatar uploads with rate limiting (per-user limiter)
+	* 2FA settings available only for password-based accounts (not OAuth users)
+	* Backend validates all updates and publishes `user.updated` event so other services receive the updates
+
 
 ## Marketplace: `ner-roui`
 
@@ -438,6 +461,13 @@ Designed and implemented a complete permission system from scratch covering both
 - [cAdvisor GitHub Repository](https://github.com/google/cadvisor)
 
 ### Auth References
+-  [portswigger jwt documentation](https://portswigger.net/web-security/jwt#what-are-jwts)
+-  [Authentication flow on the web](https://jsmastery.com/blogs/authentication-flow-on-the-web)
+- [Password storage methods](https://www.youtube.com/watch?v=qgpsIBLvrGY)
+- [Oauth 2.0](https://oauth.net/2/)
+- [Access and Refresh tokens](https://www.geeksforgeeks.org/javascript/access-token-vs-refresh-token-a-breakdown/)
+
+### Marketplace References
 - ...
 ### Chat References
 - [Socket.IO documentation](https://socket.io/docs/v4/)
