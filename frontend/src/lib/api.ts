@@ -576,7 +576,6 @@ export const adminApi = {
 		const query = new URLSearchParams(params as any).toString();
 		return api<User[]>(`/admin/users?${query}`);
 	},
-  getUserById:      (id: string)              => api<User>(`/admin/users/${id}`),
   updateUserStatus: (id: string, status: string) =>
     api<User>(`/admin/users/${id}/status`, { method: 'PATCH', body: { status } }),
   updateUserRole:   (id: string, role: string) =>
