@@ -371,7 +371,6 @@ Designed and implemented a complete permission system from scratch covering both
 - **Major: Use a framework for both the frontend and backend.**
 - **Major: Implement real-time features using WebSockets or similar technology.**
 - **Major: Allow users to interact with other users. The minimum requirements are.**
-- **Major: A public API to interact with the database with a secured API key.**
 - **Major: Standard user management and authentication.**
 - **Major: Advanced permissions system.**
 - **Major: Monitoring system with Prometheus and Grafana.**
@@ -385,11 +384,9 @@ Designed and implemented a complete permission system from scratch covering both
 - **Minor: A complete notification system for all creation, update, and deletion actions.**
 - **Minor: Custom-made design system with reusable components.**
 - **Minor: Implement advanced search functionality with filters, sorting, and pagination.**
-- **Minor: File upload and management system.**
 - **Minor: Implement remote authentication with OAuth 2.0.**
 - **Minor: Implement a complete 2FA.**
 - **Minor: User activity analytics and insights dashboard.**
-- **Minor: Data export and import functionality.**
 
 ## Resources
 
