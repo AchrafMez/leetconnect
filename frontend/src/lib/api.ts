@@ -187,7 +187,14 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
         if (res.status == 403 && err.error == 'Account suspended'){
             setAccessToken(null);
+            window.dispatchEvent(new Event('force-logout'));
             throw new Error('Account suspended');
+        }
+
+        if (res.status === 401 && err.error === 'Session revoked') {
+            setAccessToken(null);
+            window.dispatchEvent(new Event('force-logout'));
+            throw new Error('Session revoked');
         }
 
         // Try getting message properly from express response { success: false, message: '...' }

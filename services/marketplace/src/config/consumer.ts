@@ -67,12 +67,30 @@ export const initConsumers = () => {
     }
   });
 
-  subscribeToEvents(ADMIN_EVENTS.USER_DELETED, async (channel: string, message: any) => {
-    const data = message.data;
-    const targetId = data.id || data.userId;
-    if (targetId) {
-      await prisma.job.deleteMany({ where: { clientId: targetId } });
-    }
-  });
+subscribeToEvents(ADMIN_EVENTS.USER_DELETED, async (channel: string, message: any) => {
+  const data = message.data;
+  const targetId = data.id || data.userId;
+  if (!targetId) return;
+
+  await prisma.$transaction([
+    prisma.review.deleteMany({
+      where: { OR: [{ fromUserId: targetId }, { toUserId: targetId }] },
+    }),
+
+    prisma.proposal.deleteMany({ where: { freelancerId: targetId } }),
+
+    prisma.job.updateMany({
+      where: {
+        status: "IN_PROGRESS",
+        proposals: {
+          some: { freelancerId: targetId, status: "ACCEPTED" },
+        },
+      },
+      data: { status: "OPEN" },
+    }),
+
+    prisma.job.deleteMany({ where: { clientId: targetId } }),
+  ]);
+});
 
 };

@@ -15,23 +15,44 @@ passport.use('42', new FortyTwoStrategy({
   },
   async (accessToken: string, refreshToken: string, profile: any, done: any) => {
     try {
-        // console.log("=== RAW 42 PROFILE DATA ===");
-        // console.log(JSON.stringify(profile._json, null, 2));
-        // console.log("===========================");
+
         const email = profile.emails[0].value;
+        if (!email) {
+            return done(null, false, { message: 'OAUTH_FAILED' });
+        }
         const fortyTwoId = String(profile.id);
         const intraAvatar = profile._json.image?.link || '';
+
         // Check if user already exists
         let user = await prisma.user.findFirst({
-            where: { OR: [{ oauthId: fortyTwoId }, { email: email }] }
+            where: { OR: [{ oauthProvider: '42', oauthId: fortyTwoId }] }
         });
+
+        
+        
+        if (user) return done(null, user);
+        
+        // if the 42 intra user email is already used by another acc stawp right there 
+        const existingByEmail = await prisma.user.findUnique({ where: { email } });
+        if (existingByEmail) {
+            return done(null, false, {
+                message: 'EMAIL_ALREADY_USED',
+            });
+        }
+
+        // check if username already exists
+        let finalUsername = profile.username;
+        const existingUsername = await prisma.user.findUnique({ where: { username: finalUsername  } });
+        if (existingUsername){ // if the username already exists , add last 4 charcaters from the id to the username
+            finalUsername = `${profile.username}_${fortyTwoId.slice(-4)}`;
+        }
 
         if (!user) {
             // If not, create them with data from Intra
             user = await prisma.user.create({
                 data: {
                     email: email,
-                    username: profile.username,
+                    username: finalUsername,
                     firstname: profile.name.givenName || '',
                     lastname: profile.name.familyName || '',
                     avatar: intraAvatar,
@@ -42,9 +63,8 @@ passport.use('42', new FortyTwoStrategy({
                     status: 'active'
                 }
             });
-            // console.log("user avatar-> [", profile.photos[0]?.value, "]")
-            // console.log("user avatar-> [", user.avatar, "]")
-            // 3. Shout to Redis so Chat Service sees the new user
+
+            // Shout to Redis so Chat Service sees the new user
             await publishEvent(AUTH_EVENTS.USER_REGISTERED, {
                 id: user.id,
                 email: user.email,
@@ -53,7 +73,7 @@ passport.use('42', new FortyTwoStrategy({
                 lastname: user.lastname,
                 role: user.role,
                 type: user.type,
-                avatar: user.avatar,
+                avatar: user.avatar
             });
         }
 

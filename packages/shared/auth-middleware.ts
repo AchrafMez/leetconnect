@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import { Role, UserType } from './constants';
+import { redisClient } from './event-emitter';
 
 const publicKeyPath = process.env.JWT_PUBLIC_KEY_PATH as string;
 
@@ -35,7 +36,7 @@ declare global {
 
 // verifies the jwt token from authorization header
 // ex: router.get('/profile', authMiddleware, handler)
-function authMiddleware(req: Request, res: Response, next: NextFunction) {
+async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' });
@@ -46,13 +47,27 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
   }
 
   try { // verify using asymmetric public key
-    const decoded = jwt.verify(token, publicKey, { algorithms: ['RS256'] }) as unknown as JwtPayload;
+    const decoded = jwt.verify(token, publicKey, { 
+        algorithms: ['RS256'],
+        issuer: 'leetconnect-auth',
+        audience: 'leetconnect-services'
+    }) as unknown as JwtPayload;
+
     if ((decoded as any).pending2FA === true) {
       return res.status(401).json({ 
         error: '2FA verification required',
         code: 'PENDING_2FA'
       });
     }
+
+    // Check if user session was revoked
+    if (redisClient) {
+        const isRevoked = await redisClient.get(`revoked:${decoded.userId}`);
+        if (isRevoked) {
+            return res.status(401).json({ error: 'Session revoked' });
+        }
+    }
+
     req.user = decoded; // contains token info like : id email username role
     next();
   } catch (err) {
