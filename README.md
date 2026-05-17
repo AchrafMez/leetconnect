@@ -439,8 +439,6 @@ Designed and implemented a complete permission system from scratch covering both
 
 ### Auth References
 - ...
-### Marketplace References
-- ...
 ### Chat References
 - [Socket.IO documentation](https://socket.io/docs/v4/)
 - [Socket.IO client API](https://socket.io/docs/v4/client-api/)
