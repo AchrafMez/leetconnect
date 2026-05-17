@@ -71,6 +71,9 @@ make
 | `amezioun` | Tech Lead / Infra Dev | Docker Compose, Nginx, monitoring stack, environment orchestration |
 
 ## Project Management
+- Regular communication: Organized weekly meetings to sync on progress, blockers, and upcoming milestones.
+- Communication channel: Kept a dedicated Discord Server active for quick questions, decisions, and updates between team members.
+- Code reviews: Enforced the rule “no direct pushes to dev” by requiring at least one teammate to review and approve pull requests before merge.
 
 ### Work organization
 
@@ -422,7 +425,12 @@ Designed and implemented a complete permission system from scratch covering both
 - [cAdvisor GitHub Repository](https://github.com/google/cadvisor)
 
 ### Auth References
-- ...
+-  [portswigger jwt documentation](https://portswigger.net/web-security/jwt#what-are-jwts)
+-  [Authentication flow on the web](https://jsmastery.com/blogs/authentication-flow-on-the-web)
+- [Password storage methods](https://www.youtube.com/watch?v=qgpsIBLvrGY)
+- [Oauth 2.0](https://oauth.net/2/)
+- [Access and Refresh tokens](https://www.geeksforgeeks.org/javascript/access-token-vs-refresh-token-a-breakdown/)
+
 ### Marketplace References
 - ...
 ### Chat References
