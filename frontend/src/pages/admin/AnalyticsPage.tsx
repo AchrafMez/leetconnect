@@ -211,7 +211,6 @@ export const AnalyticsPage = () => {
 						<h2 className="text-sm font-semibold text-foreground mb-4">User Type</h2>
 						<div className="space-y-3">
 							{users.userType.map(item => {
-								console.log(item);
 								const total = users.userType.reduce((s, i) => s + i.count, 0);
 								const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
 								return(
