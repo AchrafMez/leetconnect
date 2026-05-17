@@ -160,6 +160,20 @@ async function start_chat_server() {
 		subscribeToEvents(AUTH_EVENTS.USER_UPDATED,    handle_user_sync);
 		subscribeToEvents(ADMIN_EVENTS.USER_DELETED,   handle_user_sync);
 
+		subscribeToEvents(ADMIN_EVENTS.USER_UPDATED, async (_channel, message: any) => {
+			try {
+				const {id, status} = message?.data ?? {};
+				if (!id || status !== 'suspended')
+					return;
+
+				const sockets = await io.in(`user:${id}`).fetchSockets();
+				for (const s of sockets)
+					s.disconnect(true);
+			} catch (err) {
+				console.error('[suspend] socket disconnect failed:', (err as Error).message);
+			}
+		});
+
 		await reset_presence();
 
 		subscribeToEvents(EVENTS.NOTIF_CREATE, async (channel, message: any) => {
