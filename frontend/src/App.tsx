@@ -35,6 +35,7 @@ export default function App() {
           <Route path="/auth/sign-in" element={<Login />} />
           <Route path="/auth/sign-up" element={<Register />} />
           <Route path="/" element={<Landing />} />
+          
           <Route path="/admin/login" element={<AdminLoginPage />} />
         </Route>
         
