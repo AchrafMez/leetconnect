@@ -51,7 +51,8 @@ export default function ProfileHeader({
 			});
 			navigate(`/chat?conv=${convers.id}`);
 		} catch (err) {
-			// if (!rl.handle(err)) console.error('Failed to open conversation:', err instanceof Error ? err.message : err);
+			rl.handle(err);
+				// console.error('Failed to open conversation:', err instanceof Error ? err.message : err);
 		} finally {
 			setMessageLoading(false);
 		}
@@ -62,7 +63,8 @@ export default function ProfileHeader({
 		setActionLoading(true);
 		try { await friendApi.sendRequest(targetUserId); onFriendAction(); }
 		catch (err) {
-			// if (!rl.handle(err)) console.error('Failed to send friend request:', err instanceof Error ? err.message : err);
+			rl.handle(err);
+				// console.error('Failed to send friend request:', err instanceof Error ? err.message : err);
 		} finally { setActionLoading(false); }
 	};
 
@@ -71,7 +73,8 @@ export default function ProfileHeader({
 		setActionLoading(true);
 		try { await friendApi.acceptRequest(friendRequestId); onFriendAction(); }
 		catch (err) {
-			// if (!rl.handle(err)) console.error('Failed to accept request:', err instanceof Error ? err.message : err);
+			rl.handle(err);
+				// console.error('Failed to accept request:', err instanceof Error ? err.message : err);
 		} finally { setActionLoading(false); }
 	};
 
@@ -80,7 +83,8 @@ export default function ProfileHeader({
 		setActionLoading(true);
 		try { await friendApi.rejectRequest(friendRequestId); onFriendAction(); }
 		catch (err) {
-			// if (!rl.handle(err)) console.error('Failed to reject request:', err instanceof Error ? err.message : err);
+			rl.handle(err);
+				// console.error('Failed to reject request:', err instanceof Error ? err.message : err);
 		} finally { setActionLoading(false); }
 	};
 
@@ -89,7 +93,8 @@ export default function ProfileHeader({
 		setActionLoading(true);
 		try { await friendApi.removeFriend(targetUserId); onFriendAction(); }
 		catch (err) {
-			// if (!rl.handle(err)) console.error('Failed to remove friend:', err instanceof Error ? err.message : err);
+			rl.handle(err);
+				// console.error('Failed to remove friend:', err instanceof Error ? err.message : err);
 		} finally { setActionLoading(false); }
 	};
 
