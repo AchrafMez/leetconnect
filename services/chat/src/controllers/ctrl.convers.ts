@@ -322,6 +322,37 @@ export async function add_member(req: Request, res: Response, next: NextFunction
 				}
 			}
 		});
+
+		const full_convers = await prisma.convers.findUnique({
+			where: {id: convers_id},
+			include: {
+				members: {
+					select: {
+						user_id: true,
+						user: {
+							select: {
+								username: true,
+								firstname: true,
+								lastname: true,
+								avatar: true,
+								isOnline: true
+							}
+						}
+					}
+				},
+				messages: {
+					orderBy: {created_at: 'desc'},
+					take: 1,
+					select: {content: true, sender_id: true, created_at: true}
+				}
+			}
+		});
+
+		if (full_convers) {
+			const io = req.app.get('io');
+			io.to(`user:${new_member_id}`).emit('convers_created', full_convers);
+		}
+
 		res.status(201).json(member);
 	} catch (err) {
 		next(err);
