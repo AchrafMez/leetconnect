@@ -7,7 +7,7 @@ import passport from 'passport';
 import './lib/passport';
 
 // shared resources
-import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal, subscribeToEvents, EVENTS, ADMIN_EVENTS} from '@leetconnect/shared';
+import { initEventBus, closeEventBus, errorHandler, getMetrics, httpRequestDuration, httpRequestsTotal, subscribeToEvents, EVENTS, ADMIN_EVENTS, redisClient} from '@leetconnect/shared';
 
 import cookieParser from 'cookie-parser'; // to store tokens in cookies
 import prisma from './lib/prisma';
@@ -82,8 +82,17 @@ const loginLimiter = rateLimit({
 });
 
 
+const refreshLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500, // Increased to 500 to prevent 429s during dev page reloads
+    message: { error: 'Too many refresh attempts' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 app.use('/api/auth/register', registerLimiter);
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/refresh', refreshLimiter);
 
 // routes
 app.use('/api/auth', healthRoutes);
@@ -142,7 +151,12 @@ async function start() {
           prisma.user.delete({ where: { id } })
         ]);
         
-        console.log(`[EVENT] Admin deleted user: ${id}. Auth records wiped.`);
+        if (redisClient) {
+          // Block token for 15 minutes (900s) to instantly invalidate access tokens
+          await redisClient.setex(`revoked:${id}`, 900, 'true');
+        }
+
+        console.log(`[EVENT] Admin deleted user: ${id}. Auth records wiped & revoked in Redis.`);
       } catch (err) {
         console.error('Admin User Deletion Sync Failed:', err);
       }
@@ -157,7 +171,10 @@ async function start() {
         // If the admin suspended the user, we immediately revoke their sessions
         if (status === 'suspended') {
           await prisma.refreshToken.deleteMany({ where: { userId: id } });
-          console.log(`[EVENT] User ${id} suspended by admin. Sessions revoked.`);
+          if (redisClient) {
+            await redisClient.setex(`revoked:${id}`, 900, 'true');
+          }
+          console.log(`[EVENT] User ${id} suspended by admin. Sessions revoked in DB and Redis.`);
         }
 
         await prisma.user.update({

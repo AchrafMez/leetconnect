@@ -1,5 +1,5 @@
 import  { useCallback, useEffect, useMemo, useState } from "react"
-import { HiOutlineBookmarkSlash, HiOutlineBriefcase, HiOutlineUsers } from "react-icons/hi2";
+import { HiOutlineBriefcase, HiOutlineCheckBadge, HiOutlineMinusCircle, HiOutlineUsers } from "react-icons/hi2";
 import { analyticsApi, JobsAnalytics, OverviewData, UsersAnalytics } from "@/lib/api";
 import { type DateRange, DateRangePicker } from "@/components/analytics/DateRangePicker";
 import { Spin } from "@/components/ui/Spin";
@@ -134,12 +134,12 @@ export const AnalyticsPage = () => {
 					icon={<HiOutlineBriefcase />} />
 
 					<StatCard 
-					label="Flagged Jobs"
-					value={overview.flaggedJobs}
-					sub="require review"
-					subColor="text-destructive"
-					iconBg="bg-desctructive/10"
-					icon={<HiOutlineBookmarkSlash />} />
+					label="Completed Jobs"
+					value={overview.completedJobs}
+					sub="successfully delivered"
+  				subColor="text-emerald-400"
+  				iconBg="bg-emerald-500/10"
+					icon={<HiOutlineCheckBadge />} />
 
 					<StatCard 
 					label="Suspended Users"
@@ -147,7 +147,7 @@ export const AnalyticsPage = () => {
 					subColor="text-muted-foreground"
           iconBg="bg-amber-500/10"
 					attention={overview.suspendedUsers > 0}
-					icon={<HiOutlineBriefcase />} />
+					icon={<HiOutlineMinusCircle />} />
 				</div>
 			)}
 
@@ -204,9 +204,37 @@ export const AnalyticsPage = () => {
 			</div>
 
 			{/* buttom row - extra stats */}
-			{jobs && (
-				<div className="grid">
-					{/* Quick stats */}
+			<div className="grid grid-cols-2 gap-6">
+			{/* user type breakdown */}
+				{users && (
+					<div className="bg-card border border-border p-5">
+						<h2 className="text-sm font-semibold text-foreground mb-4">User Type</h2>
+						<div className="space-y-3">
+							{users.userType.map(item => {
+								console.log(item);
+								const total = users.userType.reduce((s, i) => s + i.count, 0);
+								const pct = total > 0 ? Math.round((item.count / total) * 100) : 0;
+								return(
+									<div key={item.userType.toLowerCase()} className="flex items-center gap-3">
+										<div className="w-16 shrink-0">
+											<p className="text-xs text-muted-foreground capitalize">{item.userType.toLowerCase()}</p>
+										</div>
+										<div className="flex-1 bg-secondary rounded-full h-1.5 overflow-hidden">
+											<div
+												className="h-full rounded-full bg-primary"
+												style={{ width: `${pct}%` }}
+											/>
+										</div>
+										<span className="text-xs font-semibold text-foreground w-12 text-right tabular-nums">
+											{item.count} ({pct}%)
+										</span>
+									</div>
+								)
+							})}
+						</div>
+					</div>
+				)}
+				{jobs && (
 					<div className="bg-card border border-border p-5">
 						<h2 className="text-sm font-semibold text-foreground mb-4">Quick Stats</h2>
 						<div className="space-y-4">
@@ -225,15 +253,15 @@ export const AnalyticsPage = () => {
 								<div key={stat.label} className="flex items-center justify-between">
 									<div>
 										<p className="text-xs text-muted-foreground">{stat.label}</p>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">{stat.sub}</p>
+										<p className="text-xs text-muted-foreground/60 mt-0.5">{stat.sub}</p>
 									</div>
 									<span className="text-xl font-bold text-foreground">{stat.value}</span>
 								</div>
 							))}
 						</div>
 					</div>
-				</div>
-			)}
+				)}
+			</div>
 		</div>
   );
 };

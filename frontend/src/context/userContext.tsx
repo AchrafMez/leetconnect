@@ -186,6 +186,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
+  useEffect(() => {
+    const handleForceLogout = () => {
+      setAccessToken(null);
+      setUser(null);
+    };
+    window.addEventListener('force-logout', handleForceLogout);
+    return () => window.removeEventListener('force-logout', handleForceLogout);
+  }, []);
+
   const login = async (data: LoginRequest): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
      const res = await api<{ 
       accessToken?: string;

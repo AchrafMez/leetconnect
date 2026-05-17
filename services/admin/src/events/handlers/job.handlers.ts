@@ -1,6 +1,24 @@
+import { MARKET_EVENTS } from "@leetconnect/shared";
 import { prisma } from "../../config/prisma";
 
+const MARKET_TO_ADMIN_STATUS: Record<string, string> = {
+  OPEN: 'active',
+  FLAGGED: 'flagged',
+  COMPLETED: 'completed',
+  CLOSED: 'closed',
+};
+
+function mapJobStatus(marketStatus: string): string {
+  const mapped = MARKET_TO_ADMIN_STATUS[marketStatus];
+  if (!mapped) {
+    console.warn(`[JOB_HANDLER] Unknown marketplace status: "${marketStatus}" — defaulting to active`);
+    return 'active';
+  }
+  return mapped;
+}
+
 export const handleJobCreated = async (channel: string, message: any) => {
+	if(channel !== MARKET_EVENTS.JOB_CREATED) return;
   try {
     const payload = message.data || {};
     if (!payload.jobId || !payload.title) {
@@ -18,6 +36,8 @@ export const handleJobCreated = async (channel: string, message: any) => {
       return;
     }
 
+		const mappedStatus = mapJobStatus(payload.status as string) as any;
+
     await prisma.job.create({
       data: {
         id: payload.jobId,
@@ -26,9 +46,9 @@ export const handleJobCreated = async (channel: string, message: any) => {
         category: payload.category || "",
         budget: payload.budget || 0,
         skills: payload.skills || [],
-        status: payload.status === "OPEN" ? "active" : "active", 
+        status: mappedStatus, 
         postedByName: payload.postedByName || "Unknown",
-        createdBy: { connect: { id: payload.clientId } }, // clientId mapped to createdBy relation
+        createdBy: { connect: { id: payload.clientId } },
         createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
       },
     });
@@ -38,6 +58,7 @@ export const handleJobCreated = async (channel: string, message: any) => {
 };
 
 export const handleJobUpdated = async (channel: string, message: any) => {
+	if(channel !== MARKET_EVENTS.JOB_UPDATED) return;
   try {
     const payload = message.data || {};
     if (!payload.jobId) return;
@@ -50,7 +71,7 @@ export const handleJobUpdated = async (channel: string, message: any) => {
     if (payload.skills !== undefined) data.skills = payload.skills;
     if (payload.proposals !== undefined) data.proposals = payload.proposals;
     if (payload.status !== undefined) {
-       data.status = payload.status === "OPEN" ? "active" : (payload.status === "CLOSED" ? "closed" : "active");
+      data.status = mapJobStatus(payload.status as string) as any;
     }
 
     if (Object.keys(data).length > 0) {
@@ -71,6 +92,7 @@ export const handleJobUpdated = async (channel: string, message: any) => {
 };
 
 export const handleJobDeleted = async (channel: string, message: any) => {
+	if(channel !== MARKET_EVENTS.JOB_DELETED) return;
   try {
     const payload = message.data || {};
     if (!payload.jobId) return;

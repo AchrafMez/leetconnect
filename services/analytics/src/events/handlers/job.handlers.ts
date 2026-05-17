@@ -2,63 +2,95 @@ import { MARKET_EVENTS, ADMIN_EVENTS } from "@leetconnect/shared";
 import { prisma } from "../../config/prisma";
 // const mappedStatus = (marketToAdminStatus[status] ?? 'active') as any;
 
+const MARKET_TO_ADMIN_STATUS: Record<string, string> = {
+  OPEN: 'active',
+  FLAGGED: 'flagged',
+  COMPLETED: 'completed',
+  CLOSED: 'closed',
+};
 
-
-export async function handleJobCreated(channel: string, message: any): Promise<void> {
-  if (channel !== MARKET_EVENTS.JOB_CREATED) return;
-  try {
-    const { jobId, title, description, category, budget, skills, status, clientId, postedByName, createdAt } = message.data;
-
-    const marketToAdminStatus: Record<string, string> = {
-      OPEN: 'active', FLAGGED: 'flagged', CLOSED: 'closed',
-      IN_PROGRESS: 'active', COMPLETED: 'closed',
-    };
-    const mappedStatus = (marketToAdminStatus[status as string] ?? 'active') as any;
-
-    await prisma.job.upsert({
-      where: { id: jobId },
-      update: { title, description, category, budget, skills, status: mappedStatus, postedByName },
-      create: {
-        id: jobId, title, description, category,
-        budget: Number(budget), skills: skills ?? [],
-        status: mappedStatus,
-        clientId,
-        postedByName: postedByName ?? 'Unknown',
-        createdAt: createdAt ? new Date(createdAt) : new Date(),
-      }
-    });
-
-    console.log(`[EVENT] JOB_CREATED — synced job ${jobId}`);
-  } catch (error) {
-    console.error('[EVENT] JOB_CREATED — sync failed:', error);
+function mapJobStatus(marketStatus: string): string {
+  const mapped = MARKET_TO_ADMIN_STATUS[marketStatus];
+  if (!mapped) {
+    console.warn(`[JOB_HANDLER] Unknown marketplace status: "${marketStatus}" — defaulting to active`);
+    return 'active';
   }
+  return mapped;
 }
 
-export async function handleJobUpdated(channel: string, message: any): Promise<void> {
-  if (channel !== MARKET_EVENTS.JOB_UPDATED) return;
+export const handleJobCreated = async (channel: string, message: any) => {
+	if(channel !== MARKET_EVENTS.JOB_CREATED) return;
   try {
-    const { jobId, title, description, category, budget, skills, status } = message.data;
-
-    const marketToAdminStatus: Record<string, string> = {
-      OPEN: 'active', FLAGGED: 'flagged', CLOSED: 'closed',
-      IN_PROGRESS: 'active', COMPLETED: 'closed',
-    };
-    const mappedStatus = (marketToAdminStatus[status as string] ?? 'active') as any;
-
-    await prisma.job.update({
-      where: { id: jobId },
-      data: { title, description, category, budget: Number(budget), skills, status: mappedStatus },  // ← use mappedStatus
+    const payload = message.data || {};
+    if (!payload.jobId || !payload.title) {
+        console.warn("Invalid job created payload", payload);
+        return;
+    }
+    
+    // Check if the user exists
+    const user = await prisma.user.findUnique({
+      where: { id: payload.clientId }
     });
 
-    console.log(`[EVENT] JOB_UPDATED — synced job ${jobId}`);
-  } catch (error) {
-    if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] JOB_UPDATED — job ${message.data?.jobId} not in local DB yet, skipping`);
+    if (!user) {
+      console.warn(`User with id ${payload.clientId} not found. Cannot create job ${payload.jobId}.`);
       return;
     }
-    console.error('[EVENT] JOB_UPDATED — sync failed:', error);
+
+		const mappedStatus = mapJobStatus(payload.status as string) as any;
+
+    await prisma.job.create({
+      data: {
+        id: payload.jobId,
+        title: payload.title,
+        description: payload.description || "",
+        category: payload.category || "",
+        budget: payload.budget || 0,
+        skills: payload.skills || [],
+        status: mappedStatus, 
+        postedByName: payload.postedByName || "Unknown",
+        createdBy: { connect: { id: payload.clientId } },
+        createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("Error handling job created event", error);
   }
-}
+};
+
+export const handleJobUpdated = async (channel: string, message: any) => {
+	if(channel !== MARKET_EVENTS.JOB_UPDATED) return;
+  try {
+    const payload = message.data || {};
+    if (!payload.jobId) return;
+
+    const data: any = {};
+    if (payload.title !== undefined) data.title = payload.title;
+    if (payload.description !== undefined) data.description = payload.description;
+    if (payload.category !== undefined) data.category = payload.category;
+    if (payload.budget !== undefined) data.budget = payload.budget;
+    if (payload.skills !== undefined) data.skills = payload.skills;
+    if (payload.proposals !== undefined) data.proposals = payload.proposals;
+    if (payload.status !== undefined) {
+      data.status = mapJobStatus(payload.status as string) as any;
+    }
+
+    if (Object.keys(data).length > 0) {
+      // Check if job exists first
+      const job = await prisma.job.findUnique({ where: { id: payload.jobId } });
+      if (!job) {
+         console.warn(`Job with id ${payload.jobId} not found, cannot update.`);
+         return;
+      }
+      await prisma.job.update({
+        where: { id: payload.jobId },
+        data,
+      });
+    }
+  } catch (error) {
+    console.error("Error handling job updated event", error);
+  }
+};
 
 export async function handleJobDeleted(channel: string, message: any): Promise<void> {
   if (channel !== MARKET_EVENTS.JOB_DELETED) return;

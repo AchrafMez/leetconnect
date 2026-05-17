@@ -8,7 +8,10 @@ import healthRoutes from './routes/health';
 import { initEventBus, closeEventBus, errorHandler,  getMetrics,  } from '@leetconnect/shared';
 import jobsRoutes from "./routes/jobs";
 import proposalsRoutes from "./routes/proposals";
-
+import {
+  httpRequestDuration,
+  httpRequestsTotal
+} from '@leetconnect/shared';
 import { initConsumers } from './config/consumer';
 
 const app = express();
@@ -17,7 +20,10 @@ const PORT = 3002;
 
 // middlewares
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'https://localhost:5173', // Only allows requests from  React frontend
+    credentials: true // Required to accept cookies from the frontend
+}));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
@@ -30,6 +36,29 @@ app.get('/metrics', async (_req, res) => {
 app.use('/api/market', healthRoutes);
 app.use("/api/market/jobs", jobsRoutes);
 app.use("/api/market/proposals", proposalsRoutes);
+
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const route = req.route?.path ?? 'unknown';
+
+    const labels = {
+      method: req.method,
+      route,
+      status_code: String(res.statusCode),
+    };
+
+    httpRequestDuration.observe(
+      labels,
+      (Date.now() - start) / 1000
+    );
+
+    httpRequestsTotal.inc(labels);
+  });
+
+  next();
+});
 
 // global error handler
 app.use(errorHandler);

@@ -58,8 +58,12 @@ profileSettings.png
 userContext.md
 **/prisma/generated/
 migrations/
+generated/
+/services/admin/prisma/generated
+/services/analytics/prisma/generated
 *.md
 # test scripts
 /security-test.sh
 /rate-limit-test.sh
 /.env.ip
+/audit_test.sh
