@@ -26,7 +26,7 @@ export default function ClosedJobReviews({ userId, interval = 6000 }: Props) {
 				if (!alive) return;
 				setReviews(res.reviews || []);
 			})
-			.catch((err) => console.error("failed to load reviews:", err))
+			// .catch((err) => console.error("failed to load reviews:", err))
 			.finally(() => alive && setLoading(false));
 		return () => {
 			alive = false;

@@ -39,7 +39,7 @@ export default function ProfilePage() {
 					seed([{ id: data.id, isOnline: data.isOnline }]);
 				}
 			} catch (err) {
-				console.error('Failed to fetch profile:', err);
+				// console.error('Failed to fetch profile:', err);
 			} finally {
 				setLoading(false);
 			}
@@ -73,7 +73,7 @@ export default function ProfilePage() {
 
 				setFriendStatus('none');
 			} catch (err) {
-				console.error('Failed to check friend status:', err);
+				// console.error('Failed to check friend status:', err);
 			}
 		};
 

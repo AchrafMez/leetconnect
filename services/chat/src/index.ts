@@ -146,7 +146,7 @@ async function start_chat_server() {
 					});
 				} else if (channel === ADMIN_EVENTS.USER_DELETED) {
 					await prisma.user.delete({where: {id: data.id}}).catch((err: any) => {
-						console.error('failed to delete user:', err);
+						console.error('failed to delete user:', (err as Error).message);
 						throw err;
 					});
 				} else {
@@ -182,7 +182,7 @@ async function start_chat_server() {
 			console.log(`chat server running on port: ${PORT}`);
 		});
 	} catch (err) {
-		console.error('error accured:', err);
+		console.error('error accured:', (err as Error).message);
 		console.error('CHAT SERVER EXITING');
 		process.exit(1);
 	}

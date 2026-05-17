@@ -53,7 +53,7 @@ export default function NetworkPage() {
 
 				seed(friends.map((friend) => ({ id: friend.id, isOnline: friend.is_online })));
 			})
-			.catch((err) => console.error('failed to load network:', err))
+			// .catch((err) => console.error('failed to load network:', err instanceof Error ? err.message : err))
 			.finally(() => setLoading(false));
 	}, [refreshKey, seed]);
 
@@ -66,7 +66,7 @@ export default function NetworkPage() {
 			await friendApi.acceptRequest(id);
 			refresh();
 		} catch (err) {
-			console.error('failed to accept request:', err);
+			// console.error('failed to accept request:', err instanceof Error ? err.message : err);
 		} finally {
 			setActionId(null);
 		}
@@ -78,7 +78,7 @@ export default function NetworkPage() {
 			await friendApi.rejectRequest(id);
 			refresh();
 		} catch (err) {
-			console.error('failed to reject request:', err);
+			// console.error('failed to reject request:', err instanceof Error ? err.message : err);
 		} finally {
 			setActionId(null);
 		}
@@ -90,7 +90,7 @@ export default function NetworkPage() {
 			await friendApi.removeFriend(friendId);
 			refresh();
 		} catch (err) {
-			console.error('failed to remove friend:', err);
+			// console.error('failed to remove friend:', err instanceof Error ? err.message : err);
 		} finally {
 			setActionId(null);
 		}
@@ -105,7 +105,7 @@ export default function NetworkPage() {
 			});
 			navigate(`/chat?conv=${convers.id}`);
 		} catch (err) {
-			console.error('failed to open conversation:', err);
+			// console.error('failed to open conversation:', err instanceof Error ? err.message : err);
 		} finally {
 			setActionId(null);
 		}
