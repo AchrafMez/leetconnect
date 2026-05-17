@@ -12,7 +12,9 @@ export default function ChatInput({onSend}: ChatInputProp) {
 	const textarea_ref = useRef<HTMLTextAreaElement>(null);
 	const rl = useRateLimit();
 
-	const disabled = sending || rl.isLimited;
+	const MAX_LENGTH = 3000;
+	const overLimit = text.length > MAX_LENGTH;
+	const disabled = sending || rl.isLimited || overLimit;
 
 	async function handleSend() {
 		const trimmed = text.trim();
@@ -69,6 +71,11 @@ export default function ChatInput({onSend}: ChatInputProp) {
 					<SendHorizonal size={16}/>
 				</button>
 			</div>
+			{overLimit && (
+				<p className="text-xs text-destructive">
+					Message too long ({text.length}/{MAX_LENGTH} characters)
+				</p>
+			)}
 		</div>
 	);
 }

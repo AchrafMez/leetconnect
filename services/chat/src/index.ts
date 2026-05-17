@@ -118,7 +118,7 @@ async function start_chat_server() {
 		});
 
 		initEventBus();
-		subscribeToEvents('user.*', async (channel, message: any) => {
+		const handle_user_sync = async (channel: string, message: any) => {
 			try {
 				const data = message?.data;
 				if (!data?.id) return;
@@ -155,7 +155,10 @@ async function start_chat_server() {
 			} catch (err) {
 				console.error(`[user sync] ${channel} failed:`, (err as Error).message);
 			}
-		});
+		};
+		subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, handle_user_sync);
+		subscribeToEvents(AUTH_EVENTS.USER_UPDATED,    handle_user_sync);
+		subscribeToEvents(ADMIN_EVENTS.USER_DELETED,   handle_user_sync);
 
 		await reset_presence();
 
