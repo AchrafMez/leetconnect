@@ -64,7 +64,7 @@ make
 
 | Login | Assigned Role(s) | Responsibilities |
 |------|-------------------|------------------|
-| `noben-ai` | Project Manager & Dev (Auth) | Auth service, login/register, OAuth/2FA integration |
+| `noben-ai` | Project Manager & Dev (Auth) | Auth service, login/register, OAuth/2FA integration, profile settings |
 | `ner-roui` | Dev (Marketplace) | Marketplace service, jobs/proposals/contracts workflows |
 | `adbouras` | Dev (Chat) | Chat service, notifications, Profile  |
 | `abmahfou` | Product Owner & Dev (Analytics/Admin) | Analytics and admin service |
@@ -217,11 +217,31 @@ Grafana is configured with Prometheus as its datasource.
 ## Authentication: `noben-ai`
 ### What this work includes
 
-- ...
-- ...
-- ..
+1. **User registration & login**
+   * Email/password signup with strong password rules, role/type selection, and duplicate checks.  
+   * Passwords hashed with bcrypt; issues short-lived JWT access tokens plus DB-backed refresh tokens.  
+   * Publishes user events to Redis so other services stay in sync.
 
-- Friends system — noben-ai and adbouras
+2. **2FA with TOTP**
+   * Optional authenticator-app 2FA using TOTP secrets and QR codes.  
+   * Login flow splits into temp “pending 2FA” tokens and final tokens after code verification.  
+   * Rate limiting on setup, verify, login, and disable to mitigate brute force.
+
+3. **OAuth (42 Intra)**
+   * OAuth login via Passport strategy for 42 accounts.  
+   * Auto-creates or links users based on 42 profile, with basic conflict/error handling.  
+   * OAuth-only users rely on 42 for auth and do not configure local 2FA.
+
+4. **Token & session security**
+   * RS256 JWT access tokens, opaque refresh tokens in httpOnly cookies.  
+   * Auto-refresh on 401 from the frontend, plus logout and suspension-based revocation.  
+   * Central auth middleware verifies tokens, roles/types, and revoked sessions.
+
+5. **Profile Updates**
+	* Supports avatar uploads with rate limiting (per-user limiter)
+	* 2FA settings available only for password-based accounts (not OAuth users)
+	* Backend validates all updates and publishes `user.updated` event so other services receive the updates
+
 
 ## Marketplace: `ner-roui`
 ### What this work includes
