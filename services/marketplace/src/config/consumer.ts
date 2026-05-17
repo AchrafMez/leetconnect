@@ -5,7 +5,7 @@ export const initConsumers = () => {
 
   subscribeToEvents(ADMIN_EVENTS.CONTENT_UPDATED, async (channel: string, message: any) => {
     const data = message.data;
-    console.log("[MARKETPLACE CONSUMER] Received CONTENT_UPDATED:", data);
+    // console.log("[MARKETPLACE CONSUMER] Received CONTENT_UPDATED:", data);
 
     if (!data.id || typeof data.status !== 'string') return;
 
@@ -17,7 +17,7 @@ export const initConsumers = () => {
 
     const newStatus = statusMap[data.status];
     if (!newStatus) {
-      console.warn(`[MARKETPLACE CONSUMER] Unknown status: ${data.status}`);
+    //   console.warn(`[MARKETPLACE CONSUMER] Unknown status: ${data.status}`);
       return;
     }
 
@@ -26,7 +26,7 @@ export const initConsumers = () => {
         where: { id: data.id },
         data: { status: newStatus as any }
       });
-      console.log(`[MARKETPLACE CONSUMER] Updated job ${data.id} → ${newStatus}`);
+    //   console.log(`[MARKETPLACE CONSUMER] Updated job ${data.id} → ${newStatus}`);
 
       if (newStatus === 'FLAGGED' || newStatus === 'CLOSED') {
         await prisma.proposal.updateMany({
@@ -39,7 +39,7 @@ export const initConsumers = () => {
         });
       }
     } catch (err: any) {                                          // ← was missing
-      console.error(`[MARKETPLACE CONSUMER] Failed to update job ${data.id}:`, err.message);
+    //   console.error(`[MARKETPLACE CONSUMER] Failed to update job ${data.id}:`, err.message);
     }
   });                                                             // ← was missing
 
@@ -49,7 +49,7 @@ export const initConsumers = () => {
       try {
         await prisma.job.delete({ where: { id: data.id } });
       } catch (err: any) {
-        console.error(`[MARKETPLACE CONSUMER] Failed to delete job ${data.id}:`, err.message);
+        // console.error(`[MARKETPLACE CONSUMER] Failed to delete job ${data.id}:`, err.message);
       }
     }
   });

@@ -9,7 +9,7 @@ get_local_ip() {
   fi
   # macOS specific (using the command you provided)
   if [ -z "${ipaddr:-}" ] && command -v ipconfig >/dev/null 2>&1; then
-    ipaddr=$(ipconfig getifaddr en0 2>/dev/null || true)
+    ipaddr=$(ipconfig getifaddr en1 2>/dev/null || true)
   fi
   # Fallback to `hostname -I` if available and returns something
   if [ -z "${ipaddr:-}" ] && command -v hostname >/dev/null 2>&1; then

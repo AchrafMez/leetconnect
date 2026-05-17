@@ -46,6 +46,24 @@ app.use('/api/admin/analytics', analyticsRoutes);
 
 app.use(errorHandler);
 
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+	const durationSeconds = (Date.now() - start) / 1000;
+	const route = req.route?.path ?? req.path;
+	const labels = {
+	  method: req.method,
+	  route,
+	  status_code: String(res.statusCode),
+	};
+
+	httpRequestDuration.observe(labels, durationSeconds);
+	httpRequestsTotal.inc(labels);
+  });
+
+  next();
+});
 let server: Server;
 
 const startServer = async () => {
@@ -64,24 +82,6 @@ const startServer = async () => {
 };
 startServer();
 
-app.use((req, res, next) => {
-  const start = Date.now();
-
-  res.on('finish', () => {
-    const durationSeconds = (Date.now() - start) / 1000;
-    const route = req.route?.path ?? req.path;
-    const labels = {
-      method: req.method,
-      route,
-      status_code: String(res.statusCode),
-    };
-
-    httpRequestDuration.observe(labels, durationSeconds);
-    httpRequestsTotal.inc(labels);
-  });
-
-  next();
-});
 
 const gracefulShutdown = async (signal: string) => {
   console.log(`${signal} received. Shutting down gracefully...`);

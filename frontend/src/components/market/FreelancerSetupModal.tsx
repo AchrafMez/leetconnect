@@ -93,7 +93,7 @@ export default function FreelancerSetupModal() {
         setIsOpen(false);
       }
     } catch (err: any) {
-      console.error("Failed to update profile:", err);
+    //   console.error("Failed to update profile:", err);
       setError(err.message || "Failed to complete setup. Please try again.");
     } finally {
       setLoading(false);

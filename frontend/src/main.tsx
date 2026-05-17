@@ -16,7 +16,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("ErrorBoundary caught an error", error, errorInfo);
+    // console.error("ErrorBoundary caught an error", error, errorInfo);
   }
   render() {
     if (this.state.hasError) {

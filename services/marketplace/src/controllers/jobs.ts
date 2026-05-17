@@ -42,7 +42,7 @@ export const addJob = async (req: Request, res: Response) => {
 
     return res.json({ success: true, job });
   } catch (error: any) {
-    console.error("addJob error:", error);
+    // console.error("addJob error:", error);
     return res.status(500).json({ success: false, message: "Failed to create job" });
   }
 };
@@ -66,7 +66,7 @@ export const getMyJobs = async (req: Request, res: Response) => {
 
     return res.json({ success: true, jobs });
   } catch (error: any) {
-    console.error("getMyJobs error:", error);
+    // console.error("getMyJobs error:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch jobs" });
   }
 };
@@ -131,7 +131,7 @@ export const getAllJobs = async (req: Request, res: Response) => {
 
     return res.json({ success: true, jobs });
   } catch (error: any) {
-    console.error("getAllJobs error:", error);
+    // console.error("getAllJobs error:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch jobs" });
   }
 };
@@ -154,7 +154,7 @@ export const getSingleJob = async (req: Request, res: Response) => {
 
     return res.json({ success: true, job });
   } catch (error: any) {
-    console.error("getSingleJob error:", error);
+    // console.error("getSingleJob error:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch job" });
   }
 };
@@ -203,7 +203,7 @@ export const updateJob = async (req: Request, res: Response) => {
 
     return res.json({ success: true, job });
   } catch (error: any) {
-    console.error("updateJob error:", error);
+    // console.error("updateJob error:", error);
     return res.status(500).json({ success: false, message: "Failed to update job" });
   }
 };
@@ -237,7 +237,7 @@ export const deleteJob = async (req: Request, res: Response) => {
 
     return res.json({ success: true, message: "Job deleted" });
   } catch (error: any) {
-    console.error("deleteJob error:", error);
+    // console.error("deleteJob error:", error);
     return res.status(500).json({ success: false, message: "Failed to delete job" });
   }
 };
@@ -271,7 +271,7 @@ export const completeJob = async (req: Request, res: Response) => {
 
     return res.json({ success: true, job: updated });
   } catch (error: any) {
-    console.error("completeJob error:", error);
+    // console.error("completeJob error:", error);
     return res.status(500).json({ success: false, message: "Failed to complete job" });
   }
 };
@@ -356,7 +356,7 @@ export const submitReview = async (req: Request, res: Response) => {
     if (error.code === "P2002") {
       return res.status(400).json({ success: false, message: "You have already reviewed this job" });
     }
-    console.error("submitReview error:", error);
+    // console.error("submitReview error:", error);
     return res.status(500).json({ success: false, message: "Failed to submit review" });
   }
 };
@@ -394,7 +394,7 @@ export const getUserReviews = async (req: Request, res: Response) => {
 
     return res.json({ success: true, reviews: enriched });
   } catch (error: any) {
-    console.error("getUserReviews error:", error);
+    // console.error("getUserReviews error:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch reviews" });
   }
 };
@@ -435,7 +435,7 @@ export const pay = async (req: Request, res: Response) => {
 
     return res.json({ success: true, payment });
   } catch (error: any) {
-    console.error("pay error:", error);
+    // console.error("pay error:", error);
     return res.status(500).json({ success: false, message: "Failed to process payment" });
   }
 };
@@ -461,7 +461,7 @@ export const getPaymentById = async (req: Request, res: Response) => {
 
     return res.json({ success: true, payment });
   } catch (error: any) {
-    console.error("getPaymentById error:", error);
+    // console.error("getPaymentById error:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch payment" });
   }
 };

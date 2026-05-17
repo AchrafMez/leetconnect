@@ -4,7 +4,7 @@ import { prisma } from "../../config/prisma";
 const MARKET_TO_ADMIN_STATUS: Record<string, string> = {
   OPEN: 'active',
   FLAGGED: 'flagged',
-  COMPLETED: 'completed',
+  COMPLETED: 'closed',
   CLOSED: 'closed',
 };
 

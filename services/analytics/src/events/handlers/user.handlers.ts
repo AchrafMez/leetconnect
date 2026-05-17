@@ -39,7 +39,7 @@ export async function handleUserUpdated(channel: string, message: any): Promise<
 	} catch (error) {
 		const { id } = message.data;
 		if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] USER_UPDATED — user ${id} not in local DB yet, skipping`);
+    //   console.warn(`[EVENT] USER_UPDATED — user ${id} not in local DB yet, skipping`);
       return;
     }
     // console.error('[EVENT] USER_UPDATED — sync failed:', error);
@@ -60,7 +60,7 @@ export async function handleUserUpdatedAdmin(channel: string, message: any): Pro
 	} catch (error) {
 		const { id } = message.data;
 		if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] USER_UPDATED_ADMIN — user ${id} not in local DB yet, skipping`);
+    //   console.warn(`[EVENT] USER_UPDATED_ADMIN — user ${id} not in local DB yet, skipping`);
       return;
     }
     // console.error('[EVENT] USER_UPDATED_ADMIN — sync failed:', error);
@@ -81,7 +81,7 @@ export async function handleUserDeleted(channel: string, message: any): Promise<
 	} catch (error) {
 		const { id } = message.data;
 		if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] USER_DELETED — user ${id} not in local DB yet, skipping`);
+    //   console.warn(`[EVENT] USER_DELETED — user ${id} not in local DB yet, skipping`);
       return;
     }
     // console.error('[EVENT] USER_DELETED — sync failed:', error);

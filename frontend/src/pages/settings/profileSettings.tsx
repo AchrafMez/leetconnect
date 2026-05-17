@@ -336,7 +336,7 @@ export default function ProfileSettings() {
             await logout();
             navigate('/auth/sign-in');
         } catch (error) {
-            console.error('Logout failed:', error);
+            // console.error('Logout failed:', error);
         }
     };
 

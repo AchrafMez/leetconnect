@@ -63,7 +63,7 @@ export default function Navbar() {
       navigate('/');
       setMobileMenuOpen(false);
     } catch (error) {
-      console.error('Logout failed:', error);
+    //   console.error('Logout failed:', error);
     }
   };
 
