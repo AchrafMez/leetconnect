@@ -156,7 +156,7 @@ async function start() {
           await redisClient.setex(`revoked:${id}`, 900, 'true');
         }
 
-        console.log(`[EVENT] Admin deleted user: ${id}. Auth records wiped & revoked in Redis.`);
+        // console.log(`[EVENT] Admin deleted user: ${id}. Auth records wiped & revoked in Redis.`);
       } catch (err) {
         // console.error('Admin User Deletion Sync Failed:', err);
       }
@@ -174,7 +174,7 @@ async function start() {
           if (redisClient) {
             await redisClient.setex(`revoked:${id}`, 900, 'true');
           }
-          console.log(`[EVENT] User ${id} suspended by admin. Sessions revoked in DB and Redis.`);
+        //   console.log(`[EVENT] User ${id} suspended by admin. Sessions revoked in DB and Redis.`);
         } else if (status === 'active') {
           if (redisClient)
             await redisClient.del(`revoked:${id}`);
@@ -188,7 +188,7 @@ async function start() {
           }
         });
 
-        console.log(`[EVENT] Admin updated user: ${id}. Auth DB synchronized.`);
+        // console.log(`[EVENT] Admin updated user: ${id}. Auth DB synchronized.`);
       } catch (err) {
         // console.error('Admin User Update Sync Failed:', err);
       }
