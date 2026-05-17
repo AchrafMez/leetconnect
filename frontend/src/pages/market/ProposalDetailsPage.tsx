@@ -36,10 +36,7 @@ const ProposalDetailsPage: React.FC = () => {
   const fetchProposal = async () => {
     try {
       setLoading(true);
-      console.log('idddd', id)
       const res = await proposalsApi.getProposalById(id)
-
-     console.log('resulta//', res)
 
       setProposal(res.proposal);
 

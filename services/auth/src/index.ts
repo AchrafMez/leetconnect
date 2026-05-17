@@ -132,10 +132,10 @@ async function start() {
               reviewCount: updatedCount
             }
           });
-          console.log(`Updated rating for user ${userId}: ${updatedRating.toFixed(2)} (${updatedCount} reviews)`);
+          // console.log(`Updated rating for user ${userId}: ${updatedRating.toFixed(2)} (${updatedCount} reviews)`);
         }
       } catch (err) {
-        console.error('Failed to update aggregated rating:', err);
+        // console.error('Failed to update aggregated rating:', err);
       }
     });
 
@@ -158,7 +158,7 @@ async function start() {
 
         console.log(`[EVENT] Admin deleted user: ${id}. Auth records wiped & revoked in Redis.`);
       } catch (err) {
-        console.error('Admin User Deletion Sync Failed:', err);
+        // console.error('Admin User Deletion Sync Failed:', err);
       }
     });
 
@@ -190,7 +190,7 @@ async function start() {
 
         console.log(`[EVENT] Admin updated user: ${id}. Auth DB synchronized.`);
       } catch (err) {
-        console.error('Admin User Update Sync Failed:', err);
+        // console.error('Admin User Update Sync Failed:', err);
       }
     });
 
@@ -199,7 +199,7 @@ async function start() {
     });
   } catch (err) {
     const error = err as Error;
-    console.error('auth service failed to start:', error.message);
+    // console.error('auth service failed to start:', error.message);
     process.exit(1);
   }
 }

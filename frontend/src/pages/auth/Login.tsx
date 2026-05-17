@@ -114,13 +114,6 @@ export default function Login() {
                 return;
             }
             // Navigate to dashboard
-            // console.log("type", result.user?.type);
-            // console.log(result.user);
-            // if (result.user?.type == "FREELANCER"){
-            //     navigate('/freedashboard');
-            // } else {
-            //     navigate('/dashboard');
-            // }
             navigate('/dashboard');
 
         } catch (err: any) {
