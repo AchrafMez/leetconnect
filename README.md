@@ -224,11 +224,47 @@ Grafana is configured with Prometheus as its datasource.
 - Friends system — noben-ai and adbouras
 
 ## Marketplace: `ner-roui`
+
 ### What this work includes
 
-- ...
-- ...
+#### 1. Job Lifecycle Management
+Built the full job posting and management system exposing REST routes under `/api/marketplace/jobs/*`.
 
+* Jobs follow a strict status progression: `OPEN` → `IN_PROGRESS` → `PAYMENT_PENDING` → `COMPLETED`, with `FLAGGED` and `CLOSED` as admin-controlled states
+* Clients can create, update, and delete jobs — edits and deletions are locked once a job leaves `OPEN` status to preserve contract integrity
+* `GET /jobs` supports rich filtering: full-text search across title and description, category, budget range (`minBudget` / `maxBudget`), required skills (comma-separated), and status
+* `FLAGGED` jobs are silently excluded from all public listings
+
+#### 2. Proposal System
+Designed the full proposal workflow between freelancers and clients, including resubmission and rejection logic.
+
+* One proposal record per `(freelancerId, jobId)` — resubmissions update the existing row rather than creating duplicates
+* Freelancers may resubmit after rejection up to **2 times** (3 total attempts); `rejectionCount >= 2` permanently blocks further submissions on that job
+* Proposal acceptance runs as an **atomic transaction**: job moves to `IN_PROGRESS`, the accepted proposal is marked `ACCEPTED`, all remaining pending proposals are bulk-rejected, and a `Payment` record is created in a single operation — preventing race conditions on concurrent acceptance
+
+#### 3. Payment Flow
+Implemented a simple but guarded payment lifecycle attached to accepted proposals.
+
+* A `Payment` record (status `PENDING`) is automatically created when a proposal is accepted
+* Only the client who owns the payment can trigger `PATCH /payments/:id/pay`; only `PENDING` payments are payable
+* Both the client and the accepted freelancer can view their shared payment record
+* Payments are stored in cents (`Int`) to avoid floating-point precision issues
+
+#### 4. Review System
+Built a cross-review system gated behind job completion.
+
+* Reviews are only allowed on jobs with status `COMPLETED`
+* Only the **client** and the **accepted freelancer** can review each other — self-reviews are blocked
+* One review per `(fromUserId, jobId)` enforced by a unique constraint
+* `GET /reviews/:userId` returns the full review history for any user
+
+#### 5. Event Publishing
+Marketplace emits events to the shared Redis bus to keep other services in sync.
+
+* `JOB_CREATED` / `JOB_UPDATED` / `JOB_DELETED` — keep Analytics and Admin dashboards current
+* `PROPOSAL_ACCEPTED` — triggers Chat and Notification service workflows (conversation creation, notifications)
+* `REVIEW_SUBMITTED` — notifies the reviewed user and updates their profile rating
+* `NOTIF_CREATE` — dispatched on proposal acceptance, rejection, and review actions
 ---
 
 ## Chat: `adbouras`
