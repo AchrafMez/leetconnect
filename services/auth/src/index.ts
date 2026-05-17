@@ -175,6 +175,9 @@ async function start() {
             await redisClient.setex(`revoked:${id}`, 900, 'true');
           }
           console.log(`[EVENT] User ${id} suspended by admin. Sessions revoked in DB and Redis.`);
+        } else if (status === 'active') {
+          if (redisClient)
+            await redisClient.del(`revoked:${id}`);
         }
 
         await prisma.user.update({

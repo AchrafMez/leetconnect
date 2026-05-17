@@ -69,6 +69,7 @@ async function authMiddleware(req: Request, res: Response, next: NextFunction) {
     }
 
     req.user = decoded; // contains token info like : id email username role
+    console.log("user info", req.user);
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Invalid or expired token' });
