@@ -12,6 +12,8 @@ export const generateAccessToken = (payload: JwtPayload) => {
   return jwt.sign(payload, privateKey, {
     algorithm: 'RS256',
     expiresIn: '15m',
+    issuer: 'leetconnect-auth',
+    audience: 'leetconnect-services'
   });
 };
 
@@ -25,12 +27,21 @@ export const generateTempToken = (userId: string) => {
   return jwt.sign(
     { userId, pending2FA: true },
     privateKey,
-    { algorithm: 'RS256', expiresIn: '5m' }
+    { 
+      algorithm: 'RS256', 
+      expiresIn: '5m',
+      issuer: 'leetconnect-auth',
+      audience: 'leetconnect-services'
+    }
   );
 };
 
 export const verifyTempToken = (token: string): { userId: string; pending2FA: boolean } => {
-  const payload = jwt.verify(token, publicKey, { algorithms: ['RS256'] }) as any;
+  const payload = jwt.verify(token, publicKey, { 
+    algorithms: ['RS256'],
+    issuer: 'leetconnect-auth',
+    audience: 'leetconnect-services'
+  }) as any;
 
   if (!payload.pending2FA) {
     throw new Error('Invalid token type');

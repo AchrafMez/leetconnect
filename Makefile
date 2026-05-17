@@ -1,18 +1,14 @@
-up: certs ip
+up: certs
 	docker compose up --build
 
-up-d: certs ip
+up-d: certs
 	docker compose up --build -d
 
 down:
 	docker compose down
 
-re: clean certs ip
+re: clean certs
 	docker compose up --build -d
-
-ip:
-	@chmod +x scripts/getLocalIpforOauth.sh
-	@./scripts/getLocalIpforOauth.sh
 
 certs:
 	@if [ ! -d "./certs" ]; then \

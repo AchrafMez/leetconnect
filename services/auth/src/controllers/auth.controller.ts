@@ -534,8 +534,15 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
         
+        if (!user || !user.password) {
+            return res.status(401).json({ 
+                error: 'Validation failed',
+                details: [{ field: 'currentPassword', message: 'User has no password set (OAuth)' }]
+            });
+        }
+
         // verify current password
-        const isMatch = await bcrypt.compare(currentPassword, user!.password!);
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
             return res.status(400).json({ 
                 error: 'Validation failed',

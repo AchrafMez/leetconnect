@@ -8,13 +8,16 @@ import Redis from 'ioredis';
 
 let publisher: Redis | null = null;
 let subscriber: Redis | null = null;
+export let redisClient: Redis | null = null;
 
 function initEventBus(redisUrl?: string): void{
     const url = redisUrl || process.env.REDIS_URL;
     publisher = new Redis(url!);
     subscriber = new Redis(url!);
+    redisClient = new Redis(url!);
     publisher.on('connect', () => console.log('Event bus publisher connected'));
     subscriber.on('connect', () => console.log('Event bus subscriber connected'));
+    redisClient.on('connect', () => console.log('Redis KV client connected'));
     publisher.on('error', (err) => console.error('Publisher error:', err.message));
     subscriber.on('error', (err) => console.error('Subscriber error:', err.message));
 }
@@ -46,6 +49,7 @@ function subscribeToEvents(
 async function closeEventBus(): Promise<void>{
     if (publisher) await publisher.quit();
     if (subscriber) await subscriber.quit();
+    if (redisClient) await redisClient.quit();
 }
 
 export {initEventBus, publishEvent, subscribeToEvents, closeEventBus};
