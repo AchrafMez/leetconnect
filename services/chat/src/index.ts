@@ -146,7 +146,7 @@ async function start_chat_server() {
 					});
 				} else if (channel === ADMIN_EVENTS.USER_DELETED) {
 					await prisma.user.delete({where: {id: data.id}}).catch((err: any) => {
-						console.error('failed to delete user:', err);
+						console.error('failed to delete user:', (err as Error).message);
 						throw err;
 					});
 				} else {
@@ -159,6 +159,20 @@ async function start_chat_server() {
 		subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, handle_user_sync);
 		subscribeToEvents(AUTH_EVENTS.USER_UPDATED,    handle_user_sync);
 		subscribeToEvents(ADMIN_EVENTS.USER_DELETED,   handle_user_sync);
+
+		subscribeToEvents(ADMIN_EVENTS.USER_UPDATED, async (_channel, message: any) => {
+			try {
+				const {id, status} = message?.data ?? {};
+				if (!id || status !== 'suspended')
+					return;
+
+				const sockets = await io.in(`user:${id}`).fetchSockets();
+				for (const s of sockets)
+					s.disconnect(true);
+			} catch (err) {
+				console.error('[suspend] socket disconnect failed:', (err as Error).message);
+			}
+		});
 
 		await reset_presence();
 
@@ -182,7 +196,7 @@ async function start_chat_server() {
 			console.log(`chat server running on port: ${PORT}`);
 		});
 	} catch (err) {
-		console.error('error accured:', err);
+		console.error('error accured:', (err as Error).message);
 		console.error('CHAT SERVER EXITING');
 		process.exit(1);
 	}

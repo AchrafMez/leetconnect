@@ -34,7 +34,7 @@ export default function Messages() {
 			await chatApi.deleteMessage(active_id, msg_id);
 			setMessages((prev) => prev.filter((m) => m.id !== msg_id));
 		} catch (err) {
-			console.error('Delete failed:', err instanceof Error ? err.message : err);
+			// console.error('Delete failed:', err instanceof Error ? err.message : err);
 		}
 	}, [active_id]);
 
@@ -71,7 +71,7 @@ export default function Messages() {
 		if (!CURRENT_USER_ID) return;
 		friendApi.listFriends()
 			.then(setFriends)
-			.catch(console.error);
+			// .catch((err) => console.error(err instanceof Error ? err.message : err));
 	}, [CURRENT_USER_ID]);
 
 	// tell server were on /chat to suppress message notifs
@@ -168,7 +168,7 @@ export default function Messages() {
 				);
 				seed(entries);
 			})
-			.catch(console.error);
+			// .catch((err) => console.error(err instanceof Error ? err.message : err));
 	}, [CURRENT_USER_ID, seed]);
 
 	// auto select conversation from ?conv=<id>
@@ -193,7 +193,7 @@ export default function Messages() {
 				setMessages(data.messages);
 				setNext_cursor(data.next_cursor);
 			})
-			.catch(console.error);
+			// .catch((err) => console.error(err instanceof Error ? err.message : err));
 	}, [active_id, CURRENT_USER_ID]);
 
 	const loadMore = useCallback(async () => {
@@ -204,7 +204,7 @@ export default function Messages() {
 			setMessages((prev) => [...data.messages, ...prev]);
 			setNext_cursor(data.next_cursor);
 		} catch (err) {
-			console.error('Failed to load older messages:', err);
+			// console.error('Failed to load older messages:', err instanceof Error ? err.message : err);
 		} finally {
 			setLoading_more(false);
 		}

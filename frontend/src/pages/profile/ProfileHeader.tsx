@@ -51,7 +51,7 @@ export default function ProfileHeader({
 			});
 			navigate(`/chat?conv=${convers.id}`);
 		} catch (err) {
-			if (!rl.handle(err)) console.error('Failed to open conversation:', err);
+			// if (!rl.handle(err)) console.error('Failed to open conversation:', err instanceof Error ? err.message : err);
 		} finally {
 			setMessageLoading(false);
 		}
@@ -61,32 +61,36 @@ export default function ProfileHeader({
 		if (rl.isLimited) return;
 		setActionLoading(true);
 		try { await friendApi.sendRequest(targetUserId); onFriendAction(); }
-		catch (err) { if (!rl.handle(err)) console.error('Failed to send friend request:', err); }
-		finally { setActionLoading(false); }
+		catch (err) {
+			// if (!rl.handle(err)) console.error('Failed to send friend request:', err instanceof Error ? err.message : err);
+		} finally { setActionLoading(false); }
 	};
 
 	const handleAccept = async () => {
 		if (!friendRequestId || rl.isLimited) return;
 		setActionLoading(true);
 		try { await friendApi.acceptRequest(friendRequestId); onFriendAction(); }
-		catch (err) { if (!rl.handle(err)) console.error('Failed to accept request:', err); }
-		finally { setActionLoading(false); }
+		catch (err) {
+			// if (!rl.handle(err)) console.error('Failed to accept request:', err instanceof Error ? err.message : err);
+		} finally { setActionLoading(false); }
 	};
 
 	const handleReject = async () => {
 		if (!friendRequestId || rl.isLimited) return;
 		setActionLoading(true);
 		try { await friendApi.rejectRequest(friendRequestId); onFriendAction(); }
-		catch (err) { if (!rl.handle(err)) console.error('Failed to reject request:', err); }
-		finally { setActionLoading(false); }
+		catch (err) {
+			// if (!rl.handle(err)) console.error('Failed to reject request:', err instanceof Error ? err.message : err);
+		} finally { setActionLoading(false); }
 	};
 
 	const handleUnfriend = async () => {
 		if (rl.isLimited) return;
 		setActionLoading(true);
 		try { await friendApi.removeFriend(targetUserId); onFriendAction(); }
-		catch (err) { if (!rl.handle(err)) console.error('Failed to remove friend:', err); }
-		finally { setActionLoading(false); }
+		catch (err) {
+			// if (!rl.handle(err)) console.error('Failed to remove friend:', err instanceof Error ? err.message : err);
+		} finally { setActionLoading(false); }
 	};
 
 	const renderActionButton = () => {

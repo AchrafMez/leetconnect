@@ -288,9 +288,7 @@ Real-time `online/offline` status powering friends list dots, chat headers, conv
 ---
 
 ## Analytics and admin: `abmahfou`
-### Modules:
-* **Major**: Advanced permissions system
-* **Major**:  Advanced analytics dashboard with data visualization
+
 ### What this work includes
 
 #### 1. Role-Based Access Control (RBAC) System
@@ -370,9 +368,28 @@ Designed and implemented a complete permission system from scratch covering both
 ## Modules
 
 ### Major modules
-- ...
+- **Major: Use a framework for both the frontend and backend.**
+- **Major: Implement real-time features using WebSockets or similar technology.**
+- **Major: Allow users to interact with other users. The minimum requirements are.**
+- **Major: A public API to interact with the database with a secured API key.**
+- **Major: Standard user management and authentication.**
+- **Major: Advanced permissions system.**
+- **Major: Monitoring system with Prometheus and Grafana.**
+- **Major: Backend as microservices.**
+- **Major: Advanced analytics dashboard with data visualization.**
+
 ### Minor modules
-- ...
+- **Minor: Use a frontend framework (React, Vue, Angular, Svelte, etc.).**
+- **Minor: Use a backend framework (Express, Fastify, NestJS, Django, etc.).**
+- **Minor: Use an ORM for the database.**
+- **Minor: A complete notification system for all creation, update, and deletion actions.**
+- **Minor: Custom-made design system with reusable components.**
+- **Minor: Implement advanced search functionality with filters, sorting, and pagination.**
+- **Minor: File upload and management system.**
+- **Minor: Implement remote authentication with OAuth 2.0.**
+- **Minor: Implement a complete 2FA.**
+- **Minor: User activity analytics and insights dashboard.**
+- **Minor: Data export and import functionality.**
 
 ## Resources
 
@@ -400,5 +417,5 @@ Designed and implemented a complete permission system from scratch covering both
 - [express-rate-limit](https://express-rate-limit.mintlify.app/)
 
 ### Analytics References
-- [recharts guide](https://recharts.github.io/en-US/guide/getting-started/)
-- [papaparse docs](https://www.papaparse.com/docs)
+- [Recharts Guide](https://recharts.github.io/en-US/guide/getting-started/)
+- [Papaparse Docs](https://www.papaparse.com/docs)

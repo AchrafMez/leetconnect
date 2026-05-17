@@ -2,13 +2,14 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import type { JwtPayload } from '@leetconnect/shared';
+import { redisClient } from '@leetconnect/shared';
 import prisma from '../config/config.database';
 import { mark_offline, mark_online } from '../lib/presence';
 
 const pub_key = fs.readFileSync(process.env.JWT_PUBLIC_KEY_PATH as string);
 
 export function setup_sockets(io: Server) {
-	io.use((socket, next) => {
+	io.use(async (socket, next) => {
 		const token = socket.handshake.auth?.token
 			|| socket.handshake.headers?.authorization?.split(' ')[1];
 
@@ -19,6 +20,12 @@ export function setup_sockets(io: Server) {
 			const decoded = jwt.verify(token, pub_key, {
 				algorithms: ['RS256']
 			}) as unknown as JwtPayload;
+
+			if (redisClient) {
+				const isRevoked = await redisClient.get(`revoked:${decoded.userId}`);
+				if (isRevoked)
+					return next(new Error('session revoked'));
+			}
 
 			socket.data.user = decoded;
 

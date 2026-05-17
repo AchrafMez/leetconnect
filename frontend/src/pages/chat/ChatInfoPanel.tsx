@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, UserPlus, Users, ExternalLink, Loader2, Check } from 'lucide-react';
+import { LogOut, UserPlus,User , Users, ExternalLink, Loader2, Check } from 'lucide-react';
 import Avatar from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -80,7 +80,12 @@ export default function ChatInfoPanel({
 				<DialogHeader>
 					<div className="flex items-center gap-3">
 						<div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-							<Users size={18} className="text-primary" />
+							{isDirect ? (
+									<User size={18} className="text-primary" />
+								) : (
+									<Users size={18} className="text-primary" />
+								)
+							}
 						</div>
 						<div className="min-w-0">
 							<DialogTitle>{isDirect ? 'Profile' : 'Network Info'}</DialogTitle>
