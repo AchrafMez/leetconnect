@@ -7,7 +7,7 @@ import rolesRoutes from "./routes/roles.route"
 import healthRoutes from "./routes/health"
 import { connectDb, disconnectDb } from './config/prisma'
 import { Server } from "http"
-import { authMiddleware, initEventBus } from '@leetconnect/shared';
+import { authMiddleware, initEventBus, getMetrics, httpRequestDuration, httpRequestsTotal } from '@leetconnect/shared';
 import { errorHandler } from "./errorHandler"
 import { RegisterEventHandlers } from "./events"
 import { limiter } from './middleware/limiters'
@@ -26,6 +26,30 @@ app.use(limiter);
 app.use(cors(corsOpts));
 app.use(express.json());
 app.use(helmet());
+
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+    const durationSeconds = (Date.now() - start) / 1000;
+    const route = req.route?.path ?? req.path;
+    const labels = {
+      method: req.method,
+      route,
+      status_code: String(res.statusCode),
+    };
+
+    httpRequestDuration.observe(labels, durationSeconds);
+    httpRequestsTotal.inc(labels);
+  });
+
+  next();
+});
+
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(await getMetrics());
+});
 
 app.use('/api/admin', healthRoutes);
 

@@ -35,16 +35,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes (health must be before auth middleware)
 // app.use('/api/analytics', healthRoutes);
-app.get('/metrics', async (_req, res) => {
-  res.set('Content-Type', 'text/plain; version=0.0.4');
-  res.send(await getMetrics());
-});
-
-app.use(authMiddleware);
-
-app.use('/api/admin/analytics', analyticsRoutes);
-
-app.use(errorHandler);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -64,6 +54,18 @@ app.use((req, res, next) => {
 
   next();
 });
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(await getMetrics());
+});
+
+app.use(authMiddleware);
+
+app.use('/api/admin/analytics', analyticsRoutes);
+
+app.use(errorHandler);
+
+
 let server: Server;
 
 const startServer = async () => {
