@@ -24,6 +24,7 @@ import PostJob from './pages/market/PostJob';
 import PaymentPage from './pages/market/PaymentPage';
 import Proposals from './pages/market/Proposals';
 import MyJobs from './pages/market/MyJobs';
+import AdminLoginPage from './pages/admin/AdminLoginPage'
 
 export default function App() {
   return (
@@ -34,16 +35,19 @@ export default function App() {
           <Route path="/auth/sign-in" element={<Login />} />
           <Route path="/auth/sign-up" element={<Register />} />
           <Route path="/" element={<Landing />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
         </Route>
         
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
 
+
         {/* Public market routes that still use Layout/Navbar */}
         <Route element={<Layout />}>
           <Route path="/market/find-work" element={<FindWork />} />
         </Route>
+
 
         <Route element={<RequireAuth />}>
           <Route element={<Layout />}>

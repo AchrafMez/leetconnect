@@ -32,11 +32,6 @@ app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', 'text/plain; version=0.0.4');
   res.send(await getMetrics());
 });
-// routes
-app.use('/api/market', healthRoutes);
-app.use("/api/market/jobs", jobsRoutes);
-app.use("/api/market/proposals", proposalsRoutes);
-
 app.use((req, res, next) => {
   const start = Date.now();
 
@@ -59,6 +54,13 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// routes
+app.use('/api/market', healthRoutes);
+app.use("/api/market/jobs", jobsRoutes);
+app.use("/api/market/proposals", proposalsRoutes);
+
+
 
 // global error handler
 app.use(errorHandler);
