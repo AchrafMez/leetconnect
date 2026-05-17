@@ -5,9 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 // import healthRoutes from './routes/health';
 import { initEventBus,
-				 closeEventBus,
 				 authMiddleware,
-				 errorHandler,
 				 getMetrics,
 				 httpRequestDuration,
 				 httpRequestsTotal } from '@leetconnect/shared';
@@ -16,6 +14,7 @@ import { connectDb, disconnectDb } from './config/prisma';
 import { RegisterEventHandlers } from './events';
 import { limiter } from './middleware/limiters';
 import { Server } from 'node:http';
+import { errorHandler } from './errorHandler';
 
 const app = express();
 
@@ -33,6 +32,13 @@ app.use(cors(corsOpts));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// routes (health must be before auth middleware)
+// app.use('/api/analytics', healthRoutes);
+app.get('/metrics', async (_req, res) => {
+  res.set('Content-Type', 'text/plain; version=0.0.4');
+  res.send(await getMetrics());
+});
 
 app.use(authMiddleware);
 
@@ -76,13 +82,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
-app.get('/metrics', async (_req, res) => {
-  res.set('Content-Type', 'text/plain; version=0.0.4');
-  res.send(await getMetrics());
-});
-// routes (health must be before auth middleware)
-// app.use('/api/analytics', healthRoutes);
 
 const gracefulShutdown = async (signal: string) => {
   console.log(`${signal} received. Shutting down gracefully...`);

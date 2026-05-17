@@ -28,6 +28,13 @@ export interface DateRangeValue {
 // Polling interval - 30 seconds
 const POLL_INTERVAL = 30_000;
 
+const toLocalDateString = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const AnalyticsPage = () => {
 	const [range, setRange] = useState<DateRangeValue>({
 		preset: '30d',
@@ -47,7 +54,7 @@ export const AnalyticsPage = () => {
 
 		try {
 			const params = range.preset === 'custom'
-				? `from=${range.from!.toISOString()}&to=${range.to!.toISOString()}`
+				? `from=${toLocalDateString(range.from!)}&to=${toLocalDateString(range.to!)}`
       	: `range=${range.preset}`;
 			const [overview, users, jobs] = await Promise.all([
 				analyticsApi.getAnalyticsOverview(),

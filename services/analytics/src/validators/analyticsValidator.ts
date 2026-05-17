@@ -2,10 +2,10 @@ import { z } from 'zod'
 
 const VALID_RANGES = ['7d', '30d', '90d', '1y'] as const;
 
-const isoDateString = (field: string) =>
-	z.string()
-		.datetime({ message: `${field} must be a valid ISO date string`})
-		.refine(val => new Date(val) <= new Date(), {
+const calendarDateString = (field: string) =>
+  z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { message: `${field} must be in YYYY-MM-DD format` })
+    .refine(val => new Date(val) <= new Date(), {
       message: `${field} cannot be in the future`,
     });
 
@@ -19,8 +19,8 @@ export const analyticsQueryParams = z.union([
 	})),
 
 	z.object({
-		from: isoDateString('from'),
-		to: isoDateString('to'),
+		from: calendarDateString('from'),
+		to: calendarDateString('to'),
 		range: z.undefined().optional(),
 	}).refine(
 		data => new Date(data.from!) <= new Date(data.to!),
