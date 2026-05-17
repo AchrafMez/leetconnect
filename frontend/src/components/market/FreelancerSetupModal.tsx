@@ -125,7 +125,7 @@ export default function FreelancerSetupModal() {
             </div>
           </div>
         </DialogHeader>
-
+    
         {error && (
           <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mt-2 whitespace-pre-wrap">
             <p className="text-sm font-medium">{error}</p>
@@ -152,9 +152,11 @@ export default function FreelancerSetupModal() {
               id="rate"
               type="number"
               required
+              min="0"
               placeholder="45"
               value={formData.rate}
               onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+              onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
             />
           </div>
 
