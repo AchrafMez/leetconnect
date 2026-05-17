@@ -19,10 +19,8 @@ export async function handleUserRegistred(channel: string, message: any): Promis
       }
 		});
 
-		console.log(`[EVENT] USER_REGISTERED — synced user ${username}`);
-	} catch (error) {
-		console.error('[EVENT] USER_REGISTERED — sync failed:', error);
-	}
+		// console.log(`[EVENT] USER_REGISTERED — synced user ${username}`);
+	} catch (error) { }
 }
 
 export async function handleUserUpdated(channel: string, message: any): Promise<void> {
@@ -35,13 +33,13 @@ export async function handleUserUpdated(channel: string, message: any): Promise<
 			data: { username, avatar, firstname, lastname, email},
 		});
 		
-		console.log(`[EVENT] USER_UPDATED — synced user ${username}`);
+		// console.log(`[EVENT] USER_UPDATED — synced user ${username}`);
 	} catch (error) {
 		const { id } = message.data;
 		if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] USER_UPDATED — user ${id} not in local DB yet, skipping`);
+      // console.warn(`[EVENT] USER_UPDATED — user ${id} not in local DB yet, skipping`);
       return;
     }
-    console.error('[EVENT] USER_UPDATED — sync failed:', error);
+    // console.error('[EVENT] USER_UPDATED — sync failed:', error);
 	}
 }
