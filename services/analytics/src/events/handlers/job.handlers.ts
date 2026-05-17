@@ -12,7 +12,7 @@ const MARKET_TO_ADMIN_STATUS: Record<string, string> = {
 function mapJobStatus(marketStatus: string): string {
   const mapped = MARKET_TO_ADMIN_STATUS[marketStatus];
   if (!mapped) {
-    console.warn(`[JOB_HANDLER] Unknown marketplace status: "${marketStatus}" — defaulting to active`);
+    // console.warn(`[JOB_HANDLER] Unknown marketplace status: "${marketStatus}" — defaulting to active`);
     return 'active';
   }
   return mapped;
@@ -23,7 +23,7 @@ export const handleJobCreated = async (channel: string, message: any) => {
   try {
     const payload = message.data || {};
     if (!payload.jobId || !payload.title) {
-        console.warn("Invalid job created payload", payload);
+        // console.warn("Invalid job created payload", payload);
         return;
     }
     
@@ -33,7 +33,7 @@ export const handleJobCreated = async (channel: string, message: any) => {
     });
 
     if (!user) {
-      console.warn(`User with id ${payload.clientId} not found. Cannot create job ${payload.jobId}.`);
+      // console.warn(`User with id ${payload.clientId} not found. Cannot create job ${payload.jobId}.`);
       return;
     }
 
@@ -54,7 +54,7 @@ export const handleJobCreated = async (channel: string, message: any) => {
       },
     });
   } catch (error) {
-    console.error("Error handling job created event", error);
+    // console.error("Error handling job created event", error);
   }
 };
 
@@ -79,7 +79,7 @@ export const handleJobUpdated = async (channel: string, message: any) => {
       // Check if job exists first
       const job = await prisma.job.findUnique({ where: { id: payload.jobId } });
       if (!job) {
-         console.warn(`Job with id ${payload.jobId} not found, cannot update.`);
+        //  console.warn(`Job with id ${payload.jobId} not found, cannot update.`);
          return;
       }
       await prisma.job.update({
@@ -88,7 +88,7 @@ export const handleJobUpdated = async (channel: string, message: any) => {
       });
     }
   } catch (error) {
-    console.error("Error handling job updated event", error);
+    // console.error("Error handling job updated event", error);
   }
 };
 
@@ -99,13 +99,13 @@ export async function handleJobDeleted(channel: string, message: any): Promise<v
 
     await prisma.job.delete({ where: { id: jobId } });
 
-    console.log(`[EVENT] JOB_DELETED — removed job ${jobId}`);
+    // console.log(`[EVENT] JOB_DELETED — removed job ${jobId}`);
   } catch (error) {
     if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] JOB_DELETED — job ${message.data?.jobId} not in local DB yet, skipping`);
+      // console.warn(`[EVENT] JOB_DELETED — job ${message.data?.jobId} not in local DB yet, skipping`);
       return;
     }
-    console.error('[EVENT] JOB_DELETED — sync failed:', error);
+    // console.error('[EVENT] JOB_DELETED — sync failed:', error);
   }
 }
 
@@ -119,13 +119,13 @@ export async function handleJobUpdatedAdmin(channel: string, message: any): Prom
       data: { status },
     });
 
-    console.log(`[EVENT] CONTENT_UPDATED — synced job ${id} → ${status}`);
+    // console.log(`[EVENT] CONTENT_UPDATED — synced job ${id} → ${status}`);
   } catch (error) {
     if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] CONTENT_UPDATED — job ${message.data?.id} not in local DB yet, skipping`);
+      // console.warn(`[EVENT] CONTENT_UPDATED — job ${message.data?.id} not in local DB yet, skipping`);
       return;
     }
-    console.error('[EVENT] CONTENT_UPDATED — sync failed:', error);
+    // console.error('[EVENT] CONTENT_UPDATED — sync failed:', error);
   }
 }
 
@@ -136,12 +136,12 @@ export async function handleJobDeletedAdmin(channel: string, message: any): Prom
 
     await prisma.job.delete({ where: { id } });
 
-    console.log(`[EVENT] CONTENT_DELETED — removed job ${id}`);
+    // console.log(`[EVENT] CONTENT_DELETED — removed job ${id}`);
   } catch (error) {
     if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] CONTENT_DELETED — job ${message.data?.id} not in local DB yet, skipping`);
+      // console.warn(`[EVENT] CONTENT_DELETED — job ${message.data?.id} not in local DB yet, skipping`);
       return;
     }
-    console.error('[EVENT] CONTENT_DELETED — sync failed:', error);
+    // console.error('[EVENT] CONTENT_DELETED — sync failed:', error);
   }
 }
