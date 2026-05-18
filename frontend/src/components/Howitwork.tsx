@@ -1,6 +1,8 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
-import stepImage from "../assets/wp9365202.jpg";
+import stepImage from "../assets/1.webp";
+import stepImage1 from "../assets/3.webp";
+import stepImage2 from "../assets/2.webp";
 
 interface StepItemProps {
   number: string;
@@ -58,13 +60,13 @@ const steps = [
     number: "02",
     title: "Find the perfect match",
     description: "Browse opportunities or get matched with verified professionals.",
-    image: stepImage,
+    image: stepImage1,
   },
   {
     number: "03",
     title: "Collaborate and deliver",
     description: "Work together with built-in tools. Track progress and communicate.",
-    image: stepImage,
+    image: stepImage2,
   },
 ];
 

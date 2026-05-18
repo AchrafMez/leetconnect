@@ -150,17 +150,17 @@ async function start_chat_server() {
 						for (const socket of sockets)
 							socket.disconnect(true);
 					} catch (err) {
-						console.error('[user_deleted] socket disconnect failed:', (err as Error).message);
+						// console.error('[user_deleted] socket disconnect failed:', (err as Error).message);
 					}
 					await prisma.user.delete({where: {id: data.id}}).catch((err: any) => {
-						console.error('failed to delete user:', (err as Error).message);
+						// console.error('failed to delete user:', (err as Error).message);
 						throw err;
 					});
 				} else {
 					return ;
 				}
 			} catch (err) {
-				console.error(`[user sync] ${channel} failed:`, (err as Error).message);
+				// console.error(`[user sync] ${channel} failed:`, (err as Error).message);
 			}
 		};
 		subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, handle_user_sync);
@@ -177,7 +177,7 @@ async function start_chat_server() {
 				for (const s of sockets)
 					s.disconnect(true);
 			} catch (err) {
-				console.error('[suspend] socket disconnect failed:', (err as Error).message);
+				// console.error('[suspend] socket disconnect failed:', (err as Error).message);
 			}
 		});
 
@@ -196,14 +196,14 @@ async function start_chat_server() {
 					...(data.body != null && { body: data.body }),
 				});
 			} catch (err) {
-				console.error('[notif] sync failed:', (err as Error).message);
+				// console.error('[notif] sync failed:', (err as Error).message);
 			}
 		});
 		server.listen(PORT, () => {
 			console.log(`chat server running on port: ${PORT}`);
 		});
 	} catch (err) {
-		console.error('error accured:', (err as Error).message);
+		// console.error('error accured:', (err as Error).message);
 		console.error('CHAT SERVER EXITING');
 		process.exit(1);
 	}

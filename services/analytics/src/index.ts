@@ -21,7 +21,7 @@ const app = express();
 const PORT = 3004;
 const corsOpts = {
   origin: process.env.FRONTEND_URL || 'https://localhost:5173', // Only allows requests from  React frontend
-  credentials: false
+  credentials: true
 }
 
 app.set('trust proxy', 1);

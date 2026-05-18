@@ -83,17 +83,17 @@ make
 
 ### Frontend
 
-- React
+- **React**: Enables a highly interactive, responsive application through reusable components.
 
 ### Backend
 
-- Node.js
-- Express.js
+- **Node.js**: Offers a lightweight, event-driven runtime perfect for handling concurrent connections across our microservices.
+- **Express.js**: A minimalist, fast web framework that streamlines building robust REST APIs.
 
 ### Database and cache
 
-- PostgreSQL (single instance with logical DB separation)
-- Redis (pub/sub and shared event communication)
+- **PostgreSQL (single instance with logical DB separation)**: Ensures strongly enforced data integrity, relationship mapping, and overall ACID compliance.
+- **Redis (pub/sub and shared event communication)**: Delivers extremely fast, in-memory event broadcasting and temporary data storage across our distributed services.
 
 #### db schema
 ![Database schema](./schema.svg)
@@ -419,27 +419,40 @@ Designed and implemented a complete permission system from scratch covering both
 
 ## Modules
 
+*The following modules were chosen to fulfill project requirements while building a realistic, enterprise-grade marketplace. They combine robust internal infrastructure with an interactive, secure user experience.*
+
 ### Major modules
+
+**Justification:** These core modules establish the essential infrastructure for a modern distributed application. A microservices architecture combined with robust monitoring ensures scalability and high availability. Adding WebSockets, real-time interactions, strong auth, and advanced permissions delivers a secure, highly responsive foundation that handles rapid marketplace negotiations.
+
 - **Major: Use a framework for both the frontend and backend.**
 - **Major: Implement real-time features using WebSockets or similar technology.**
-- **Major: Allow users to interact with other users. The minimum requirements are.**
+- **Major: Allow users to interact with other users.**
 - **Major: Standard user management and authentication.**
 - **Major: Advanced permissions system.**
 - **Major: Monitoring system with Prometheus and Grafana.**
 - **Major: Backend as microservices.**
 - **Major: Advanced analytics dashboard with data visualization.**
+- **Major Points: 16**
 
 ### Minor modules
+
+**Justification:** These modules round out the user experience, developer tooling, and business intelligence capabilities. Implementations like 2FA and OAuth improve security, an ORM guarantees database safety, while a custom design system, notifications, and advanced search drastically improve platform usability and user retention.
+
 - **Minor: Use a frontend framework (React, Vue, Angular, Svelte, etc.).**
 - **Minor: Use a backend framework (Express, Fastify, NestJS, Django, etc.).**
 - **Minor: Use an ORM for the database.**
 - **Minor: A complete notification system for all creation, update, and deletion actions.**
 - **Minor: Custom-made design system with reusable components.**
-- **Minor: Implement advanced search functionality with filters, sorting, and pagination.**
 - **Minor: Implement remote authentication with OAuth 2.0.**
 - **Minor: Implement a complete 2FA.**
 - **Minor: User activity analytics and insights dashboard.**
+- **Minor Points: 8**
 
+**Toatal: 24**
+
+###
+##### AI USAGE: We used it to follow the best practises, and ofc help up on repetitive work and debugging.
 ## Resources
 
 - [Docker Documentation](https://docs.docker.com/)
