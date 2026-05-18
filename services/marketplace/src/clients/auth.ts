@@ -22,7 +22,7 @@ export async function fetchUserFromAuth(
     );
     return user;
   } catch (err) {
-    console.error(`fetchUserFromAuth(${userId}) failed:`, err);
+    // console.error(`fetchUserFromAuth(${userId}) failed:`, err);
     return null;
   }
 }

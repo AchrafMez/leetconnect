@@ -38,7 +38,7 @@ export default function error_handler(err: ChatError, _req: Request, res: Respon
 	const status  = err.status;
 	const message = err.message;
 
-	console.error('error_handler messsage:', err.message);
+	// console.error('error_handler messsage:', err.message);
 
 	res.status(status).json({
 		status: 'error',
