@@ -25,14 +25,7 @@ The backend is split into independent services behind an Nginx gateway, with Pos
 
 ### Required configuration (`.env`)
 
-At minimum, configure:
-
-- `POSTGRES_USER`, `POSTGRES_PASSWORD`
-- `AUTH_DB_*`, `MARKET_DB_*`, `CHAT_DB_*`, `ANALYTICS_DB_*`
-- `JWT_SECRET`
-- `REDIS_URL`
-- `GRAFANA_ADMIN_USER`, `GRAFANA_ADMIN_PASSWORD`
-- OAuth variables if OAuth login is tested locally (`GOOGLE_*`, `GITHUB_*`)
+- Check the `.env.example`, and update the `.env` depends on it.
 
 ### Run the project (step-by-step)
 
@@ -449,8 +442,6 @@ Designed and implemented a complete permission system from scratch covering both
 
 ## Resources
 
-### infra References
-
 - [Docker Documentation](https://docs.docker.com/)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Nginx Documentation](https://nginx.org/en/docs/)
@@ -459,24 +450,16 @@ Designed and implemented a complete permission system from scratch covering both
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
 - [cAdvisor GitHub Repository](https://github.com/google/cadvisor)
-
-### Auth References
--  [portswigger jwt documentation](https://portswigger.net/web-security/jwt#what-are-jwts)
--  [Authentication flow on the web](https://jsmastery.com/blogs/authentication-flow-on-the-web)
+- [portswigger jwt documentation](https://portswigger.net/web-security/jwt#what-are-jwts)
+- [Authentication flow on the web](https://jsmastery.com/blogs/authentication-flow-on-the-web)
 - [Password storage methods](https://www.youtube.com/watch?v=qgpsIBLvrGY)
 - [Oauth 2.0](https://oauth.net/2/)
 - [Access and Refresh tokens](https://www.geeksforgeeks.org/javascript/access-token-vs-refresh-token-a-breakdown/)
-
-### Marketplace References
-- ...
-### Chat References
 - [Socket.IO documentation](https://socket.io/docs/v4/)
 - [Socket.IO client API](https://socket.io/docs/v4/client-api/)
 - [Redis Pub/Sub](https://redis.io/docs/latest/develop/interact/pubsub/)
 - [Redis Sets](https://redis.io/docs/latest/develop/data-types/sets/)
 - [Prisma documentation](https://www.prisma.io/docs)
 - [express-rate-limit](https://express-rate-limit.mintlify.app/)
-
-### Analytics References
 - [Recharts Guide](https://recharts.github.io/en-US/guide/getting-started/)
 - [Papaparse Docs](https://www.papaparse.com/docs)
