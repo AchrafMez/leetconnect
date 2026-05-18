@@ -24,7 +24,8 @@ export default function ChatInput({onSend}: ChatInputProp) {
 			await onSend(trimmed);
 			setText("");
 		} catch (err) {
-			// if (!rl.handle(err)) console.error('Send failed:', err instanceof Error ? err.message : err);
+			rl.handle(err);
+				// console.error('Send failed:', err instanceof Error ? err.message : err);
 		} finally {
 			setSending(false);
 		}
