@@ -1,5 +1,6 @@
-// Seed script for auth_db and chat_db
+// Seed script for auth_db, chat_db, admin_db, analytics_db and market_db
 // Run: docker cp scripts/seed.js auth:/tmp/seed.js && docker exec auth node /tmp/seed.js
+// Mints 5 users (eve = ADMIN) with chat + marketplace mock data, mirrored to admin/analytics shadow tables.
 
 const { Client } = require('pg');
 const bcrypt = require('bcryptjs');
@@ -103,13 +104,19 @@ async function seed() {
 	const hash = await bcrypt.hash('Test1234', 12);
 	const now = new Date().toISOString();
 
-	// ── Connect to both databases ──
-	const authDb = new Client({ connectionString: 'postgresql://auth_user:auth_pass@postgres:5432/auth_db' });
-	const chatDb = new Client({ connectionString: 'postgresql://chat_user:chat_pass@postgres:5432/chat_db' });
+	// ── Connect to all five databases ──
+	const authDb      = new Client({ connectionString: 'postgresql://auth_user:auth_pass@postgres:5432/auth_db' });
+	const chatDb      = new Client({ connectionString: 'postgresql://chat_user:chat_pass@postgres:5432/chat_db' });
+	const adminDb     = new Client({ connectionString: 'postgresql://admin_user:admin_pass@postgres:5432/admin_db' });
+	const analyticsDb = new Client({ connectionString: 'postgresql://analytics_user:analytics_pass@postgres:5432/analytics_db' });
+	const marketDb    = new Client({ connectionString: 'postgresql://market_user:market_pass@postgres:5432/market_db' });
 	await authDb.connect();
 	await chatDb.connect();
+	await adminDb.connect();
+	await analyticsDb.connect();
+	await marketDb.connect();
 
-	console.log('connected to both databases');
+	console.log('connected to all 5 databases');
 
 	// ── Clean existing data ──
 	await authDb.query('TRUNCATE "RefreshToken" CASCADE');
@@ -120,6 +127,14 @@ async function seed() {
 	await chatDb.query('TRUNCATE "FriendRequest" CASCADE');
 	await chatDb.query('TRUNCATE "Notification" CASCADE');
 	await chatDb.query('TRUNCATE "User" CASCADE');
+	await adminDb.query('TRUNCATE "Job" CASCADE');
+	await adminDb.query('TRUNCATE "User" CASCADE');
+	await analyticsDb.query('TRUNCATE "Job" CASCADE');
+	await analyticsDb.query('TRUNCATE "User" CASCADE');
+	await marketDb.query('TRUNCATE "Payment" CASCADE');
+	await marketDb.query('TRUNCATE "Review" CASCADE');
+	await marketDb.query('TRUNCATE "Proposal" CASCADE');
+	await marketDb.query('TRUNCATE "Job" CASCADE');
 
 	console.log('cleared existing data');
 
@@ -250,14 +265,179 @@ async function seed() {
 	}
 	console.log(`created ${notifs.length} notifications`);
 
+	// ── Seed admin_db users (shadow) ──
+	for (const u of USERS) {
+		await adminDb.query(
+			`INSERT INTO "User" (id, email, username, firstname, lastname, role, type, avatar, "isOnline", "twoFAEnabled", "createdAt", "updatedAt")
+			 VALUES ($1, $2, $3, $4, $5, $6::"Role", $7::"UserType", $8, false, false, $9, $9)`,
+			[u.id, u.email, u.username, u.firstname, u.lastname, u.role, u.type, u.avatar || '/avatars/default.png', now]
+		);
+	}
+	console.log(`seeded ${USERS.length} users in admin_db`);
+
+	// ── Seed analytics_db users (shadow) ──
+	for (const u of USERS) {
+		await analyticsDb.query(
+			`INSERT INTO "User" (id, email, username, firstname, lastname, role, type, avatar, "isOnline", "twoFAEnabled", "createdAt", "updatedAt")
+			 VALUES ($1, $2, $3, $4, $5, $6::"Role", $7::"UserType", $8, false, false, $9, $9)`,
+			[u.id, u.email, u.username, u.firstname, u.lastname, u.role, u.type, u.avatar || '/avatars/default.png', now]
+		);
+	}
+	console.log(`seeded ${USERS.length} users in analytics_db`);
+
+	// ── Jobs (marketplace = source of truth, mirrored to admin & analytics) ──
+	// Alice and Charlie are CLIENTS, Bob and Diana are FREELANCERS.
+	// status mapping: market(canonical) → admin(active|flagged|closed) → analytics(active|flagged|closed|in_progress|completed)
+	const JOBS = [
+		{
+			id: '1111aaaa-1111-4111-8111-111111111111',
+			title: 'Build a React analytics dashboard',
+			description: 'Need a responsive analytics dashboard with charts, dark mode, and 5 main pages. Recharts preferred.',
+			category: 'Web Development',
+			budget: 2800,
+			skills: ['React', 'TypeScript', 'Tailwind', 'Recharts'],
+			clientId: ALICE,
+			postedByName: 'alice',
+			marketStatus: 'COMPLETED',
+			adminStatus:  'closed',
+			analyticsStatus: 'completed',
+		},
+		{
+			id: '2222bbbb-2222-4222-8222-222222222222',
+			title: 'Real-time chat module with Socket.IO',
+			description: 'Looking for help integrating Socket.IO for a real-time messaging feature. Backend already in Node.js.',
+			category: 'Backend',
+			budget: 1500,
+			skills: ['Node.js', 'Socket.IO', 'TypeScript'],
+			clientId: ALICE,
+			postedByName: 'alice',
+			marketStatus: 'OPEN',
+			adminStatus:  'active',
+			analyticsStatus: 'active',
+		},
+		{
+			id: '3333cccc-3333-4333-8333-333333333333',
+			title: 'Database schema and ERD for SaaS MVP',
+			description: 'Need a database designer to draft Postgres schema + ERD for Project Alpha (SaaS).',
+			category: 'Database',
+			budget: 900,
+			skills: ['PostgreSQL', 'ERD', 'Schema Design'],
+			clientId: CHARLIE,
+			postedByName: 'charlie',
+			marketStatus: 'OPEN',
+			adminStatus:  'active',
+			analyticsStatus: 'active',
+		},
+	];
+
+	for (const j of JOBS) {
+		// marketplace (canonical)
+		await marketDb.query(
+			`INSERT INTO "Job" (id, title, category, budget, description, skills, status, "clientId", "createdAt", "updatedAt")
+			 VALUES ($1, $2, $3, $4, $5, $6, $7::"JobStatus", $8, $9, $9)`,
+			[j.id, j.title, j.category, j.budget, j.description, j.skills, j.marketStatus, j.clientId, now]
+		);
+		// admin (shadow)
+		await adminDb.query(
+			`INSERT INTO "Job" (id, title, description, budget, category, "clientId", status, "createdAt", proposals, skills, "postedByName")
+			 VALUES ($1, $2, $3, $4, $5, $6, $7::"JobStatus", $8, 0, $9, $10)`,
+			[j.id, j.title, j.description, j.budget, j.category, j.clientId, j.adminStatus, now, j.skills, j.postedByName]
+		);
+		// analytics (shadow)
+		await analyticsDb.query(
+			`INSERT INTO "Job" (id, title, description, budget, category, "clientId", status, "createdAt", proposals, skills, "postedByName")
+			 VALUES ($1, $2, $3, $4, $5, $6, $7::"JobStatus", $8, 0, $9, $10)`,
+			[j.id, j.title, j.description, j.budget, j.category, j.clientId, j.analyticsStatus, now, j.skills, j.postedByName]
+		);
+	}
+	console.log(`seeded ${JOBS.length} jobs across market_db / admin_db / analytics_db`);
+
+	// ── Proposals (marketplace only) ──
+	const PROPOSALS = [
+		{
+			id: 'p1111111-1111-4111-8111-111111111111',
+			coverLetter: 'I have built several React dashboards with Recharts. Can deliver in 3 weeks.',
+			proposedBudget: 2800,
+			deliveryDays: 21,
+			status: 'ACCEPTED',
+			freelancerId: BOB,
+			jobId: JOBS[0].id,
+		},
+		{
+			id: 'p2222222-2222-4222-8222-222222222222',
+			coverLetter: 'Socket.IO is my specialty. Happy to start this week.',
+			proposedBudget: 1400,
+			deliveryDays: 10,
+			status: 'PENDING',
+			freelancerId: DIANA,
+			jobId: JOBS[1].id,
+		},
+		{
+			id: 'p3333333-3333-4333-8333-333333333333',
+			coverLetter: 'I can draft the full ERD and schema in under a week.',
+			proposedBudget: 900,
+			deliveryDays: 5,
+			status: 'PENDING',
+			freelancerId: BOB,
+			jobId: JOBS[2].id,
+		},
+	];
+
+	for (const p of PROPOSALS) {
+		await marketDb.query(
+			`INSERT INTO "Proposal" (id, "coverLetter", "proposedBudget", "deliveryDays", status, "rejectionCount", "freelancerId", "jobId", "createdAt")
+			 VALUES ($1, $2, $3, $4, $5::"ProposalStatus", 0, $6, $7, $8)`,
+			[p.id, p.coverLetter, p.proposedBudget, p.deliveryDays, p.status, p.freelancerId, p.jobId, now]
+		);
+	}
+	console.log(`seeded ${PROPOSALS.length} proposals in market_db`);
+
+	// ── Payment for the accepted proposal (Bob → Alice's dashboard job) ──
+	await marketDb.query(
+		`INSERT INTO "Payment" (id, amount, status, "proposalId", "jobId", "clientId", "freelancerId", "createdAt", "updatedAt")
+		 VALUES ($1, $2, $3::"PaymentStatus", $4, $5, $6, $7, $8, $8)`,
+		[
+			'pay11111-1111-4111-8111-111111111111',
+			2800,
+			'PAID',
+			PROPOSALS[0].id,
+			JOBS[0].id,
+			ALICE,
+			BOB,
+			now,
+		]
+	);
+	console.log('seeded 1 payment in market_db');
+
+	// ── Review (Alice rates Bob for the completed dashboard job) ──
+	await marketDb.query(
+		`INSERT INTO "Review" (id, rating, comment, "fromUserId", "toUserId", "jobId", "createdAt")
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		[
+			'rev11111-1111-4111-8111-111111111111',
+			5,
+			'Bob delivered on time and the dashboard looks great. Highly recommended.',
+			ALICE,
+			BOB,
+			JOBS[0].id,
+			now,
+		]
+	);
+	console.log('seeded 1 review in market_db');
+
 	// ── Done ──
 	await authDb.end();
 	await chatDb.end();
+	await adminDb.end();
+	await analyticsDb.end();
+	await marketDb.end();
 
 	console.log('\n--- seed complete ---');
-	console.log('users: alice, bob, charlie, diana, eve');
-	console.log('password for all: Test1234');
-	console.log(`conversations: ${convers1} (alice+bob, ${aliceBobMessages.length} msgs), ${convers2} (group, ${groupMessages.length} msgs), ${convers3} (bob+diana, ${bobDianaMessages.length} msgs)`);
+	console.log('users:    alice, bob, charlie, diana, eve (ADMIN)');
+	console.log('password: Test1234');
+	console.log(`chat:     ${convers1} (alice+bob, ${aliceBobMessages.length} msgs), ${convers2} (group, ${groupMessages.length} msgs), ${convers3} (bob+diana, ${bobDianaMessages.length} msgs)`);
+	console.log(`market:   ${JOBS.length} jobs, ${PROPOSALS.length} proposals, 1 payment, 1 review`);
+	console.log(`shadows:  users + jobs mirrored to admin_db and analytics_db`);
 }
 
 seed().catch(err => { console.error('seed failed:', err); process.exit(1); });
