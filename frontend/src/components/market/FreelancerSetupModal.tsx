@@ -92,8 +92,11 @@ export default function FreelancerSetupModal() {
         updateUser(res.user);
         setIsOpen(false);
       }
+      else {
+        setError(res.message || "Failed to complete setup. Please try again.");
+      }
     } catch (err: any) {
-      console.error("Failed to update profile:", err);
+    //   console.error("Failed to update profile:", err);
       setError(err.message || "Failed to complete setup. Please try again.");
     } finally {
       setLoading(false);
@@ -125,7 +128,7 @@ export default function FreelancerSetupModal() {
             </div>
           </div>
         </DialogHeader>
-
+    
         {error && (
           <div className="p-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 mt-2 whitespace-pre-wrap">
             <p className="text-sm font-medium">{error}</p>
@@ -152,9 +155,11 @@ export default function FreelancerSetupModal() {
               id="rate"
               type="number"
               required
+              min="5"
               placeholder="45"
               value={formData.rate}
               onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+              onKeyDown={(e) => ["-", "+", "e", "E"].includes(e.key) && e.preventDefault()}
             />
           </div>
 
@@ -226,6 +231,7 @@ export default function FreelancerSetupModal() {
             <Textarea
               id="bio"
               rows={3}
+              maxLength={300}
               placeholder="Briefly describe your expertise..."
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}

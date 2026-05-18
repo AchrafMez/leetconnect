@@ -189,7 +189,6 @@ export const JobsPage = () => {
 				const data = await adminApi.getJobs(params);
 				setJobs(data);
 			} catch (error: any) {
-				console.error('Failed to fetch jobs: ', error);
 				setError(error.message || 'Failed to fetch jobs');
 			} finally {
 				setLoading(false);

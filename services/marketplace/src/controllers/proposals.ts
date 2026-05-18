@@ -105,7 +105,7 @@ export const addProposal = async (req: Request, res: Response) => {
 
     return res.json({ success: true, proposal });
   } catch (error: any) {
-    console.error("addProposal error:", error);
+    // console.error("addProposal error:", error);
     return res.status(500).json({ success: false, message: "Failed to submit proposal" });
   }
 };
@@ -140,7 +140,7 @@ export const getJobProposals = async (req: Request, res: Response) => {
       return res.json({ success: true, proposals });
     }
   } catch (error: any) {
-    console.error("getJobProposals error:", error);
+    // console.error("getJobProposals error:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch proposals" });
   }
 };
@@ -161,7 +161,7 @@ export const getMyProposals = async (req: Request, res: Response) => {
 
     return res.json({ success: true, proposals });
   } catch (error: any) {
-    console.error("getMyProposals error:", error);
+    // console.error("getMyProposals error:", error);
     return res.status(500).json({ success: false, message: "Failed to fetch proposals" });
   }
 };
@@ -278,7 +278,7 @@ export const acceptProposal = async (req: Request, res: Response) => {
       payment,
     });
   } catch (error: any) {
-    console.error("acceptProposal error:", error);
+    // console.error("acceptProposal error:", error);
     return res.status(500).json({ success: false, message: "Failed to accept proposal" });
   }
 };
@@ -328,7 +328,7 @@ export const rejectProposal = async (req: Request, res: Response) => {
 
     return res.json({ success: true, proposal });
   } catch (error: any) {
-    console.error("rejectProposal error:", error);
+    // console.error("rejectProposal error:", error);
     return res.status(500).json({ success: false, message: "Failed to reject proposal" });
   }
 };

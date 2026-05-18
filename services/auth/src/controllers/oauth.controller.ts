@@ -20,6 +20,7 @@ export const handleOAuthSuccess = async (req: Request, res: Response, next: Next
         res.cookie('refreshToken', refreshToken.token, {
             httpOnly: true,
             secure: true,
+            // sameSite: 'lax', // Use lax instead of strict for OAuth cross-site redirects
             sameSite: 'strict',
             path: '/api/auth/refresh',
             maxAge: 7 * 24 * 60 * 60 * 1000
@@ -33,7 +34,8 @@ export const handleOAuthSuccess = async (req: Request, res: Response, next: Next
         
         // const frontendUrl = `${protocol}://${currentHost}`;
     
-        res.redirect(`${process.env.FRONTEND_URL || 'https://localhost'}/dashboard`); // change to /freedashboard later
+        // res.redirect(`${process.env.FRONTEND_URL || 'https://localhost'}/dashboard`); // change to /freedashboard later
+        res.redirect(`${process.env.FRONTEND_URL || 'https://localhost'}/market/dashboard`); // change to /freedashboard later
     } catch (error) {
         next(error);
     }

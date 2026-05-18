@@ -41,7 +41,7 @@ function subscribeToEvents(
     try {
       handler(channel, JSON.parse(message));
     } catch (err) {
-      console.error('Failed to parse event:', (err as Error).message);
+    //   console.error('Failed to parse event:', (err as Error).message);
     }
   });
 }

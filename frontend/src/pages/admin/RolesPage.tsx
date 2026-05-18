@@ -39,7 +39,6 @@ export const RolesPage = () => {
 				setRoles(data);
 				if(data.length > 0) setSelectedId(data[0]!.id);
 			} catch (error: any) {
-				console.error('Failed to fetch permissions: ', error.message);
 				setError(error.message || 'Failed to fetch roles');
 			} finally {
 				setLoading(false);

@@ -38,7 +38,6 @@ export const DashboardPage = () => {
 				setUsers(fetchedUsers);
 				setJobs(fetchedJobs);
 			} catch(error: any) {
-				console.error("Failed to fetch dashboard data: ", error);
 				setError(error.message || "Faled to fetch dashboard data");
 			} finally {
 				setLoading(false);

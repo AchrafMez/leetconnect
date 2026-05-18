@@ -2,21 +2,30 @@ import { Router } from "express";
 import { addJob, getAllJobs, getMyJobs, getSingleJob, updateJob, deleteJob, pay, getPaymentById, submitReview, getUserReviews, completeJob } from "../controllers/jobs";
 import { authMiddleware, requireType } from "@leetconnect/shared";
 import { validateJob, validateJobUpdate, validateReview, validateIdParam } from "../middlewares/validate";
-import { rateLimit} from "express-rate-limit";
+import { rateLimit , ipKeyGenerator } from "express-rate-limit";
 const router = Router();
 
 const browseLimiter = rateLimit({
   windowMs: 60 * 1000, 
   max: 120,
-  keyGenerator: (req) => req.ip ?? "unknown",
+  message: { message: 'Too many requests, please slow down'},
+	standardHeaders: true,
+	legacyHeaders: false,
+  keyGenerator: (req) => {
+	return (req as any).user?.userId ?? ipKeyGenerator(req.ip ?? '');
+}
 });
 
 
 const writeLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
-  keyGenerator: (req) =>
-    (req as any).user?.userId ?? req.ip ?? "unknown",
+  message: { message: 'Too many modification requests' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+	return (req as any).user?.userId ?? ipKeyGenerator(req.ip ?? '');
+}
 });
 
 // Job CRUD

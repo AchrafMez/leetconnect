@@ -4,14 +4,14 @@ import { prisma } from "../../config/prisma";
 const MARKET_TO_ADMIN_STATUS: Record<string, string> = {
   OPEN: 'active',
   FLAGGED: 'flagged',
-  COMPLETED: 'completed',
+  COMPLETED: 'closed',
   CLOSED: 'closed',
 };
 
 function mapJobStatus(marketStatus: string): string {
   const mapped = MARKET_TO_ADMIN_STATUS[marketStatus];
   if (!mapped) {
-    console.warn(`[JOB_HANDLER] Unknown marketplace status: "${marketStatus}" — defaulting to active`);
+    // console.warn(`[JOB_HANDLER] Unknown marketplace status: "${marketStatus}" — defaulting to active`);
     return 'active';
   }
   return mapped;
@@ -22,7 +22,7 @@ export const handleJobCreated = async (channel: string, message: any) => {
   try {
     const payload = message.data || {};
     if (!payload.jobId || !payload.title) {
-        console.warn("Invalid job created payload", payload);
+        // console.warn("Invalid job created payload", payload);
         return;
     }
     
@@ -32,7 +32,7 @@ export const handleJobCreated = async (channel: string, message: any) => {
     });
 
     if (!user) {
-      console.warn(`User with id ${payload.clientId} not found. Cannot create job ${payload.jobId}.`);
+      // console.warn(`User with id ${payload.clientId} not found. Cannot create job ${payload.jobId}.`);
       return;
     }
 
@@ -52,9 +52,7 @@ export const handleJobCreated = async (channel: string, message: any) => {
         createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
       },
     });
-  } catch (error) {
-    console.error("Error handling job created event", error);
-  }
+  } catch (error) { }
 };
 
 export const handleJobUpdated = async (channel: string, message: any) => {
@@ -78,7 +76,7 @@ export const handleJobUpdated = async (channel: string, message: any) => {
       // Check if job exists first
       const job = await prisma.job.findUnique({ where: { id: payload.jobId } });
       if (!job) {
-         console.warn(`Job with id ${payload.jobId} not found, cannot update.`);
+        //  console.warn(`Job with id ${payload.jobId} not found, cannot update.`);
          return;
       }
       await prisma.job.update({
@@ -86,9 +84,7 @@ export const handleJobUpdated = async (channel: string, message: any) => {
         data,
       });
     }
-  } catch (error) {
-    console.error("Error handling job updated event", error);
-  }
+  } catch (error) { }
 };
 
 export const handleJobDeleted = async (channel: string, message: any) => {
@@ -100,14 +96,12 @@ export const handleJobDeleted = async (channel: string, message: any) => {
     // Check if job exists first
     const job = await prisma.job.findUnique({ where: { id: payload.jobId } });
     if (!job) {
-       console.warn(`Job with id ${payload.jobId} not found, cannot delete.`);
+      //  console.warn(`Job with id ${payload.jobId} not found, cannot delete.`);
        return;
     }
 
     await prisma.job.delete({
       where: { id: payload.jobId },
     });
-  } catch (error) {
-    console.error("Error handling job deleted event", error);
-  }
+  } catch (error) { }
 };

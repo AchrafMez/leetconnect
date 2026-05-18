@@ -19,9 +19,9 @@ export async function handleUserRegistred(channel: string, message: any): Promis
       }
 		});
 
-		console.log(`[EVENT] USER_REGISTERED — synced user ${username}`);
+		// console.log(`[EVENT] USER_REGISTERED — synced user ${username}`);
 	} catch (error) {
-		console.error('[EVENT] USER_REGISTERED — sync failed:', error);
+		// console.error('[EVENT] USER_REGISTERED — sync failed:', error);
 	}
 }
 
@@ -35,14 +35,14 @@ export async function handleUserUpdated(channel: string, message: any): Promise<
 			data: { username, avatar, firstname, lastname, email},
 		});
 		
-		console.log(`[EVENT] USER_UPDATED — synced user ${username}`);
+		// console.log(`[EVENT] USER_UPDATED — synced user ${username}`);
 	} catch (error) {
 		const { id } = message.data;
 		if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] USER_UPDATED — user ${id} not in local DB yet, skipping`);
+    //   console.warn(`[EVENT] USER_UPDATED — user ${id} not in local DB yet, skipping`);
       return;
     }
-    console.error('[EVENT] USER_UPDATED — sync failed:', error);
+    // console.error('[EVENT] USER_UPDATED — sync failed:', error);
 	}
 }
 
@@ -56,14 +56,14 @@ export async function handleUserUpdatedAdmin(channel: string, message: any): Pro
 			data: { role, status },
 		});
 
-		console.log(`[EVENT] USER_UPDATED_ADMIN — synced user ${username}`);
+		// console.log(`[EVENT] USER_UPDATED_ADMIN — synced user ${username}`);
 	} catch (error) {
 		const { id } = message.data;
 		if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] USER_UPDATED_ADMIN — user ${id} not in local DB yet, skipping`);
+    //   console.warn(`[EVENT] USER_UPDATED_ADMIN — user ${id} not in local DB yet, skipping`);
       return;
     }
-    console.error('[EVENT] USER_UPDATED_ADMIN — sync failed:', error);
+    // console.error('[EVENT] USER_UPDATED_ADMIN — sync failed:', error);
 	}
 }
 
@@ -77,13 +77,13 @@ export async function handleUserDeleted(channel: string, message: any): Promise<
 			where: { id }
 		})
 
-		console.log(`[EVENT] USER_DELETED — synced user ${username}`);
+		// console.log(`[EVENT] USER_DELETED — synced user ${username}`);
 	} catch (error) {
 		const { id } = message.data;
 		if ((error as any)?.code === 'P2025') {
-      console.warn(`[EVENT] USER_DELETED — user ${id} not in local DB yet, skipping`);
+    //   console.warn(`[EVENT] USER_DELETED — user ${id} not in local DB yet, skipping`);
       return;
     }
-    console.error('[EVENT] USER_DELETED — sync failed:', error);
+    // console.error('[EVENT] USER_DELETED — sync failed:', error);
 	}
 }

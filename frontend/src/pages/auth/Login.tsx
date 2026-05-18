@@ -72,6 +72,7 @@ export default function Login() {
         };
         
         setError(messages[code] || 'OAuth sign-in failed.');
+        localStorage.removeItem('isAuthenticated');
 
         // remove it from URL after showing once
         searchParams.delete('oauth_error');
@@ -114,13 +115,6 @@ export default function Login() {
                 return;
             }
             // Navigate to dashboard
-            // console.log("type", result.user?.type);
-            // console.log(result.user);
-            // if (result.user?.type == "FREELANCER"){
-            //     navigate('/freedashboard');
-            // } else {
-            //     navigate('/dashboard');
-            // }
             navigate('/dashboard');
 
         } catch (err: any) {
@@ -156,6 +150,7 @@ export default function Login() {
         // dynamic
         // window.location.origin automatically becomes "https://10.12.4.4" 
         // or "https://localhost" based on the URL in the browser bar.
+        localStorage.setItem('isAuthenticated', 'true');
         window.location.href = `${window.location.origin}/api/auth/42`;
     };
 

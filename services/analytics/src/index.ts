@@ -35,6 +35,25 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes (health must be before auth middleware)
 // app.use('/api/analytics', healthRoutes);
+
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on('finish', () => {
+	const durationSeconds = (Date.now() - start) / 1000;
+	const route = req.route?.path ?? req.path;
+	const labels = {
+	  method: req.method,
+	  route,
+	  status_code: String(res.statusCode),
+	};
+
+	httpRequestDuration.observe(labels, durationSeconds);
+	httpRequestsTotal.inc(labels);
+  });
+
+  next();
+});
 app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', 'text/plain; version=0.0.4');
   res.send(await getMetrics());
@@ -45,6 +64,7 @@ app.use(authMiddleware);
 app.use('/api/admin/analytics', analyticsRoutes);
 
 app.use(errorHandler);
+
 
 let server: Server;
 
@@ -64,24 +84,6 @@ const startServer = async () => {
 };
 startServer();
 
-app.use((req, res, next) => {
-  const start = Date.now();
-
-  res.on('finish', () => {
-    const durationSeconds = (Date.now() - start) / 1000;
-    const route = req.route?.path ?? req.path;
-    const labels = {
-      method: req.method,
-      route,
-      status_code: String(res.statusCode),
-    };
-
-    httpRequestDuration.observe(labels, durationSeconds);
-    httpRequestsTotal.inc(labels);
-  });
-
-  next();
-});
 
 const gracefulShutdown = async (signal: string) => {
   console.log(`${signal} received. Shutting down gracefully...`);

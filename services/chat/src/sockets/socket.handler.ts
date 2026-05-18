@@ -44,7 +44,7 @@ export function setup_sockets(io: Server) {
 		try {
 			await mark_online(io, userId, socket.id);
 		} catch (err) {
-			console.error('[presence] mark_online failed:', (err as Error).message);
+			// console.error('[presence] mark_online failed:', (err as Error).message);
 		}
 		socket.on('watch_presence', (ids: unknown) => {
 			if (!Array.isArray(ids)) return;
@@ -81,7 +81,7 @@ export function setup_sockets(io: Server) {
 			try {
 				await mark_offline(io, userId, socket.id);
 			} catch(err) {
-				console.error('[presence] mark_offline failed:', (err as Error).message);
+				// console.error('[presence] mark_offline failed:', (err as Error).message);
 			}
 		});
 	});

@@ -42,7 +42,6 @@ export const UsersPage = () => {
 				const data = await adminApi.getUsers(params);
 				setUsers(data);
 			} catch (error: any) {
-				console.error("Failed to fetch users: ", error.message);
 				setError(error.message || "Failed to fetch users");
 			} finally {
 				setLoading(false);
@@ -57,7 +56,6 @@ export const UsersPage = () => {
 				const data = await adminApi.getUsers();
 				setAllUsers(data);
 			} catch (error: any) {
-				console.error('Failed to fetch users: ', error.message);
 				setError(error.message || "Failed to fetch users");
 			}
 		}

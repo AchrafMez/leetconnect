@@ -169,6 +169,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      if (localStorage.getItem('isAuthenticated') !== 'true') {
+        setLoading(false);
+        return;
+      }
       try {
         // Instead of /me, try to get a new token from the cookie immediately
         // This populates the _accessToken in api.ts RAM
@@ -178,6 +182,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(userData);
       } catch {
         setUser(null);
+        localStorage.removeItem('isAuthenticated');
       } finally {
         setLoading(false);
       }
@@ -190,6 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const handleForceLogout = () => {
       setAccessToken(null);
       setUser(null);
+      localStorage.removeItem('isAuthenticated');
     };
     window.addEventListener('force-logout', handleForceLogout);
     return () => window.removeEventListener('force-logout', handleForceLogout);
@@ -211,6 +217,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // normal login
     setAccessToken(res.accessToken!);
     setUser(res.user!);
+    localStorage.setItem('isAuthenticated', 'true');
 
     return { requires2FA: false, user: res.user!};
   };
@@ -219,6 +226,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const res = await authApi.login2FA(tempToken, code);
     setAccessToken(res.accessToken);
     setUser(res.user!);
+    localStorage.setItem('isAuthenticated', 'true');
   };
 
   const register = async (data: any) => {
@@ -228,6 +236,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
     setAccessToken(res.accessToken);
     setUser(res.user);
+    localStorage.setItem('isAuthenticated', 'true');
   };
 
   const logout = async () => {
@@ -235,6 +244,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     disconnectSocket();
     setAccessToken(null);
     setUser(null);
+    localStorage.removeItem('isAuthenticated');
   };
 
   const updateUser = (updatedUser: User) => {

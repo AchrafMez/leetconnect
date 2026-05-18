@@ -11,7 +11,7 @@ import { RolesPage } from './RolesPage';
 import { ForbiddenPage } from '../ForbiddenPage';
 import { AnalyticsPage } from './AnalyticsPage';
 import { JobsPage } from './JobsPage';
-import { AdminLoginPage } from './AdminLoginPage';
+import AdminLoginPage from './AdminLoginPage';
 
 const Admin = () => {
   const [isMobile, setIsMobile] = useState(false);

@@ -200,8 +200,8 @@ services:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
       - prometheus_data:/prometheus
-    # ports:
-    #   - "9090:9090"
+    ports:
+      - "9090:9090"
     networks:
       - leetconnect
 
@@ -211,15 +211,15 @@ services:
     restart: unless-stopped
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
-      - GF_SECURITY_ADMIN_PASS=${GRAFANA_ADMIN_PASS}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASS}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_AUTH_ANONYMOUS_ENABLED=false
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
-    # ports:
-    #   - "3000:3000"
+    ports:
+      - "3000:3000"
     depends_on:
       - prometheus
     networks:
@@ -234,8 +234,8 @@ services:
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
-    # ports:
-    #   - "8080:8080"
+    ports:
+      - "8080:8080"
     networks:
       - leetconnect
 

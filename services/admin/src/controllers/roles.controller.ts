@@ -51,7 +51,6 @@ export const getRoles = async (req: Request, res: Response, next: NextFunction) 
 
 		return res.status(StatusCodes.OK).json(roles);
 	} catch (error) {
-		console.error('[getRoles]: ', error);
 		next(error);
 	}
 }

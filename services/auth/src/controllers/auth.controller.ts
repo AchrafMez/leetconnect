@@ -353,7 +353,7 @@ export const getAllFreelancers = async (_req: Request, res: Response) => {
 
     return res.json({success: true,freelancers,});
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return res.status(500).json({
       success: false,
       message: "Erreur serveur",
@@ -378,7 +378,7 @@ export const getAllClients = async (_req: Request, res: Response) => {
 
     return res.json({success: true,clients,});
   } catch (error) {
-    console.error(error);
+    // console.error(error);
     return res.status(500).json({
       success: false,
       message: "Erreur serveur",
@@ -429,7 +429,7 @@ export const getUserById = async (req: Request, res: Response) => {
     });
 
   } catch (error: any) {
-    console.error("GET USER BY ID ERROR:", error);
+    // console.error("GET USER BY ID ERROR:", error);
 
     return res.status(500).json({
       success: false,
@@ -624,7 +624,6 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
                 .webp({ quality: 80 })
                 .toFile(uploadPath);
         } catch (err){
-            // console.error('Sharp error:', err); 
             return res.status(400).json({ error: 'Invalid or corrupted image file' });
         }
 
@@ -639,8 +638,8 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
         if (existingUser?.avatar && existingUser.avatar.startsWith('/uploads/avatars/')) {
             const oldFilename = path.basename(existingUser.avatar.split('?')[0] as string);
             const oldPath = path.join(uploadDir, oldFilename);
-            fs.unlink(oldPath, (err) => {
-                if (err) console.warn('Could not delete old avatar:', err.message);
+            fs.unlink(oldPath, () => {
+                // if (err) console.warn('Could not delete old avatar:', err.message);
             });
         }
 
@@ -660,7 +659,7 @@ export const SetupProfile = async (req: Request, res: Response) => {
     const { category, skills, rate, expLevel, title, bio } = req.body;
 
     if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ success: false, message: 'Unauthorized',});
     }
 
     const authUser = req.user as JwtPayload;
@@ -699,7 +698,7 @@ export const SetupProfile = async (req: Request, res: Response) => {
     });
 
   } catch (error) {
-    console.log("SETUP ERROR =>", error);
+    // console.log("SETUP ERROR =>", error);
 
     return res.status(500).json({
       success: false,
