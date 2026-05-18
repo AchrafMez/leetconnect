@@ -145,6 +145,13 @@ async function start_chat_server() {
 						}
 					});
 				} else if (channel === ADMIN_EVENTS.USER_DELETED) {
+					try {
+						const sockets = await io.in(`user:${data.id}`).fetchSockets();
+						for (const socket of sockets)
+							socket.disconnect(true);
+					} catch (err) {
+						console.error('[user_deleted] socket disconnect failed:', (err as Error).message);
+					}
 					await prisma.user.delete({where: {id: data.id}}).catch((err: any) => {
 						console.error('failed to delete user:', (err as Error).message);
 						throw err;

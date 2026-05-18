@@ -193,6 +193,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const handleForceLogout = () => {
+      disconnectSocket();
       setAccessToken(null);
       setUser(null);
       localStorage.removeItem('isAuthenticated');
@@ -240,11 +241,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
-    await api('/auth/logout', { method: 'POST' });
-    disconnectSocket();
-    setAccessToken(null);
-    setUser(null);
-    localStorage.removeItem('isAuthenticated');
+    try {
+      await api('/auth/logout', { method: 'POST' });
+    } finally {
+      disconnectSocket();
+      setAccessToken(null);
+      setUser(null);
+      localStorage.removeItem('isAuthenticated');
+    }
   };
 
   const updateUser = (updatedUser: User) => {
