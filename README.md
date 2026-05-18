@@ -25,14 +25,7 @@ The backend is split into independent services behind an Nginx gateway, with Pos
 
 ### Required configuration (`.env`)
 
-At minimum, configure:
-
-- `POSTGRES_USER`, `POSTGRES_PASSWORD`
-- `AUTH_DB_*`, `MARKET_DB_*`, `CHAT_DB_*`, `ANALYTICS_DB_*`
-- `JWT_SECRET`
-- `REDIS_URL`
-- `GRAFANA_ADMIN_USER`, `GRAFANA_ADMIN_PASSWORD`
-- OAuth variables if OAuth login is tested locally (`GOOGLE_*`, `GITHUB_*`)
+- Check the `.env.example`, and update the `.env` depends on it.
 
 ### Run the project (step-by-step)
 
