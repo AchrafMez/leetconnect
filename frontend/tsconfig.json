@@ -37,7 +37,7 @@
       ]
     },
     // Recommended Options
-    "strict": true,
+    "strict": false,
     "jsx": "react-jsx",
     // "verbatimModuleSyntax": true,
     "isolatedModules": true,
