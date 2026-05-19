@@ -1,0 +1,29 @@
+{
+  "experimentalServices": {
+    "frontend": {
+      "entrypoint": "frontend",
+      "routePrefix": "/",
+      "framework": "vite"
+    },
+    "admin": {
+      "entrypoint": "services/admin",
+      "routePrefix": "/_/admin"
+    },
+    "analytics": {
+      "entrypoint": "services/analytics",
+      "routePrefix": "/_/analytics"
+    },
+    "auth": {
+      "entrypoint": "services/auth",
+      "routePrefix": "/_/auth"
+    },
+    "chat": {
+      "entrypoint": "services/chat",
+      "routePrefix": "/_/chat"
+    },
+    "marketplace": {
+      "entrypoint": "services/marketplace",
+      "routePrefix": "/_/marketplace"
+    }
+  }
+}
