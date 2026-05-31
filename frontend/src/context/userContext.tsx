@@ -4,7 +4,6 @@ import { authApi } from '../lib/api';
 import { disconnectSocket } from '@/lib/socket';
 import { canAccessMinRole, hasPermission as checkPermission } from '../lib/permissions';
 import type { Role, Permission } from '../types';
-import type { LoginRequest } from '../types/auth';
 
 
 type SkillsState = {
@@ -202,7 +201,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => window.removeEventListener('force-logout', handleForceLogout);
   }, []);
 
-  const login = async (data: LoginRequest): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
+  const login = async (data: any): Promise<{ requires2FA: boolean; tempToken?: string;user?: User;}> => {
      const res = await api<{ 
       accessToken?: string;
       user?: User;

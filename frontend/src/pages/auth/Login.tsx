@@ -9,7 +9,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { login: loginUser, login2FA, user } = useAuth();
+    const { login: loginUser, login2FA } = useAuth();
 
     // is the form currently sending to the server 
     const [loading, setLoading] = useState(false);

@@ -19,7 +19,6 @@ export default function ProfileSettings() {
     const [avatarError, setAvatarError] = useState(false);
     
     const isOAuthUser = !!user?.oauthProvider; 
-    const providerOauth = user?.oauthProvider;
 
     // 2FA
     const [is2FALoading, setIs2FALoading] = useState(false);

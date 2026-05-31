@@ -1,8 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import { categoriesData } from "../../assets/assets";
-import { context } from "../../context/context";
-import { freelencer } from "../../assets/assets";
 import { useAuth } from "@/context/userContext";
 
 type FilterModalProps = {

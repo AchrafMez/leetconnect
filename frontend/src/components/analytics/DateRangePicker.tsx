@@ -73,7 +73,7 @@ export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
 				<div className="flex items-center gap-2">
 					<div className="relative">
 						<DatePicker selected={value.from}
-              onChange={handleFromChange}
+              onChange={handleFromChange as any}
               selectsStart
               startDate={value.from}
               endDate={value.to}
@@ -87,12 +87,12 @@ export const DateRangePicker = ({ value, onChange }: DateRangePickerProps) => {
 					<span className="text-xs text-muted-foreground">→</span>
 
 					<div className="relative">
-            <DatePicker selected={value.to}
-              onChange={handleToChange}
+            <DatePicker selected={value.to as any}
+              onChange={handleToChange as any}
               selectsEnd
               startDate={value.from}
               endDate={value.to}
-              minDate={value.from ?? undefined}
+              minDate={value.from || new Date()}
               maxDate={new Date()}
               placeholderText="To"
               dateFormat="MMM d, yyyy"

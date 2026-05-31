@@ -36,9 +36,10 @@ const ProposalDetailsPage: React.FC = () => {
   const fetchProposal = async () => {
     try {
       setLoading(true);
-      const res = await proposalsApi.getProposalById(id)
+      if (!id) return;
+      const res = await proposalsApi.getProposalsByJob(id)
 
-      setProposal(res.proposal);
+      setProposal((res.proposals[0] as any) || null);
 
     } catch (error) {
     //   console.error(error);
