@@ -27,6 +27,9 @@
     "url": "https://github.com/leetconnect/leetconnect/issues"
   },
   "homepage": "https://github.com/leetconnect/leetconnect#readme",
+  "overrides": {
+    "rollup": "npm:@rollup/wasm-node"
+  },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.60.2",
     "@heroicons/react": "^2.2.0",
