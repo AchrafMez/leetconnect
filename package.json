@@ -14,7 +14,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
-    "docker:clean": "docker compose down -v --rmi all"
+    "docker:clean": "docker compose down -v --rmi all",
+    "vercel-build": "npm run build --workspace=@leetconnect/shared && npx prisma generate --schema=services/auth/prisma/schema.prisma && npx prisma generate --schema=services/marketplace/prisma/schema.prisma && npx prisma generate --schema=services/chat/prisma/schema.prisma && npx prisma generate --schema=services/analytics/prisma/schema.prisma && npx prisma generate --schema=services/admin/prisma/schema.prisma && npm run build --workspace=frontend"
   },
   "repository": {
     "type": "git",

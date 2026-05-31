@@ -2,14 +2,16 @@
   "version": 2,
   "framework": "vite",
   "installCommand": "npm install",
-  "buildCommand": "npm run build --workspace=frontend",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
     { "source": "/api/auth/:match*", "destination": "/services/auth/src/index.ts" },
     { "source": "/api/chat/:match*", "destination": "/services/chat/src/index.ts" },
+    { "source": "/api/friend/:match*", "destination": "/services/chat/src/index.ts" },
+    { "source": "/api/notifs/:match*", "destination": "/services/chat/src/index.ts" },
     { "source": "/api/admin/:match*", "destination": "/services/admin/src/index.ts" },
     { "source": "/api/analytics/:match*", "destination": "/services/analytics/src/index.ts" },
-    { "source": "/api/marketplace/:match*", "destination": "/services/marketplace/src/index.ts" },
-    { "source": "/(.*)", "destination": "/frontend/dist/index.html" }
+    { "source": "/api/market/:match*", "destination": "/services/marketplace/src/index.ts" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

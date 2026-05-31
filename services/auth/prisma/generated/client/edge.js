@@ -39,12 +39,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.6.0
- * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+ * Prisma Client JS version: 7.8.0
+ * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
  */
 Prisma.prismaVersion = {
-  client: "7.6.0",
-  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
+  client: "7.8.0",
+  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -171,8 +171,8 @@ exports.Prisma.ModelName = {
  */
 const config = {
   "previewFeatures": [],
-  "clientVersion": "7.6.0",
-  "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
+  "clientVersion": "7.8.0",
+  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
   "activeProvider": "postgresql",
   "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"./generated/client\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel User {\n  // Used String/UUID for better security in microservices to prevent IDOR attack :3\n  id       String @id @default(uuid())\n  email    String @unique\n  username String @unique\n\n  firstname String   @default(\"\")\n  lastname  String   @default(\"\")\n  status    Status   @default(active)\n  type      UserType @default(CLIENT)\n\n  // Optional password for OAuth users\n  password String?\n  role     Role    @default(USER)\n  avatar   String  @default(\"\")\n\n  // Presence state\n  isOnline Boolean @default(false)\n\n  skills      String[]\n  rating      Float    @default(0)\n  reviewCount Int      @default(0)\n  category    String[]\n  rate        Float?\n  expLevel    String?\n\n  // Security & 2FA\n  twoFASecret  String?\n  twoFAEnabled Boolean @default(false)\n\n  // OAuth fields\n  oauthProvider String?\n  oauthId       String?\n\n  // I used an array of refresh tokens because a user can log in from multiple devices \n  //thus have multiple refresh tokens\n  refreshTokens RefreshToken[] // Relation\n\n  // Timestamps\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  // for profile settings \n  bio      String?\n  location String?\n  website  String?\n  title    String?\n\n  // jobs          Job[]\n  // Ensures a unique combination of provider + ID\n  @@unique([oauthProvider, oauthId])\n}\n\n// old\n// enum Role {\n//   FREELANCER\n//   CLIENT\n//   ADMIN\n// }\n\n// to separe admin permissions from users\nenum Role {\n  ADMIN\n  USER\n  MODERATOR\n}\n\nenum UserType {\n  FREELANCER\n  CLIENT\n}\n\nenum Status {\n  active\n  suspended\n  pending\n}\n\nmodel RefreshToken {\n  id        String   @id @default(uuid())\n  token     String   @unique\n  userId    String // tells the database which user this token belongs to\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) // relation\n  revoked   Boolean  @default(false) //flag used to cancel the user session when the refresh token expired\n  expiresAt DateTime\n  createdAt DateTime @default(now())\n}\n"
 }

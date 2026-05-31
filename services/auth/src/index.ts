@@ -196,9 +196,9 @@ async function start() {
 
     if (process.env.NODE_ENV !== 'production') {
       app.listen(PORT, '0.0.0.0', () => {
-      console.log(`auth service running on port ${PORT}`);
+        console.log(`auth service running on port ${PORT}`);
+      });
     }
-    });
   } catch (err) {
     const error = err as Error;
     // console.error('auth service failed to start:', error.message);
