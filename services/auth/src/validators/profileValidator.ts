@@ -1,14 +1,12 @@
 import { body } from 'express-validator';
 import { URL } from 'url';
-import DOMPurify from 'isomorphic-dompurify';
 
-// helper function
-const rejectIfSus= (field: string, max: number, label: string) =>
+const rejectIfSus = (field: string, max: number, label: string) =>
     body(field).optional().trim()
         .isLength({ max }).withMessage(`${label} must be ${max} characters or less`)
         .custom(val => {
-            const sanitized = DOMPurify.sanitize(val, { ALLOWED_TAGS: [] });
-            if (sanitized !== val) throw new Error(`${label} contains invalid characters`);
+            const sanitized = val.replace(/<[^>]*>/g, '').trim();
+            if (sanitized !== val.trim()) throw new Error(`${label} contains invalid characters`);
             return true;
 });
 
@@ -28,20 +26,17 @@ export const updateProfileValidator = [
     body('email').optional().isEmail(),
 
     rejectIfSus('bio',      300, 'Bio'),
-
     rejectIfSus('location', 100, 'Location'),
-
     rejectIfSus('title',    100, 'Title'),
 
     body('website').optional().trim()
         .custom(val => {
-            const url = new URL(val); // throws if invalid
+            const url = new URL(val);
             if (!['http:', 'https:'].includes(url.protocol))
                 throw new Error('Invalid protocol');
             return true;
         }).isLength({ max: 200 }),
 
-    // check later
     body('avatar').optional().trim()
         .custom(val => {
             const url = new URL(val);
@@ -50,7 +45,6 @@ export const updateProfileValidator = [
             return true;
         }),
 ];
-
 
 export const changePasswordValidator = [
     body('currentPassword').notEmpty().withMessage('Current password required'),

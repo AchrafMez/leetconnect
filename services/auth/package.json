@@ -28,7 +28,6 @@
     "file-type": "^22.0.1",
     "helmet": "^8.1.0",
     "install": "^0.13.0",
-    "isomorphic-dompurify": "^3.11.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.1.1",
