@@ -6,11 +6,19 @@ import { redisClient } from './event-emitter';
 
 const publicKeyPath = process.env.JWT_PUBLIC_KEY_PATH as string;
 
-// We load the public key once on startup If it fails, the service won't start
-let publicKey: Buffer;
+// We load the public key once on startup. If it fails, the service won't start
+let publicKey: Buffer | string;
 try {
-    publicKey = fs.readFileSync(publicKeyPath);
-    console.log("JWT Public Key loaded successfully");
+    if (process.env.JWT_PUBLIC_KEY) {
+        // Vercel Serverless environment where the key is stored as a direct string
+        // Replace literal \n strings with actual newlines if they exist
+        publicKey = process.env.JWT_PUBLIC_KEY.replace(/\\n/g, '\n');
+        console.log("JWT Public Key loaded from environment variable");
+    } else {
+        // Docker/Local environment where key is a file
+        publicKey = fs.readFileSync(publicKeyPath);
+        console.log("JWT Public Key loaded from file successfully");
+    }
 } catch (err) {
     console.warn("JWT Public Key not found at startup. Middleware will fail until it's provided.");
 }

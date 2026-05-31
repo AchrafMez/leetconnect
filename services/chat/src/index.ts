@@ -199,9 +199,11 @@ async function start_chat_server() {
 				// console.error('[notif] sync failed:', (err as Error).message);
 			}
 		});
-		if (process.env.NODE_ENV !== 'production') { server.listen(PORT, () => {
-			console.log(`chat server running on port: ${PORT}`); }
-		});
+		if (process.env.NODE_ENV !== 'production') { 
+            server.listen(PORT, () => {
+			    console.log(`chat server running on port: ${PORT}`); 
+            });
+		}
 	} catch (err) {
 		// console.error('error accured:', (err as Error).message);
 		console.error('CHAT SERVER EXITING');

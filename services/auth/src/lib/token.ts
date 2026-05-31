@@ -5,8 +5,21 @@ import fs from 'fs'
 import { JwtPayload } from '@leetconnect/shared'; 
 import crypto from 'crypto';
 
-const privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
-const publicKey = fs.readFileSync(process.env.JWT_PUBLIC_KEY_PATH as string);
+// Read keys from direct ENV variables (Vercel Serverless) or fallback to file paths (Docker)
+let privateKey: Buffer | string;
+let publicKey: Buffer | string;
+
+try {
+    if (process.env.JWT_PRIVATE_KEY && process.env.JWT_PUBLIC_KEY) {
+        privateKey = process.env.JWT_PRIVATE_KEY.replace(/\\n/g, '\n');
+        publicKey = process.env.JWT_PUBLIC_KEY.replace(/\\n/g, '\n');
+    } else {
+        privateKey = fs.readFileSync(process.env.JWT_PRIVATE_KEY_PATH as string);
+        publicKey = fs.readFileSync(process.env.JWT_PUBLIC_KEY_PATH as string);
+    }
+} catch (err) {
+    console.warn("JWT Keys could not be loaded at startup.", err);
+}
 
 export const generateAccessToken = (payload: JwtPayload) => {
   return jwt.sign(payload, privateKey, {

@@ -6,7 +6,17 @@ import { redisClient } from '@leetconnect/shared';
 import prisma from '../config/config.database';
 import { mark_offline, mark_online } from '../lib/presence';
 
-const pub_key = fs.readFileSync(process.env.JWT_PUBLIC_KEY_PATH as string);
+// Load public key directly from environment or fallback to file path
+let pub_key: Buffer | string;
+try {
+    if (process.env.JWT_PUBLIC_KEY) {
+        pub_key = process.env.JWT_PUBLIC_KEY.replace(/\\n/g, '\n');
+    } else {
+        pub_key = fs.readFileSync(process.env.JWT_PUBLIC_KEY_PATH as string);
+    }
+} catch (err) {
+    console.warn("JWT Public Key could not be loaded at startup.", err);
+}
 
 export function setup_sockets(io: Server) {
 	io.use(async (socket, next) => {
