@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { authenticator } from '@otplib/v12-adapter';
+// import { authenticator } from '@otplib/v12-adapter';
+import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import prisma from '../lib/prisma';
 import { generateAccessToken, generateRefreshToken, verifyTempToken } from '../lib/token';
