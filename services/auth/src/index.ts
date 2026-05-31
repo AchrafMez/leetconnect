@@ -194,8 +194,10 @@ async function start() {
       }
     });
 
-    app.listen(PORT, '0.0.0.0', () => {
+    if (process.env.NODE_ENV !== 'production') {
+      app.listen(PORT, '0.0.0.0', () => {
       console.log(`auth service running on port ${PORT}`);
+    }
     });
   } catch (err) {
     const error = err as Error;
@@ -212,3 +214,4 @@ process.on('SIGTERM', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
+export default app;

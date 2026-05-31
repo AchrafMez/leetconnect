@@ -67,3 +67,7 @@ generated/
 /rate-limit-test.sh
 /.env.ip
 /audit_test.sh
+# Catch all environment variables in subdirectories
+**/.env
+**/.env.*
+!**/.env.example

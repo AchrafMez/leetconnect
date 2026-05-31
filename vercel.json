@@ -1,29 +1,14 @@
 {
-  "experimentalServices": {
-    "frontend": {
-      "entrypoint": "frontend",
-      "routePrefix": "/",
-      "framework": "vite"
-    },
-    "admin": {
-      "entrypoint": "services/admin",
-      "routePrefix": "/_/admin"
-    },
-    "analytics": {
-      "entrypoint": "services/analytics",
-      "routePrefix": "/_/analytics"
-    },
-    "auth": {
-      "entrypoint": "services/auth",
-      "routePrefix": "/_/auth"
-    },
-    "chat": {
-      "entrypoint": "services/chat",
-      "routePrefix": "/_/chat"
-    },
-    "marketplace": {
-      "entrypoint": "services/marketplace",
-      "routePrefix": "/_/marketplace"
-    }
-  }
+  "version": 2,
+  "framework": "vite",
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
+    { "source": "/api/auth/:match*", "destination": "/services/auth/src/index.ts" },
+    { "source": "/api/chat/:match*", "destination": "/services/chat/src/index.ts" },
+    { "source": "/api/admin/:match*", "destination": "/services/admin/src/index.ts" },
+    { "source": "/api/analytics/:match*", "destination": "/services/analytics/src/index.ts" },
+    { "source": "/api/marketplace/:match*", "destination": "/services/marketplace/src/index.ts" },
+    { "source": "/(.*)", "destination": "/frontend/dist/index.html" }
+  ]
 }

@@ -69,7 +69,7 @@ const startServer = async () => {
     await initEventBus();
     RegisterEventHandlers();
 
-    server = app.listen(PORT, () => {
+    if (process.env.NODE_ENV !== 'production') { server = app.listen(PORT, () => {
       console.log(`Admin Service listening on PORT ${PORT}...`);
     });
   } catch (error) {
@@ -109,3 +109,4 @@ process.on('uncaughtException', (err) => {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+export default app;

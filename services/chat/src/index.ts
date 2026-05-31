@@ -199,8 +199,8 @@ async function start_chat_server() {
 				// console.error('[notif] sync failed:', (err as Error).message);
 			}
 		});
-		server.listen(PORT, () => {
-			console.log(`chat server running on port: ${PORT}`);
+		if (process.env.NODE_ENV !== 'production') { server.listen(PORT, () => {
+			console.log(`chat server running on port: ${PORT}`); }
 		});
 	} catch (err) {
 		// console.error('error accured:', (err as Error).message);
@@ -220,3 +220,5 @@ async function server_exit() {
 
 process.on('SIGINT', server_exit);
 process.on('SIGTERM', server_exit);
+
+export default app;

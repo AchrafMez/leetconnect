@@ -76,7 +76,7 @@ async function start() {
     initEventBus(process.env.REDIS_URL as string);
     initConsumers();
 
-    app.listen(PORT, '0.0.0.0', () => {
+    if (process.env.NODE_ENV !== 'production') { app.listen(PORT, '0.0.0.0', () => {
       console.log(`Marketplace service running on port ${PORT}`);
     });
   } catch (err) {
@@ -95,3 +95,4 @@ process.on('SIGTERM', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
+export default app;

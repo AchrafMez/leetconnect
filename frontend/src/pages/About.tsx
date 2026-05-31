@@ -114,7 +114,7 @@ export default function About() {
           <div className="flex flex-wrap justify-center gap-x-0 md:gap-x-20 gap-y-12 max-w-[400px] md:max-w-3xl mx-auto">
             {[
               {name: 'Abdelali Mahfoudi', role: 'Project Owner', img: projectOwnerImg, delay: 100, href: 'https://github.com/abdelali77'},
-              {name: 'Nohaila Ben Aissa', role: 'Project Manager', img: projectManagerImg, delay: 200, href: 'https://github.com/Ak4ri-exe'},
+              {name: 'Nouhaila Ben Aissa', role: 'Project Manager', img: projectManagerImg, delay: 200, href: 'https://github.com/Ak4ri-exe'},
               {name: 'Achraf Meziouni', role: 'Tech Lead', img: techLeadImg, delay: 0, href: 'https://github.com/AchrafMez'},
               {name: 'Adham Bouras', role: 'Developer', img: developer1Img, delay: 300, href: 'https://github.com/42-adbouras'},
               {name: 'Nisrine Er Rouihi', role: 'Developer', img: developer2Img, delay: 400, href: 'https://github.com/0x00siza'},
