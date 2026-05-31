@@ -1,5 +1,8 @@
 {
   "name": "@leetconnect/admin-service",
+  "prisma": {
+    "binaryTargets": ["native", "rhel-openssl-3.0.x"]
+  },
   "version": "1.0.0",
   "description": "admin service",
   "main": "dist/index.js",
