@@ -591,6 +591,7 @@ export const uploadAvatar = async (req: Request, res: Response, next: NextFuncti
 
         // check ACTUAL magic bytes of the buffer
         // This catches spoofed MIME types (e.g. shell.php sent as image/jpeg)
+        // @ts-ignore
         const { fileTypeFromBuffer } = await import('file-type');
         
         const detected = await fileTypeFromBuffer(req.file.buffer);

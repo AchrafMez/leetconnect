@@ -76,9 +76,11 @@ async function start() {
     initEventBus(process.env.REDIS_URL as string);
     initConsumers();
 
-    if (process.env.NODE_ENV !== 'production') { app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Marketplace service running on port ${PORT}`);
-    });
+    if (process.env.NODE_ENV !== 'production') { 
+        app.listen(PORT, '0.0.0.0', () => {
+          console.log(`Marketplace service running on port ${PORT}`);
+        });
+    }
   } catch (err) {
     const error = err as Error;
     console.error('marketplace service failed to start:', error.message);

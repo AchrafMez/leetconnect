@@ -7,7 +7,7 @@ export const upload = multer({
     limits: {
         fileSize: 2 * 1024 * 1024, // 2MB
     },
-    fileFilter: (req, file, cb) => {
+    fileFilter: (req: any, file: any, cb: any) => {
         // MIME type from header (cheap, fast check)
         const allowed = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowed.includes(file.mimetype)) {

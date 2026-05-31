@@ -69,9 +69,11 @@ const startServer = async () => {
     await initEventBus();
     RegisterEventHandlers();
 
-    if (process.env.NODE_ENV !== 'production') { server = app.listen(PORT, () => {
-      console.log(`Admin Service listening on PORT ${PORT}...`);
-    });
+    if (process.env.NODE_ENV !== 'production') { 
+        server = app.listen(PORT, () => {
+          console.log(`Admin Service listening on PORT ${PORT}...`);
+        });
+    }
   } catch (error) {
     console.error('Critical failure during startup:', error);
     process.exit(1);
