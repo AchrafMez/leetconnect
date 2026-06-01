@@ -9,6 +9,7 @@ datasource db {
 
 
 model User {
+  @@map("analytics_users")
   id            String         @id @default(uuid())
   email         String         @unique
   username      String         @unique
@@ -50,16 +51,15 @@ enum Role {
   ADMIN
   USER
   MODERATOR
-}
 
-enum UserType {
-  FREELANCER
-  CLIENT
+  @@map("analytics_Role")
 }
 
 enum Status {
   active
   suspended
+
+  @@map("analytics_Status")
 }
 
 enum JobStatus {
@@ -68,4 +68,13 @@ enum JobStatus {
   closed
   in_progress
   completed
+
+  @@map("analytics_JobStatus")
+}
+
+enum UserType {
+  FREELANCER
+  CLIENT
+
+  @@map("analytics_UserType")
 }

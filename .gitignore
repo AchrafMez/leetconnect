@@ -71,3 +71,4 @@ generated/
 **/.env
 **/.env.*
 !**/.env.example
+dbpush.sh

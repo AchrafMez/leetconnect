@@ -113,99 +113,92 @@ start_chat_server();
 
 async function start_chat_server() {
 	try {
-		await prisma.$connect().then( () => {
+		await prisma.$connect().then(() => {
 			console.log('connected to database.');
 		});
 
-		initEventBus();
-		const handle_user_sync = async (channel: string, message: any) => {
-			try {
-				const data = message?.data;
-				if (!data?.id) return;
+		try {
+			initEventBus();
 
-				if (channel === AUTH_EVENTS.USER_REGISTERED) {
-					await prisma.user.upsert({
-						where:  {id: data.id},
-						update: {email: data.email, username: data.username,
-							firstname: data.firstname, lastname: data.lastname,
-							role: data.role, type: data.type, avatar: data.avatar
-						},
-						create: {id: data.id, email: data.email, username: data.username,
-							firstname: data.firstname, lastname: data.lastname,
-							role: data.role, type: data.type, avatar: data.avatar
-						}
-					});
-				} else if (channel === AUTH_EVENTS.USER_UPDATED) {
-					await prisma.user.update({
-					where: {id: data.id},
-					data:  {
-							email: data.email, username: data.username, firstname: data.firstname,
-							lastname: data.lastname, avatar: data.avatar, bio: data.bio,
-							location: data.location, website: data.website, title: data.title
-						}
-					});
-				} else if (channel === ADMIN_EVENTS.USER_DELETED) {
-					try {
-						const sockets = await io.in(`user:${data.id}`).fetchSockets();
-						for (const socket of sockets)
-							socket.disconnect(true);
-					} catch (err) {
-						// console.error('[user_deleted] socket disconnect failed:', (err as Error).message);
+			const handle_user_sync = async (channel: string, message: any) => {
+				try {
+					const data = message?.data;
+					if (!data?.id) return;
+
+					if (channel === AUTH_EVENTS.USER_REGISTERED) {
+						await prisma.user.upsert({
+							where:  {id: data.id},
+							update: {email: data.email, username: data.username,
+								firstname: data.firstname, lastname: data.lastname,
+								role: data.role, type: data.type, avatar: data.avatar
+							},
+							create: {id: data.id, email: data.email, username: data.username,
+								firstname: data.firstname, lastname: data.lastname,
+								role: data.role, type: data.type, avatar: data.avatar
+							}
+						});
+					} else if (channel === AUTH_EVENTS.USER_UPDATED) {
+						await prisma.user.update({
+							where: {id: data.id},
+							data: {
+								email: data.email, username: data.username, firstname: data.firstname,
+								lastname: data.lastname, avatar: data.avatar, bio: data.bio,
+								location: data.location, website: data.website, title: data.title
+							}
+						});
+					} else if (channel === ADMIN_EVENTS.USER_DELETED) {
+						try {
+							const sockets = await io.in(`user:${data.id}`).fetchSockets();
+							for (const socket of sockets)
+								socket.disconnect(true);
+						} catch (err) {}
+						await prisma.user.delete({where: {id: data.id}}).catch((err: any) => {
+							throw err;
+						});
 					}
-					await prisma.user.delete({where: {id: data.id}}).catch((err: any) => {
-						// console.error('failed to delete user:', (err as Error).message);
-						throw err;
+				} catch (err) {}
+			};
+
+			subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, handle_user_sync);
+			subscribeToEvents(AUTH_EVENTS.USER_UPDATED,    handle_user_sync);
+			subscribeToEvents(ADMIN_EVENTS.USER_DELETED,   handle_user_sync);
+
+			subscribeToEvents(ADMIN_EVENTS.USER_UPDATED, async (_channel, message: any) => {
+				try {
+					const {id, status} = message?.data ?? {};
+					if (!id || status !== 'suspended') return;
+					const sockets = await io.in(`user:${id}`).fetchSockets();
+					for (const s of sockets)
+						s.disconnect(true);
+				} catch (err) {}
+			});
+
+			await reset_presence();
+
+			subscribeToEvents(EVENTS.NOTIF_CREATE, async (channel, message: any) => {
+				if (channel !== EVENTS.NOTIF_CREATE) return;
+				try {
+					const data = message?.data as NotifEventPayload | undefined;
+					if (!data?.user_id || !data.type || !data.title) return;
+					await notify(io, {
+						user_id: data.user_id,
+						type:    data.type,
+						title:   data.title,
+						...(data.body != null && { body: data.body }),
 					});
-				} else {
-					return ;
-				}
-			} catch (err) {
-				// console.error(`[user sync] ${channel} failed:`, (err as Error).message);
-			}
-		};
-		subscribeToEvents(AUTH_EVENTS.USER_REGISTERED, handle_user_sync);
-		subscribeToEvents(AUTH_EVENTS.USER_UPDATED,    handle_user_sync);
-		subscribeToEvents(ADMIN_EVENTS.USER_DELETED,   handle_user_sync);
+				} catch (err) {}
+			});
 
-		subscribeToEvents(ADMIN_EVENTS.USER_UPDATED, async (_channel, message: any) => {
-			try {
-				const {id, status} = message?.data ?? {};
-				if (!id || status !== 'suspended')
-					return;
+		} catch (err) {
+			console.warn('Redis/EventBus unavailable, events disabled:', (err as Error).message);
+		}
 
-				const sockets = await io.in(`user:${id}`).fetchSockets();
-				for (const s of sockets)
-					s.disconnect(true);
-			} catch (err) {
-				// console.error('[suspend] socket disconnect failed:', (err as Error).message);
-			}
-		});
-
-		await reset_presence();
-
-		subscribeToEvents(EVENTS.NOTIF_CREATE, async (channel, message: any) => {
-			if (channel !== EVENTS.NOTIF_CREATE) return;
-			try {
-				const data = message?.data as NotifEventPayload | undefined;
-				if (!data?.user_id || !data.type || !data.title) return;
-
-				await notify(io, {
-					user_id: data.user_id,
-					type:	 data.type,
-					title:	 data.title,
-					...(data.body != null && { body: data.body }),
-				});
-			} catch (err) {
-				// console.error('[notif] sync failed:', (err as Error).message);
-			}
-		});
-		if (process.env.NODE_ENV !== 'production') { 
-            server.listen(PORT, () => {
-			    console.log(`chat server running on port: ${PORT}`); 
-            });
+		if (process.env.NODE_ENV !== 'production') {
+			server.listen(PORT, () => {
+				console.log(`chat server running on port: ${PORT}`);
+			});
 		}
 	} catch (err) {
-		// console.error('error accured:', (err as Error).message);
 		console.error('CHAT SERVER EXITING');
 		process.exit(1);
 	}

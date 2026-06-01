@@ -9,6 +9,7 @@ datasource db {
 
 
 model User {
+  @@map("admin_users")
   id            String         @id @default(uuid())
   email         String         @unique
   username      String         @unique
@@ -31,6 +32,7 @@ model User {
 }
 
 model Job {
+  @@map("admin_jobs")
   id           String     @id @default(uuid())
   title        String
   description  String
@@ -45,25 +47,32 @@ model Job {
   postedByName String
   createdBy    User       @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
-
 enum Role {
   ADMIN
   USER
   MODERATOR
-}
 
-enum UserType {
-  FREELANCER
-  CLIENT
+  @@map("admin_Role")
 }
 
 enum Status {
   active
   suspended
+
+  @@map("admin_Status")
 }
 
 enum JobStatus {
   active
   flagged
   closed
+
+  @@map("admin_JobStatus")
+}
+
+enum UserType {
+  FREELANCER
+  CLIENT
+
+  @@map("admin_UserType")
 }

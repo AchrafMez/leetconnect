@@ -15,6 +15,7 @@ datasource db {
 
 
 model User {
+  @@map("chat_users")
   id              String          @id
   email           String          @unique
   username        String          @unique
