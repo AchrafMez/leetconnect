@@ -24,11 +24,9 @@ import { PrismaPg } from '@prisma/adapter-pg';
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL!.replace(
-    'sslmode=require',
-    'sslmode=require&options=--search_path%3Dmarketplace'
-  );
-  const adapter = new PrismaPg({ connectionString });
+  const adapter = new PrismaPg({ 
+    connectionString: process.env.MARKETPLACE_DATABASE_URL || process.env.DATABASE_URL!
+  });
   return new PrismaClient({ adapter });
 }
 
