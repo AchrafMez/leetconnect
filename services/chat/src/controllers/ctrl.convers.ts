@@ -7,6 +7,15 @@ import {
 	type ConversUpdateBody,
 	type ConversAddMemberBody
 } from '../schemas/schema.convers';
+import Pusher from 'pusher';
+
+const pusher = new Pusher({
+    appId:   process.env.PUSHER_APP_ID!,
+    key:     process.env.PUSHER_KEY!,
+    secret:  process.env.PUSHER_SECRET!,
+    cluster: process.env.PUSHER_CLUSTER!,
+    useTLS:  true,
+});
 
 async function assert_membership(convers_id: number, user_id: string) {
 	const member = await prisma.conversMember.findFirst({
@@ -213,10 +222,11 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 		});
 
 		if (created) {
-			const io = req.app.get('io');
-			for (const m of created.members) {
-				io.to(`user:${m.user_id}`).emit('convers_created', created);
-			}
+			await Promise.all(
+				created.members.map((m) =>
+				pusher.trigger(`user-${m.user_id}`, 'convers_created', created)
+			)
+			);
 		}
 
 		res.status(201).json(created);
@@ -349,8 +359,7 @@ export async function add_member(req: Request, res: Response, next: NextFunction
 		});
 
 		if (full_convers) {
-			const io = req.app.get('io');
-			io.to(`user:${new_member_id}`).emit('convers_created', full_convers);
+    		await pusher.trigger(`user-${new_member_id}`, 'convers_created', full_convers);
 		}
 
 		res.status(201).json(member);

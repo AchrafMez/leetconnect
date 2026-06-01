@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Socket } from 'socket.io-client';
-import { getSocket } from '../lib/socket';
+import { getPusher } from '../lib/socket';
 import { useAuth } from './userContext';
 import {
 	createContext,
@@ -25,33 +24,23 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
 	const { user } = useAuth();
 	const [map, setMap] = useState<Record<string, boolean>>({});
 	const watchers = useRef<Map<string, number>>(new Map());
-	const socketRef = useRef<Socket | null>(null);
 
 	useEffect(() => {
 		if (!user) {
 			setMap({});
 			watchers.current.clear();
-			socketRef.current = null;
-			return ;
+			return;
 		}
 
-		const socket = getSocket();
-		socketRef.current = socket;
+		const pusher = getPusher();
+		const channel = pusher.subscribe(`presence-${user.id}`);
 
-		const onPresence = (data: { id: string; isOnline: boolean}) => {
-			setMap((prev) => ({...prev, [data.id]: data.isOnline}));
-		};
-		const onConnect = () => {
-			const ids = Array.from(watchers.current.keys());
-			if (ids.length > 0) socket.emit('watch_presence', ids);
-		};
+		channel.bind('presence_changed', (data: { id: string; isOnline: boolean }) => {
+			setMap((prev) => ({ ...prev, [data.id]: data.isOnline }));
+		});
 
-		socket.on('presence_changed', onPresence);
-		socket.on('connect', onConnect);
 		return () => {
-			socket.off('presence_changed', onPresence);
-			socket.off('connect', onConnect);
-			socketRef.current = null;
+			pusher.unsubscribe(`presence-${user.id}`);
 		};
 	}, [user?.id]);
 
@@ -60,31 +49,27 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
 	);
 
 	const seed = useCallback(
-		(entries: Array<{ id: string; isOnline: boolean}>) => {
+		(entries: Array<{ id: string; isOnline: boolean }>) => {
 			setMap((prev) => {
-				const next = {...prev};
+				const next = { ...prev };
 				for (const entry of entries) {
 					if (next[entry.id] === undefined)
 						next[entry.id] = entry.isOnline;
 				}
 				return next;
 			});
-		},
-		[]
+		}, []
 	);
 
 	const subscribe = useCallback((userId: string) => {
 		const cur = watchers.current.get(userId) ?? 0;
 		watchers.current.set(userId, cur + 1);
-		if (cur === 0)
-			socketRef.current?.emit('watch_presence', [userId]);
 	}, []);
 
 	const unsubscribe = useCallback((userId: string) => {
 		const cur = watchers.current.get(userId) ?? 0;
 		if (cur <= 1) {
 			watchers.current.delete(userId);
-			socketRef.current?.emit('unwatch_presence', [userId]);
 		} else {
 			watchers.current.set(userId, cur - 1);
 		}

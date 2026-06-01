@@ -28,6 +28,7 @@
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.575.0",
     "papaparse": "^5.5.3",
+    "pusher-js": "^8.5.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-datepicker": "^9.1.0",

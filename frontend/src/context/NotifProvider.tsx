@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { notifApi, type ChatNotif } from '../lib/api';
-import { getSocket } from '../lib/socket';
+import { useAuth } from './userContext';
+import { getPusher, subscribeToUserChannel } from '../lib/socket';
 
 interface NotifContext {
 	notifs: ChatNotif[];
@@ -15,45 +16,34 @@ const NotifContext = createContext<NotifContext | null>(null);
 
 export function NotifProvider({ children }: { children: ReactNode }) {
 	const [notifs, setNotifs] = useState<ChatNotif[]>([]);
+	const { user } = useAuth();
 
 	// initial load from REST
 	useEffect(() => {
-		notifApi.list().then(setNotifs).catch((_err) => { /* handle silently */});
+		notifApi.list().then(setNotifs).catch(() => {});
 	}, []);
 
-	// live updates from the existing chat socket
+	// live updates from Pusher
 	useEffect(() => {
-		const socket = getSocket();
+		if (!user?.id) return;
 
-		const onNew  = (n: ChatNotif) => setNotifs(p => [n, ...p.filter(x => x.id !== n.id)]);
-		const onRead = ({id}: {id: number}) =>
-			setNotifs(p => p.map(n => n.id === id ? { ...n, is_read: true } : n));
-		const onReadAll  = () =>
-			setNotifs(p => p.map(n => ({ ...n, is_read: true })));
-		const onDeleted = ({id}: {id: number}) =>
-			setNotifs(p => p.filter(n => n.id !== id));
-
-		socket.on('new_notification', onNew);
-		socket.on('notification_read', onRead);
-		socket.on('notification_read_all', onReadAll);
-		socket.on('notification_deleted', onDeleted);
+		const channel = subscribeToUserChannel(user.id, (n: ChatNotif) => {
+			setNotifs(p => [n, ...p.filter(x => x.id !== n.id)]);
+		});
 
 		return () => {
-			socket.off('new_notification', onNew);
-			socket.off('notification_read', onRead);
-			socket.off('notification_read_all', onReadAll);
-			socket.off('notification_deleted', onDeleted);
+			getPusher().unsubscribe(`user-${user.id}`);
 		};
-	}, []);
+	}, [user?.id]);
 
 	const markRead = useCallback(async (id: number) => {
 		setNotifs(p => p.map(n => n.id === id ? { ...n, is_read: true } : n));
-		await notifApi.markRead(id).catch((_err) => { /* handle silently */});
+		await notifApi.markRead(id).catch(() => {});
 	}, []);
 
 	const markAllRead = useCallback(async () => {
 		setNotifs(p => p.map(n => ({ ...n, is_read: true })));
-		await notifApi.markAllRead().catch((_err) => { /* handle silently */});
+		await notifApi.markAllRead().catch(() => {});
 	}, []);
 
 	const remove = useCallback(async (id: number) => {
@@ -70,6 +60,7 @@ export function NotifProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	const unread = notifs.filter(n => !n.is_read).length;
+
 	return (
 		<NotifContext.Provider value={{ notifs, unread, markRead, markAllRead, remove }}>
 			{children}

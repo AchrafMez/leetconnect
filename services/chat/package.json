@@ -1,7 +1,10 @@
 {
   "name": "@leetconnect/chat-service",
   "prisma": {
-    "binaryTargets": ["native", "rhel-openssl-3.0.x"]
+    "binaryTargets": [
+      "native",
+      "rhel-openssl-3.0.x"
+    ]
   },
   "version": "1.0.0",
   "description": "chat service",
@@ -26,6 +29,7 @@
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
     "prom-client": "^15.1.3",
+    "pusher": "^5.3.3",
     "sequelize": "^6.37.5",
     "socket.io": "^4.8.3",
     "zod": "^4.4.3"
