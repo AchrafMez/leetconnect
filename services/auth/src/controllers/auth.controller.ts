@@ -240,6 +240,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
             path: '/api/auth/refresh', 
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { isOnline: true }
+        });
 
         return res.status(200).json({
             message: `Welcome Back ${user.username} !`,
@@ -267,6 +271,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
                 oauthProvider: user.oauthProvider,
             }
         });
+        
 
     } catch (error) {
         next(error); // Sends error to the shared errorHandler
@@ -324,15 +329,31 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 // logout => delete refreshToken from db and from httpOnly cookie
 export const logout = async (req: Request, res: Response) => {
     const { refreshToken } = req.cookies;
-    if (!refreshToken) { // protect the token so deletemany dont wipe out all the db :)
+    if (!refreshToken) {
         res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
         return res.sendStatus(204);
     }
+    
+    // Find user before deleting token
+    const stored = await prisma.refreshToken.findUnique({ 
+        where: { token: refreshToken },
+        select: { userId: true }
+    });
+
     await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
+    
+    // Mark offline
+    if (stored) {
+        await prisma.user.update({
+            where: { id: stored.userId },
+            data: { isOnline: false }
+        });
+        await publishEvent(EVENTS.USER_OFFLINE, { id: stored.userId });
+    }
+
     res.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     res.sendStatus(204);
 };
-
 
 export const getAllFreelancers = async (_req: Request, res: Response) => {
   try {
