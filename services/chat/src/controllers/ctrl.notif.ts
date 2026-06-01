@@ -1,13 +1,22 @@
 import type { Request, Response, NextFunction } from 'express';
 import prisma from '../config/config.database';
 import type { NotifParams } from '../schemas/schema.notifs';
+import Pusher from 'pusher';
+
+const pusher = new Pusher({
+	appId:   process.env.PUSHER_APP_ID!,
+	key:     process.env.PUSHER_KEY!,
+	secret:  process.env.PUSHER_SECRET!,
+	cluster: process.env.PUSHER_CLUSTER!,
+	useTLS:  true,
+});
 
 export async function list(req: Request, res: Response, next: NextFunction) {
 	try {
 		const user_id = req.user!.userId;
 		const notifs  = await prisma.notification.findMany({
-			where: { user_id: user_id },
-			orderBy: { created_at: 'desc'},
+			where: { user_id },
+			orderBy: { created_at: 'desc' },
 		});
 		res.json(notifs);
 	} catch (err) {
@@ -17,16 +26,15 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 export async function read(req: Request, res: Response, next: NextFunction) {
 	try {
-		const user_id  = req.user!.userId;
+		const user_id = req.user!.userId;
 		const {id: notif_id} = req.params as unknown as NotifParams;
 
 		const notif = await prisma.notification.update({
-			where: {id: notif_id, user_id: user_id},
+			where: {id: notif_id, user_id},
 			data: {is_read: true}
 		});
 
-		const io = req.app.get('io');
-		io.to(`user:${notif.user_id}`).emit('notification_read', {id: notif.id});
+		await pusher.trigger(`user-${notif.user_id}`, 'notification_read', {id: notif.id});
 		res.json(notif);
 	} catch (err) {
 		next(err);
@@ -38,12 +46,11 @@ export async function read_all(req: Request, res: Response, next: NextFunction) 
 		const user_id = req.user!.userId;
 
 		await prisma.notification.updateMany({
-			where: {user_id: user_id, is_read: false},
-			data :{is_read: true}
+			where: {user_id, is_read: false},
+			data: {is_read: true}
 		});
-		const io = req.app.get('io');
-		io.to(`user:${user_id}`).emit('notification_read_all');
 
+		await pusher.trigger(`user-${user_id}`, 'notification_read_all', {});
 		res.json({message: 'all notifications marked as read'});
 	} catch (err) {
 		next(err);
@@ -56,15 +63,13 @@ export async function remove(req: Request, res: Response, next: NextFunction) {
 		const {id: notif_id} = req.params as unknown as NotifParams;
 
 		const {count} = await prisma.notification.deleteMany({
-			where: {id: notif_id, user_id: user_id}
+			where: {id: notif_id, user_id}
 		});
 
 		if (count === 0)
 			return res.status(404).json({error: 'notification not found'});
 
-		const io = req.app.get('io');
-		io.to(`user:${user_id}`).emit('notification_deleted', {id: notif_id});
-
+		await pusher.trigger(`user-${user_id}`, 'notification_deleted', {id: notif_id});
 		res.status(204).send();
 	} catch (err) {
 		next(err);
