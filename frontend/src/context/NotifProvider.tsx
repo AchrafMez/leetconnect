@@ -24,15 +24,30 @@ export function NotifProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	// live updates from Pusher
-	useEffect(() => {
+		useEffect(() => {
 		if (!user?.id) return;
 
-		const channel = subscribeToUserChannel(user.id, (n: ChatNotif) => {
+		const pusher = getPusher();
+		const channel = pusher.subscribe(`user-${user.id}`);
+
+		channel.bind('new_notification', (n: ChatNotif) => {
 			setNotifs(p => [n, ...p.filter(x => x.id !== n.id)]);
 		});
 
+		channel.bind('notification_read', ({id}: {id: number}) => {
+			setNotifs(p => p.map(n => n.id === id ? { ...n, is_read: true } : n));
+		});
+
+		channel.bind('notification_read_all', () => {
+			setNotifs(p => p.map(n => ({ ...n, is_read: true })));
+		});
+
+		channel.bind('notification_deleted', ({id}: {id: number}) => {
+			setNotifs(p => p.filter(n => n.id !== id));
+		});
+
 		return () => {
-			getPusher().unsubscribe(`user-${user.id}`);
+			pusher.unsubscribe(`user-${user.id}`);
 		};
 	}, [user?.id]);
 
