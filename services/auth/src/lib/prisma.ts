@@ -27,9 +27,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({ 
-    connectionString: process.env.AUTH_DATABASE_URL || process.env.DATABASE_URL!
-  });
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
   return new PrismaClient({ adapter });
 }
 
