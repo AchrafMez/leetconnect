@@ -14,10 +14,11 @@ function initEventBus(redisUrl?: string): void{
     const url = redisUrl || process.env.REDIS_URL;
     
     // Add connection options specifically for Upstash Serverless compat
-    const redisOptions = {
-        maxRetriesPerRequest: null,
-        connectTimeout: 10000,
-        family: 0 // connect using IPv4/IPv6
+      const redisOptions = {
+        maxRetriesPerRequest: 3,
+        connectTimeout: 30000,
+        lazyConnect: true,
+        family: 0
     };
 
     publisher = new Redis(url!, redisOptions);
