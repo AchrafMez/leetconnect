@@ -1,7 +1,10 @@
 {
   "name": "@leetconnect/marketplace-service",
   "prisma": {
-    "binaryTargets": ["native", "rhel-openssl-3.0.x"]
+    "binaryTargets": [
+      "native",
+      "rhel-openssl-3.0.x"
+    ]
   },
   "version": "1.0.0",
   "description": "marketplace service",
@@ -15,6 +18,7 @@
     "@leetconnect/shared": "1.0.0",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
+    "array-flatten": "^3.0.0",
     "axios": "^1.15.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

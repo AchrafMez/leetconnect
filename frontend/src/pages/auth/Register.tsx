@@ -51,7 +51,7 @@ export default function Register() {
 
         if (!formData.email.trim()) {
             errors.email = 'Email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())){
             errors.email = 'Please enter a valid email address';
         }
 
