@@ -12,9 +12,17 @@ export let redisClient: Redis | null = null;
 
 function initEventBus(redisUrl?: string): void{
     const url = redisUrl || process.env.REDIS_URL;
-    publisher = new Redis(url!);
-    subscriber = new Redis(url!);
-    redisClient = new Redis(url!);
+    
+    // Add connection options specifically for Upstash Serverless compat
+    const redisOptions = {
+        maxRetriesPerRequest: null,
+        connectTimeout: 10000,
+        family: 0 // connect using IPv4/IPv6
+    };
+
+    publisher = new Redis(url!, redisOptions);
+    subscriber = new Redis(url!, redisOptions);
+    redisClient = new Redis(url!, redisOptions);
     publisher.on('connect', () => console.log('Event bus publisher connected'));
     subscriber.on('connect', () => console.log('Event bus subscriber connected'));
     redisClient.on('connect', () => console.log('Redis KV client connected'));
