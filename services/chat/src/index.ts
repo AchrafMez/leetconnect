@@ -100,6 +100,7 @@ app.get('/metrics', async (_req, res) => {
 	res.send(await getMetrics());
 });
 
+app.use(express.urlencoded({ extended: true }));
 app.use('/api/chat', health_routes);
 app.use('/api/chat', pusher_routes);
 
