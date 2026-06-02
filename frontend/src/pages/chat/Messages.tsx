@@ -200,53 +200,53 @@ export default function Messages() {
 		? active_convers.members.find((m) => m.user_id !== CURRENT_USER_ID)?.user.isOnline ?? false
 		: false;
 
-	return (
-		<div className="fixed inset-0 top-16 p-4 flex gap-4">
-			<div className={`${active_id ? 'hidden sm:flex' : 'flex'} w-full sm:w-80 shrink-0`}>
-				<ConversPanel
-					conversations={conversations}
-					active_id={active_id}
-					curr_user={CURRENT_USER_ID}
-					friends={friends}
-					onSelect={setActiveId}
-					onGroupCreated={handleGroupCreated}
-				/>
-			</div>
-
-			{active_convers ? (
-				<ChatBox
-					convers={active_convers}
-					convers_name={convers_name}
-					convers_avatar={convers_avatar}
-					convers_username={convers_username}
-					is_direct={active_convers.type === 'Direct'}
-					receiver_id={receiver_id}
-					recv_rest_online={recv_rest_online}
-					messages={messages}
-					curr_user={CURRENT_USER_ID}
-					friends={friends}
-					onSendMessage={handleSend}
-					onLoadMore={loadMore}
-					has_more={next_cursor !== null}
-					loading_more={loading_more}
-					onDeleteMessage={handleDelete}
-					onBack={() => setActiveId(null)}
-					onLeaveConversation={handleLeaveConversation}
-					onMemberAdded={handleMemberAdded}
-				/>
-			) : (
-				<Card className="hidden sm:flex flex-1 items-center justify-center border-border/50 bg-background-elevated">
-					<CardContent className="p-6 pt-6 text-center">
-						<div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-							<MessageCircle size={22} className="text-primary" />
-						</div>
-						<p className="text-base font-semibold text-foreground">Select a conversation</p>
-						<p className="text-xs text-muted-foreground mt-1">
-							Pick a chat from the left to start messaging.
-						</p>
-					</CardContent>
-				</Card>
-			)}
+return (
+	<div className="flex gap-4 h-[calc(100vh-theme(spacing.16)-theme(spacing.8)-5rem)]">
+		<div className={`${active_id ? 'hidden sm:flex' : 'flex'} w-full sm:w-80 shrink-0`}>
+			<ConversPanel
+				conversations={conversations}
+				active_id={active_id}
+				curr_user={CURRENT_USER_ID}
+				friends={friends}
+				onSelect={setActiveId}
+				onGroupCreated={handleGroupCreated}
+			/>
 		</div>
+
+		{active_convers ? (
+			<ChatBox
+				convers={active_convers}
+				convers_name={convers_name}
+				convers_avatar={convers_avatar}
+				convers_username={convers_username}
+				is_direct={active_convers.type === 'Direct'}
+				receiver_id={receiver_id}
+				recv_rest_online={recv_rest_online}
+				messages={messages}
+				curr_user={CURRENT_USER_ID}
+				friends={friends}
+				onSendMessage={handleSend}
+				onLoadMore={loadMore}
+				has_more={next_cursor !== null}
+				loading_more={loading_more}
+				onDeleteMessage={handleDelete}
+				onBack={() => setActiveId(null)}
+				onLeaveConversation={handleLeaveConversation}
+				onMemberAdded={handleMemberAdded}
+			/>
+		) : (
+			<Card className="hidden sm:flex flex-1 items-center justify-center border-border/50 bg-background-elevated">
+				<CardContent className="p-6 pt-6 text-center">
+					<div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+						<MessageCircle size={22} className="text-primary" />
+					</div>
+					<p className="text-base font-semibold text-foreground">Select a conversation</p>
+					<p className="text-xs text-muted-foreground mt-1">
+						Pick a chat from the left to start messaging.
+					</p>
+				</CardContent>
+			</Card>
+		)}
+	</div>
 	);
 }
