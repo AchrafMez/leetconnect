@@ -35,6 +35,9 @@ import {
 	EVENTS,
 } from '@leetconnect/shared';
 
+import pusher_routes from './routes/route.pusher';
+
+
 dotenv.config({ path: '../../.env', quiet: true});
 
 const PORT = process.env.CHAT_DB_PORT || 3003;
@@ -98,8 +101,10 @@ app.get('/metrics', async (_req, res) => {
 });
 
 app.use('/api/chat', health_routes);
+app.use('/api/chat', pusher_routes);
 
 app.use(authMiddleware);
+
 app.use('/api/chat/convers', 			  convers_routes);
 app.use('/api/chat/convers/:id/messages', message_routes);
 app.use('/api/friend/requests', 		  friends_routes);
