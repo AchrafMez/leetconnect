@@ -17,12 +17,11 @@ export async function fetchUserFromAuth(
   try {
     const { user } = await callService<{ user: AuthUserSummary }>(
       AUTH_URL,
-      `/api/auth/users/${userId}`,
-      authHeader ? { headers: { Authorization: authHeader } } : {}
+      `/api/auth/users/${userId}/internal`,
+      {}
     );
     return user;
   } catch (err) {
-    // console.error(`fetchUserFromAuth(${userId}) failed:`, err);
     return null;
   }
 }

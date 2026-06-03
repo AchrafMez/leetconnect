@@ -24,7 +24,8 @@ router.post('/refresh', refresh);
 router.post('/logout', logout);
 
 
-router.get("/users/:id",  authMiddleware, getUserById);
+router.get("/users/:id/internal", getUserById);
+router.get("/users/:id", authMiddleware, getUserById);
 router.get("/freelancers",authMiddleware,  getAllFreelancers);
 router.get("/clients",authMiddleware, getAllClients);
 router.post('/setup', authMiddleware, setupProfileValidator, validate, SetupProfile);
