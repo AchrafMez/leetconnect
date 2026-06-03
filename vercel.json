@@ -7,8 +7,8 @@
   "rewrites": [
     { "source": "/api/auth/:match*",      "destination": "/api/auth/:match*" },
     { "source": "/api/chat/:match*",      "destination": "/api/chat/:match*" },
-    { "source": "/api/friend/:match*",    "destination": "/api/chat/friend/:match*" },
-    { "source": "/api/notifs/:match*",    "destination": "/api/chat/notifs/:match*" },
+    { "source": "/api/friend/:match*",    "destination": "/api/chat/:match*" },
+    { "source": "/api/notifs/:match*",    "destination": "/api/chat/:match*" },
     { "source": "/api/admin/:match*",     "destination": "/api/admin/:match*" },
     { "source": "/api/analytics/:match*", "destination": "/api/analytics/:match*" },
     { "source": "/api/market/:match*",    "destination": "/api/market/:match*" },
