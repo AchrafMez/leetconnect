@@ -5,13 +5,13 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/api/auth/:match*",      "destination": "/api/auth/:match*" },
-    { "source": "/api/chat/:match*",      "destination": "/api/chat/:match*" },
-    { "source": "/api/friend/:match*",    "destination": "/api/chat/:match*" },
-    { "source": "/api/notifs/:match*",    "destination": "/api/chat/:match*" },
-    { "source": "/api/admin/:match*",     "destination": "/api/admin/:match*" },
-    { "source": "/api/analytics/:match*", "destination": "/api/analytics/:match*" },
-    { "source": "/api/market/:match*",    "destination": "/api/market/:match*" },
-    { "source": "/(.*)",                  "destination": "/index.html" }
+    { "source": "/api/auth/:match*", "destination": "/api/auth" },
+    { "source": "/api/chat/:match*", "destination": "/api/chat" },
+    { "source": "/api/friend/:match*", "destination": "/api/chat" },
+    { "source": "/api/notifs/:match*", "destination": "/api/chat" },
+    { "source": "/api/admin/:match*", "destination": "/api/admin" },
+    { "source": "/api/analytics/:match*", "destination": "/api/analytics" },
+    { "source": "/api/market/:match*", "destination": "/api/market" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
