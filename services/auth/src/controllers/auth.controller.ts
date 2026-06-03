@@ -18,6 +18,15 @@ type AuthBody = {
     role?: unknown;
 }
 
+let fileTypeModule: any;
+
+const getFileType = async () => {
+    if (!fileTypeModule) {
+        fileTypeModule = await import('file-type');
+    }
+    return fileTypeModule;
+};
+
 function TrimAuthInput(body: AuthBody) {
     const username = typeof body.username === 'string' ? body.username.trim() : '';
 
@@ -676,12 +685,14 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
 //     }
 // };
 
+
+
 export const uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
         // @ts-ignore
-        const { fileTypeFromBuffer } = await import('file-type');
+        const { fileTypeFromBuffer } = await getFileType();
         
         const detected = await fileTypeFromBuffer(req.file.buffer);
         const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
