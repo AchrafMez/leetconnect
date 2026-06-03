@@ -1,3 +1,6 @@
+*If you want to run the project on your machine, clone from:*
+https://github.com/leetconnect/leetconnect
+
 *This project has been created as part of the 42 curriculum by noben-ai, ner-roui, adbouras, abmahfou, amezioun.*
 
 # LeetConnect
