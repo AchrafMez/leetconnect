@@ -106,10 +106,11 @@ app.use('/api/chat', pusher_routes);
 
 app.use(authMiddleware);
 
-app.use('/api/chat/convers', 			  convers_routes);
 app.use('/api/chat/convers/:id/messages', message_routes);
-app.use('/api/friend/requests', 		  friends_routes);
-app.use('/api/notifs', 					  notif_routes);
+app.use('/api/chat/convers', 			  convers_routes);	
+app.use('/api/chat/friend/requests', 	friends_routes);
+// app.use('/api/notifs', 					  notif_routes);
+app.use('/api/chat/notifs',               notif_routes);
 app.use('/api/chat',					  users_routes);
 
 app.use(error_handler);
