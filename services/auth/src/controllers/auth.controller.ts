@@ -18,15 +18,6 @@ type AuthBody = {
     role?: unknown;
 }
 
-let fileTypeModule: any;
-
-const getFileType = async () => {
-    if (!fileTypeModule) {
-        fileTypeModule = await import('file-type');
-    }
-    return fileTypeModule;
-};
-
 function TrimAuthInput(body: AuthBody) {
     const username = typeof body.username === 'string' ? body.username.trim() : '';
 
@@ -613,119 +604,51 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     }
 };
 
-// upload avatar picture
-
-// export const uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-
-//         // check ACTUAL magic bytes of the buffer
-//         // This catches spoofed MIME types (e.g. shell.php sent as image/jpeg)
-//         // @ts-ignore
-//         const { fileTypeFromBuffer } = await import('file-type');
-        
-//         const detected = await fileTypeFromBuffer(req.file.buffer);
-//         const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
-//         if (!detected || !allowedMimes.includes(detected.mime)) {
-//             return res.status(400).json({ error: 'Invalid file content' });
-//         }
-
-//         const authUser = req.user as JwtPayload; 
-//         const userId = authUser.userId; // From JWT
-//         const hash = crypto.randomBytes(8).toString('hex');
-//         const uploadDir = path.join(process.cwd(), 'uploads/avatars');
-//         fs.mkdirSync(uploadDir, { recursive: true });
-//         const filename = `avatar-${userId}-${hash}.webp`;
-//         const uploadPath = path.join(uploadDir, filename);
-
-//         // Get old avatar BEFORE updating
-//         const existingUser = await prisma.user.findUnique({ 
-//             where: { id: userId },
-//             select: { avatar: true }
-//         });
-
-//         if (!existingUser) {
-//             return res.status(404).json({ error: "User record not found" });
-//         }
-        
-//         //  Sharp re-encode destroys any hidden payloads
-//         try {
-//             await sharp(req.file.buffer)
-//                 .resize(250, 250)
-//                 .webp({ quality: 80 })
-//                 .toFile(uploadPath);
-//         } catch (err){
-//             return res.status(400).json({ error: 'Invalid or corrupted image file' });
-//         }
-
-//         const avatarUrl = `/uploads/avatars/${filename}`;
-
-//         const user = await prisma.user.update({
-//             where: { id: userId },
-//             data: { avatar: avatarUrl },
-//         });
-
-//          // Delete old avatar AFTER successful DB update
-//         if (existingUser?.avatar && existingUser.avatar.startsWith('/uploads/avatars/')) {
-//             const oldFilename = path.basename(existingUser.avatar.split('?')[0] as string);
-//             const oldPath = path.join(uploadDir, oldFilename);
-//             fs.unlink(oldPath, () => {
-//                 // if (err) console.warn('Could not delete old avatar:', err.message);
-//             });
-//         }
-
-//         await publishEvent(AUTH_EVENTS.USER_UPDATED, {
-//             id: user.id,
-//             avatar: avatarUrl
-//         });
-
-//         res.json({ message: 'Avatar updated', avatar: avatarUrl });
-//     } catch (error) {
-//         next(error);
-//     }
-// };
-
-
 
 export const uploadAvatar = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-        // @ts-ignore
-        const { fileTypeFromBuffer } = await getFileType();
-        
-        const detected = await fileTypeFromBuffer(req.file.buffer);
         const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!detected || !allowedMimes.includes(detected.mime)) {
-            return res.status(400).json({ error: 'Invalid file content' });
+        if (!allowedMimes.includes(req.file.mimetype)) {
+            return res.status(400).json({ error: 'Invalid file type. Only JPEG, PNG and WebP allowed' });
         }
 
-        const authUser = req.user as JwtPayload; 
+        const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+        if (req.file.size > MAX_SIZE) {
+            return res.status(400).json({ error: 'File too large. Max 2MB' });
+        }
+
+        const authUser = req.user as JwtPayload;
         const userId = authUser.userId;
 
-        const existingUser = await prisma.user.findUnique({ 
+        const existingUser = await prisma.user.findUnique({
             where: { id: userId },
-            select: { avatar: true }
+            select: { id: true, avatar: true },
         });
 
         if (!existingUser) {
-            return res.status(404).json({ error: "User record not found" });
+            return res.status(404).json({ error: 'User not found' });
         }
 
-        // Store as base64 directly in DB (no filesystem, works on Vercel)
-        const avatarUrl = `data:${detected.mime};base64,${req.file.buffer.toString('base64')}`;
+        const avatarUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
 
-        const user = await prisma.user.update({
+        const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: { avatar: avatarUrl },
+            select: { id: true, avatar: true },
         });
 
         await publishEvent(AUTH_EVENTS.USER_UPDATED, {
-            id: user.id,
-            avatar: avatarUrl
+            id: updatedUser.id,
+            avatar: avatarUrl,
         });
 
-        res.json({ message: 'Avatar updated', avatar: avatarUrl });
+        return res.status(200).json({
+            message: 'Avatar updated successfully',
+            avatar: updatedUser.avatar,
+        });
+
     } catch (error) {
         next(error);
     }
